@@ -1,0 +1,204 @@
+<html>
+
+<head>
+
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta name="author" content="蓝洞公司">
+	<link rel="icon" href="46E22824B3EC5BDFA7F17CF171FB692A.png">
+	<title>蓝洞公司官方网站</title>
+	<style>
+		html{
+			font-size: calc(1.6vh + 0.4vw);
+			font-family: consolas, sans-serif;
+		}
+		#ti{
+			font-size: calc(4rem + 2vw);
+			font-family: consolas, serif;
+			margin: 0.6rem;
+			font-weight: 1000;
+		}
+		p{
+			font-size: 1.2rem;
+			margin: 1rem 0.2rem;
+			text-indent: 1rem;
+		}
+		span{
+			font-size: 1.2rem;
+			margin: 0.3rem;
+		}
+		.t2{
+			font-size: 3rem;
+			margin: 1.5rem 0.15rem;
+			font-family: consolas, serif;
+			font-weight: 1000;
+		}
+		.hr{
+			width:80%;
+			height:0.15rem;
+			background-image:linear-gradient(to right, rgba(0,0,0,0), rgba(128,128,128,100), rgba(0,0,0,0));
+			margin: 3rem auto;
+		}
+	</style>
+
+</head>
+
+<body style="background-image:url(bg.png);padding:50px">
+
+	<div align="middle">
+		<span id="ti">蓝洞公司官方网站</span>
+		<table style="display:inline-block;transform:translateY(20%);margin:0 2rem">
+			<tr>
+				<td><span>本站建立者：蓝洞公司</span></td>
+				<td><span><a target="_blank" href="https://gitblock.cn/Users/1206413">（A营主页）</a></span></td>
+			</tr>
+			<tr>
+				<td><span>作者：蓝洞公司</span></td>
+				<td><span><a target="_blank" href="https://gitblock.cn/Users/1206413">（A营主页）</a></span></td>
+			</tr>
+            	<td><span>副作者：MAX工作室</span></td>
+				<td><span><a target="_blank" href="https://gitblock.cn/Users/1187863">（A营主页）</a></span></td>
+		</table>
+	</div>
+	
+	<div class="hr"></div>
+	
+	<image src="icon.png" width="70%" style="display:block;background-color:#FFF;margin:0.6rem auto"></image>
+	
+	<div class="hr"></div>
+	
+	<p class="t2">更前面的公告</p>
+	
+	<p>此网站当参阅使用</p>
+	
+	<span style="display:block;text-align:center">2022-5-13，蓝洞公司</span>
+	
+	<div class="hr"></div>
+	
+	<p class="t2">公告</p>
+	
+	<span style="display:block;text-align:center">2022-5-13，蓝洞公司</span>
+	
+	<div class="hr"></div>
+	
+	<p class="t2">百科</p>
+	<p>Bluehole Studio，中文名为“蓝洞工作室”，是在2007年3月创办的游戏开发公司，开发的网络游戏有大型游戏3DMMORPG《TERA》（神谕之战）和《Playerunknown's Battlegrounds》（绝地求生，简称“PUBG”）。PS4和NS平台开发一新游戏作品，游戏针对亚洲市场。 [1] 
+    <p>2020年8月4日，《苏州高新区·2020胡润全球独角兽榜》发布，Bluehole排名第58位。</p>
+    <p>拥有250多名员工的Bluehole Studio由NCsoft公司出身的开发者们在2007年3月创办，开发的网络游戏有大型3DMMORPG《TERA》
+在韩国首尔江南站附近的一栋大型写字楼里，有一家游戏开发公司，那就是开发了大型3DMMORPG《TERA》的Bluehole Studio
+虽然游戏开发公司都彼此彼此，但Bluehole Studio有一个引人注目的地方，那就是为了开发一款MMORPG不仅投入了上百名开发人员，还宣称用该款MMORPG重新谱写网络游戏的历史
+这里指的游戏就是《TERA》</p>
+	
+
+	<span style="display:block;text-align:center">最后编辑于2022-5-13 18:00，编辑者蓝洞公司</span>
+	
+	<div class="hr"></div>
+	
+	<p class="t2">原作</p>
+	<p>部分蓝洞公司作品，点击下方卡片进入。</p>
+	<dir align="middle" >
+		<a target="_blank" class="pcard" projectid="1023080"></a>
+		<a target="_blank" class="pcard" projectid="982846"></a>
+		<a target="_blank" class="pcard" projectid="985195"></a>
+		<a target="_blank" class="pcard" projectid="905754"></a>
+		<a target="_blank" class="pcard" projectid="888723"></a>
+		<a target="_blank" class="pcard" projectid="936023"></a>
+		<a target="_blank" class="pcard" projectid="888472"></a>
+		<a target="_blank" class="pcard" projectid="883719"></a>
+		<a target="_blank" class="pcard" projectid="878297"></a>
+		<a target="_blank" class="pcard" projectid="878302"></a>
+		<a target="_blank" class="pcard" projectid="878301"></a>
+		<a target="_blank" class="pcard" projectid="878288"></a>
+		<a target="_blank" class="pcard" projectid="878270"></a>
+
+	</dir>
+	
+	<div class="hr"></div>
+	
+
+		</div>
+	<p>工作室：</p>
+		<div align="middle" >
+			<a target="_blank" class="scard" studioid="66056" img="46E22824B3EC5BDFA7F17CF171FB692A.png" name="蓝洞公司"></a>
+			<a target="_blank" class="scard" studioid="66846" img="https://cdn.gitblock.cn/Media?name=E67A84FFBEFCEF23655FF50CD2570B50.svg" name="蓝洞公司预备团"></a>
+		</div>
+	<p>友站：</p>
+		<div align="middle" >
+			<p><a target="_blank" href="1">MAX工作室官方网站</a></p>
+		</div>
+		
+	<div class="hr"></div>
+	
+
+	
+	<div class="hr"></div>
+	
+	<span style="display:block;text-align:center">本作品已使用蓝洞公司守护名单</span>
+	
+	<script>
+		function escapeXml(unsafe) {
+			return unsafe.replace(/[<>&'"]/g, function (c) {
+				switch (c) {
+					case '<': return '&lt;';
+					case '>': return '&gt;';
+					case '&': return '&amp;';
+					case '\'': return '&apos;';
+					case '"': return '&quot;';
+				}
+			});
+		}
+		var pcards = document.getElementsByClassName("pcard");
+		var tm = new Date();
+		var t = tm.getHours()
+		for (var i=0; i<pcards.length; i++) {
+			var card = pcards[i];
+			var id = card.getAttribute("projectid");
+			card.href = "https://gitblock.cn/Projects/" + id;
+			var img = document.createElement("img");
+			var d = document.createElement("span");
+			d.style = "display:inline-block;margin:0.5rem";
+			img.src = "https://hitokoto-svg.vercel.app/api/card?type=project&id=" + id + "&foobar=" + t;
+			img.alt = "哎呀，加载失败了！您可以刷新试试。超链接功能是正常的。";
+			d.appendChild(img);
+			card.appendChild(d);
+		}
+		var ucards = document.getElementsByClassName("ucard");
+		for (var i=0; i<ucards.length; i++) {
+			var card = ucards[i];
+			var id = card.getAttribute("userid");
+			var imglink = card.getAttribute("img");
+			var name = card.getAttribute("name");
+			card.href = "https://gitblock.cn/Users/" + id;
+			var img = document.createElement("svg");
+			var d = document.createElement("span");
+			d.style = "display:inline-block;margin:0.5rem";
+			img.innerHTML =
+				"<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"189px\" height=\"250px\" viewBox=\"0 0 189 250\" version=\"1.1\"><defs><filter x=\"-3.6%\" y=\"-2.7%\" width=\"107.3%\" height=\"105.4%\" filterUnits=\"objectBoundingBox\" id=\"filter-1\"><feOffset dx=\"0\" dy=\"1\" in=\"SourceAlpha\" result=\"shadowOffsetOuter1\"/><feGaussianBlur stdDeviation=\"1\" in=\"shadowOffsetOuter1\" result=\"shadowBlurOuter1\"/><feColorMatrix values=\"0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.5 0\" type=\"matrix\" in=\"shadowBlurOuter1\" result=\"shadowMatrixOuter1\"/><feMerge><feMergeNode in=\"shadowMatrixOuter1\"/><feMergeNode in=\"SourceGraphic\"/></feMerge></filter><rect id=\"path-2\" x=\"0\" y=\"0\" width=\"179\" height=\"240\" rx=\"8\"/></defs><g id=\"card\" stroke=\"none\" stroke-width=\"1\" fill=\"none\" fill-rule=\"evenodd\"><g id=\"project-card\" filter=\"url(#filter-1)\" transform=\"translate(5.000000, 5.000000)\"><mask id=\"mask-3\" fill=\"white\"><use xlink:href=\"#path-2\"/></mask><use id=\"card\" fill=\"#FFFFFF\" xlink:href=\"#path-2\"/><g id=\"user-avatars\" mask=\"url(#mask-3)\"><g xmlns=\"http://www.w3.org/2000/svg\"><image xmlns:xlink=\"http://www.w3.org/1999/xlink\" id=\"img\" stroke=\"none\" fill=\"none\" x=\"26\" y=\"26\" width=\"128\" height=\"128\" xlink:href=\""
+				+ imglink
+				+ "\"/><mask id=\"mask-5\" fill=\"white\"><use xmlns:xlink=\"http://www.w3.org/1999/xlink\" xlink:href=\"#path-4\"/></mask><circle stroke=\"#FFFFFF\" stroke-width=\"32\" cx=\"90\" cy=\"90\" r=\"80\"/><circle stroke=\"#888888\" stroke-width=\"1\" cx=\"90\" cy=\"90\" r=\"64\"/></g></g><text xmlns=\"http://www.w3.org/2000/svg\" fill=\"#000000\" font-weight=\"200\" font-size=\"19\" font-family=\"Sans-serif\" mask=\"url(#mask-3)\" id=\"name\" text-anchor=\"middle\" x=\"90\" y=\"200\">" + name
+				+ "</text></g></g></svg>";
+			d.appendChild(img);
+			card.appendChild(d);
+		}		
+		var scards = document.getElementsByClassName("scard");
+		for (var i=0; i<scards.length; i++) {
+			var card = scards[i];
+			var id = card.getAttribute("studioid");
+			var imglink = card.getAttribute("img");
+			var name = card.getAttribute("name");
+			card.href = "https://gitblock.cn/Studios/" + id;
+			var img = document.createElement("svg");
+			var d = document.createElement("span");
+			d.style = "display:inline-block;margin:0.5rem";
+			img.innerHTML =
+				"<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"189px\" height=\"250px\" viewBox=\"0 0 189 250\" version=\"1.1\"><defs><filter x=\"-3.6%\" y=\"-2.7%\" width=\"107.3%\" height=\"105.4%\" filterUnits=\"objectBoundingBox\" id=\"filter-1\"><feOffset dx=\"0\" dy=\"1\" in=\"SourceAlpha\" result=\"shadowOffsetOuter1\"/><feGaussianBlur stdDeviation=\"1\" in=\"shadowOffsetOuter1\" result=\"shadowBlurOuter1\"/><feColorMatrix values=\"0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.5 0\" type=\"matrix\" in=\"shadowBlurOuter1\" result=\"shadowMatrixOuter1\"/><feMerge><feMergeNode in=\"shadowMatrixOuter1\"/><feMergeNode in=\"SourceGraphic\"/></feMerge></filter><rect id=\"path-2\" x=\"0\" y=\"0\" width=\"179\" height=\"240\" rx=\"8\"/></defs><g id=\"card\" stroke=\"none\" stroke-width=\"1\" fill=\"none\" fill-rule=\"evenodd\"><g id=\"project-card\" filter=\"url(#filter-1)\" transform=\"translate(5.000000, 5.000000)\"><mask id=\"mask-3\" fill=\"white\"><use xlink:href=\"#path-2\"/></mask><use id=\"card\" fill=\"#FFFFFF\" xlink:href=\"#path-2\"/><g id=\"user-avatars\" mask=\"url(#mask-3)\"><g xmlns=\"http://www.w3.org/2000/svg\"><image xmlns:xlink=\"http://www.w3.org/1999/xlink\" id=\"img\" stroke=\"none\" fill=\"none\" x=\"10\" y=\"26\" width=\"160\" height=\"120\" xlink:href=\""
+				+ imglink
+				+ "\"/></g></g><text xmlns=\"http://www.w3.org/2000/svg\" fill=\"#000000\" font-weight=\"200\" font-size=\"19\" font-family=\"Sans-serif\" mask=\"url(#mask-3)\" id=\"name\" text-anchor=\"middle\" x=\"90\" y=\"200\">" + name
+				+ "</text></g></g></svg>";
+			d.appendChild(img);
+			card.appendChild(d);
+		}		
+	</script>
+	
+</body>
+
+</html>
