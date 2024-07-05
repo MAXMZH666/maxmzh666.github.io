@@ -94,3 +94,21 @@ footer {
     background-color: #1f1f1f;
     cursor: pointer;
 }
+
+/* 美化下载按钮 */
+.download-button {
+    display: inline-block;
+    padding: 10px 20px;
+    margin-top: 10px;
+    font-size: 16px;
+    color: #ffffff;
+    background-color: #007BFF;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.download-button:hover {
+    background-color: #0056b3;
+}
