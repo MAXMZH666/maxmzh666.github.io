@@ -24,11 +24,35 @@
     <main>
         <section class="forum">
             <h1>论坛</h1>
-            <p>这里是论坛页面的内容。</p>
+            <p>欢迎来到论坛。请在下方发表您的观点。</p >
+            <div id="disqus_thread"></div>
+            <script>
+                /**
+                *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT 
+                *  THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR 
+                *  PLATFORM OR CMS.
+                *  
+                *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: 
+                *  https://disqus.com/admin/universalcode/#configuration-variables*/
+                /*
+                var disqus_config = function () {
+                this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+                this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+                };
+                */
+                (function() {  // DON'T EDIT BELOW THIS LINE
+                var d = document, s = d.createElement('script');
+                s.src = 'https://maxforum.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+                })();
+            </script>
+            <noscript>请启用 JavaScript 以查看  提供的评论。</noscript>
         </section>
     </main>
     <footer>
-        <p>&copy; 2024 MAXMZH. 保留所有权利。</p>
+        <p>&copy; 2024 MAXMZH. 保留所有权利。</p >
     </footer>
+    <script id="dsq-count-scr" src="//maxforum.disqus.com/count.js" async></script>
 </body>
 </html>
