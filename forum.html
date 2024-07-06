@@ -4,10 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MAXMZH - 论坛</title>
-
-    <link rel="icon" type="image/png" href="MAXMZH.png">
-
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
 </head>
 <body>
     <header>
@@ -16,39 +15,33 @@
                 <li><a href="index.html">主页</a></li>
                 <li><a href="about.html">个人简介</a></li>
                 <li><a href="portfolio.html">作品集</a></li>
-				<li><a href="forum.html">论坛</a></li>
-				<li><a href="contact.html">联系方式</a></li>
-              </ul>
+                <li><a href="forum.html">论坛</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+            </ul>
         </nav>
     </header>
     <main>
         <section class="forum">
             <h1>MAX论坛</h1>
-            <p>欢迎来到MAX论坛，此论坛由MAX工作室提供技术支持。请在下方发表您的观点。tip：请使用VPN访问此论坛</p >
+            <p>欢迎来到MAX论坛，此论坛由MAX工作室提供技术支持。请在下方发表您的观点。tip：请使用VPN访问此论坛</p>
             <div id="disqus_thread"></div>
-			<script>
-				/**
-				*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
-				*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables    */
-				/*
-				var disqus_config = function () {
-				this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
-				this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
-				};
-				*/
-				(function() { // DON'T EDIT BELOW THIS LINE
-				var d = document, s = d.createElement('script');
-				s.src = 'https://maxforum.disqus.com/embed.js';
-				s.setAttribute('data-timestamp', +new Date());
-				(d.head || d.body).appendChild(s);
-				})();
-			</script>
-			<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+            <script>
+                var disqus_config = function () {
+                    this.page.url = 'http://maxmzh666.github.io/forum.html';  // 替换为您的页面 URL
+                    this.page.identifier = 'MAX论坛'; // 替换为您的页面唯一标识符
+                };
+                (function() {  // DON'T EDIT BELOW THIS LINE
+                var d = document, s = d.createElement('script');
+                s.src = 'https://maxforum.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+                })();
+            </script>
+            <noscript>请启用 JavaScript 以查看 <a href="https://disqus.com/?ref_noscript">Disqus</a> 提供的评论。</noscript>
         </section>
     </main>
     <footer>
-        <p>&copy; 2024 MAXMZH. 保留所有权利。</p >
+        <p>&copy; 2024 MAXMZH. 保留所有权利。</p>
     </footer>
-    <script id="dsq-count-scr" src="//maxforum.disqus.com/count.js" async></script>
 </body>
 </html>
