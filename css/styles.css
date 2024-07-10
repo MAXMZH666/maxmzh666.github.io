@@ -166,3 +166,16 @@ iframe {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
+#Layer1 {
+	position:absolute;
+	width:200px;
+	height:115px;
+	z-index:1;
+	left: 849px;
+	top: 236px;
+}
+.STYLE1 {
+	color: #FF0000;
+	font-weight: bold;
+}
+.STYLE2 {color: #CC0000}
