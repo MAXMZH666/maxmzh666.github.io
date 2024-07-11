@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>论坛</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* 基本样式 */
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212; /* 黑色背景 */
+            color: #fff; /* 白色文字 */
+            margin: 0;
+            padding: 0;
+        }
+
+        .iframe-container {
+            margin: 20px;
+            height: 600px; /* 设置 iframe 容器的高度 */
+        }
+
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none; /* 移除 iframe 边框 */
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>MAX科技云</h1>
+        <nav>
+            <ul>
+                <li><a href="about-max-tech-cloud.html">关于MAX科技云</a></li>
+                <li><a href="features.html">功能</a></li>
+                <li><a href="store.html">应用商城</a></li>
+                <li><a href="forum.html">论坛</a></li>
+                <li><a href="contact.html">联系我们</a></li>
+                <li><a href="settings.html">设置</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <section id="forum">
+            <h2>科技云论坛</h2>
+            <div class="forum-container">
+                <div class="post-form card">
+                    <h3>发帖</h3>
+                    <form id="postForm">
+                        <div>
+                            <label for="title">标题:</label>
+                            <input type="text" id="title" name="title" required>
+                        </div>
+                        <div>
+                            <label for="content">内容:</label>
+                            <textarea id="content" name="content" required></textarea>
+                        </div>
+                        <button type="submit">发布</button>
+                    </form>
+                </div>
+                <div class="posts card">
+                    <h3>帖子列表</h3>
+                    <div id="posts"></div>
+                </div>
+            </div>
+        </section>
+        <!-- iframe 容器 -->
+        <h2>MAX论坛</h2>
+        <div class="iframe-container">
+            <iframe src="https://maxmzh666.github.io/forum.html" title="MAXMZH 论坛"></iframe>
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2024 MAX科技云. 保留所有权利.</p>
+    </footer>
+    <script src="scripts.js"></script>
+</body>
+</html>

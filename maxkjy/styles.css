@@ -1,0 +1,147 @@
+/* 通用样式 */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #121212;
+    color: #fff;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: #1f1f1f;
+    padding: 1em;
+    text-align: center;
+    position: relative;
+}
+
+header .logo {
+    width: 100px;
+    height: auto;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+}
+
+nav ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+nav ul li {
+    display: inline;
+    margin: 0 10px;
+}
+
+nav ul li a {
+    color: #fff;
+    text-decoration: none;
+}
+
+main {
+    padding: 1em;
+}
+
+footer {
+    background-color: #1f1f1f;
+    text-align: center;
+    padding: 1em;
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+}
+
+.card {
+    background-color: #1f1f1f;
+    border: 1px solid #333;
+    padding: 1em;
+    margin: 1em 0;
+}
+
+.install-button, .settings-button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 0.5em 1em;
+    cursor: pointer;
+}
+
+.install-button:hover, .settings-button:hover {
+    background-color: #0056b3;
+}
+
+/* 论坛样式 */
+.forum-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+}
+
+.post-form, .posts {
+    flex: 1;
+}
+
+.post-form form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+}
+
+.post-form label {
+    margin-bottom: 0.5em;
+}
+
+.post-form input, .post-form textarea {
+    padding: 0.5em;
+    border: 1px solid #333;
+    background-color: #121212;
+    color: #fff;
+}
+
+.post-form button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 0.5em 1em;
+    cursor: pointer;
+}
+
+.post-form button:hover {
+    background-color: #0056b3;
+}
+
+.posts .post {
+    background-color: #1f1f1f;
+    border: 1px solid #333;
+    padding: 1em;
+    margin: 0.5em 0;
+}
+
+/* 联系表单样式 */
+#contactForm div {
+    margin-bottom: 1em;
+}
+
+#contactForm label {
+    display: block;
+    margin-bottom: 0.5em;
+}
+
+#contactForm input, #contactForm textarea {
+    width: 100%;
+    padding: 0.5em;
+    border: 1px solid #333;
+    background-color: #121212;
+    color: #fff;
+}
+
+#contactForm button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 0.5em 1em;
+    cursor: pointer;
+}
+
+#contactForm button:hover {
+    background-color: #0056b3;
+}
