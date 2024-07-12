@@ -50,7 +50,9 @@ postForm?.addEventListener('submit', function(event) {
 // 初始加载帖子
 loadPosts();
 
-
+function goBack() {
+            window.history.back();
+        }
 
 // 模拟更新软件功能
 // 更新软件按钮功能改为跳转到指定网站
@@ -60,19 +62,19 @@ function updateSoftware() {
 
 // 模拟分享软件功能
 function shareSoftware() {
-    const shareLink = "https://ldgs.lanzoul.com/b0zj27fkj 密码:1111"; // 假设的下载链接
-    const shareMessage = `分享MAX科技云应用：${shareLink}`;
+    //const shareLink = "https://ldgs.lanzoul.com/b0zj27fkj 密码:1111"; // 假设的下载链接
+    //const shareMessage = `分享MAX科技云应用：${shareLink}`;
     
     // 使用Navigator API进行分享（仅在支持的浏览器中有效）
     if (navigator.share) {
         navigator.share({
             title: 'MAX科技云',
             text: '分享MAX科技云应用',
-            url: shareLink
+            url: 'https://maxmzh666.github.io/project4.html'
         }).then(() => {
-            alert('分享成功！');
-        }).catch((error) => {
-            alert('分享失败：' + error);
+                    console.log('分享成功');
+                }).catch((error) => {
+                    console.error('分享失败:', error);
         });
     } else {
         // 不支持Navigator API的情况下，手动复制链接
@@ -82,6 +84,6 @@ function shareSoftware() {
         tempInput.select();
         document.execCommand('copy');
         document.body.removeChild(tempInput);
-        alert('下载链接已复制到剪贴板：' + shareLink);
+        alert('下载链接已复制到剪贴板：' + https://maxmzh666.github.io/project4.html);
     }
 }

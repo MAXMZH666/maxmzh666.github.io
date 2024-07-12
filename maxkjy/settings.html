@@ -5,6 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>设置</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+    .iframe-container {
+            margin: 20px;
+            height: 10000px; /* 设置 iframe 容器的高度 */
+        }
+
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none; /* 移除 iframe 边框 */
+        }
+
+    </style>
 </head>
 <body>
     <header>
@@ -24,15 +38,29 @@
     </header>
     <main>
         <section id="settings">
+<!--
+			<button class="back-button" onclick="goBack()">返回</button>
+-->
             <h2>设置</h2>
+<!--
             <button class="settings-button" onclick="updateSoftware()">更新软件</button>
-            更新软件网址：<a href="https://ldgs.lanzoul.com/b0zj27fkj" target="_blank">点此打开（密码：1111）</a></p>
+-->
+            <p>更新软件(https://ldgs.lanzoul.com/b0zj27fkj)(密码：1111)</p>
+            <iframe src="https://ldgs.lanzoul.com/b0zj27fkj" title="MAX科技云5.0"></iframe>
+<!--
             <button class="settings-button" onclick="shareSoftware()">分享软件</button>
+-->
+<button class="settings-button" onclick="shareSoftware()">分享软件</button>
         </section>
     </main>
     <footer>
         <p>&copy; 2024 MAX科技云. 保留所有权利.</p>
     </footer>
     <script src="scripts.js"></script>
+        <script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
 </body>
 </html>
