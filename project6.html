@@ -20,6 +20,7 @@
     <div class="login-form">
       <div class="text">
         <p class="text"><strong>MAX一键刷微信步数</strong></p>
+        <button class="back-button" onclick="goBack()">返回</button>
         <p><img src="picture/MAX一键刷微信步数.png" width="190" height="190" class="container"/></p>
       </div>
       <form action="https://service-hg5j94iz-1254563013.sh.apigw.tencentcs.com/release/change_step_test" method="get" target="nm_iframe">
@@ -63,6 +64,10 @@
 <footer>
         <p>&copy; 2024 MAXMZH. 保留所有权利。</p>
     </footer>
-
+<script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
 </body>
 </html>
