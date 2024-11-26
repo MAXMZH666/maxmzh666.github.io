@@ -8,7 +8,6 @@
     "start": "gulp run",
     "watch": "gulp watch",
     "test": "gulp test"
-"start": "node index.js"
   },
   "repository": {
     "type": "git",
