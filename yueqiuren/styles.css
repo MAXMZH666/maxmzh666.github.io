@@ -1,0 +1,92 @@
+/* styles.css */
+
+/* 基础样式 */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+    overflow-x: hidden; /* 防止横向滚动条出现 */
+}
+
+.background-image {
+    width: 100%;
+    height: 100vh; /* 100%的视口高度 */
+    background-image: url('images/background.jpg'); /* 替换为您的图片路径 */
+    background-size: cover;
+    position: fixed; /* 固定位置 */
+    top: 0;
+    left: 0;
+    z-index: -1; /* 确保背景图在内容之后 */
+    filter: brightness(0.6); /* 根据需要调整亮度 */
+}
+
+.header-content {
+    position: relative;
+    z-index: 2; /* 确保Logo和标题在背景图之上 */
+    background-color: rgba(0, 0, 0, 0.5); /* 半透明黑色背景 */
+    padding: 10px; /* 添加内边距 */
+    text-align: center;
+    color: white; /* 文字颜色改为白色 */
+}
+
+.logo {
+    width: 200px; /* 根据需要调整Logo大小 */
+    margin-bottom: 10px;
+}
+
+nav {
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    z-index: 1; /* 确保导航栏在背景图之上 */
+}
+
+.navbar {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex; /* 使用flex布局实现水平排列 */
+    justify-content: center; /* 居中对齐 */
+}
+
+.navbar li {
+    margin: 0 10px; /* 调整间距 */
+}
+
+.navbar li a {
+    color: white;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.navbar li a:hover {
+    color: #ffcc00;
+}
+
+main {
+    position: relative;
+    z-index: 2; /* 确保主要内容在背景图之上 */
+    padding: 20px;
+    color: white; /* 主要内容文字颜色为白色 */
+}
+
+footer {
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    z-index: 1; /* 确保页脚在背景图之上 */
+}
+
+.qrcode-container {
+    margin-bottom: 10px;
+}
+
+.qrcode {
+    width: 150px; /* 根据需要调整二维码大小 */
+}
