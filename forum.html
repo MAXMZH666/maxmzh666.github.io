@@ -1,12 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MAXMZH - 论坛</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="icon" type="image/png" href="favicon.png">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
 </head>
 <body>
     <header>
@@ -24,25 +23,80 @@
     <main>
         <section class="forum">
             <h1>MAX论坛</h1>
-            <p>欢迎来到MAX论坛，此论坛由MAX工作室提供技术支持。请在下方发表您的观点。tip：请使用VPN访问此论坛</p>
-            <div id="disqus_thread"></div>
-            <script>
-                var disqus_config = function () {
-                    this.page.url = 'http://maxmzh666.github.io/forum.html';  // 替换为您的页面 URL
-                    this.page.identifier = 'MAX论坛'; // 替换为您的页面唯一标识符
-                };
-                (function() {  // DON'T EDIT BELOW THIS LINE
-                var d = document, s = d.createElement('script');
-                s.src = 'https://maxforum.disqus.com/embed.js';
-                s.setAttribute('data-timestamp', +new Date());
-                (d.head || d.body).appendChild(s);
-                })();
-            </script>
-            <noscript>请启用 JavaScript 以查看 <a href="https://disqus.com/?ref_noscript">Disqus</a> 提供的评论。</noscript>
+            <p>欢迎来到MAX论坛，此本论坛由Github的讨论提供支持。欢迎大家踊跃发言！</p>
+
+            <!-- 访问论坛按钮 -->
+            <a href="https://github.com/MAXMZH666/maxmzh666.github.io/discussions" 
+               class="forum-btn" target="_blank">
+               进入 GitHub Discussions 论坛
+            </a>
+
+            <!-- 创建新帖子 -->
+            <a href="https://github.com/MAXMZH666/maxmzh666.github.io/discussions/new" 
+               class="forum-btn" target="_blank">
+               发表新帖
+            </a>
+
+            <!-- 发帖表单 -->
+            <form id="postForm">
+                <label for="category">选择分类：</label>
+                <select id="category">
+                    <option value="DIC_kwDOMQDQVc4CnArh">Announcements</option>
+                    <option value="DIC_kwDOMQDQVc4CnAri">General</option>
+                    <option value="DIC_kwDOMQDQVc4CnArk">Ideas</option>
+                    <option value="DIC_kwDOMQDQVc4CnArm">Polls</option>
+                    <option value="DIC_kwDOMQDQVc4CnArk">Q&A</option>
+                    <option value="DIC_kwDOMQDQVc4CnArl">Show and tell</option>
+                </select>
+                
+                <label for="title">标题：</label>
+                <input type="text" id="title" required>
+                
+                <label for="body">内容：</label>
+                <textarea id="body" required></textarea>
+                
+                <button type="submit">发布帖子</button>
+            </form>
         </section>
     </main>
     <footer>
         <p>&copy; 2024 MAXMZH. 保留所有权利。</p>
     </footer>
+
+    <script>
+    document.getElementById("postForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+        
+        const categoryId = document.getElementById("category").value;
+        const title = document.getElementById("title").value;
+        const body = document.getElementById("body").value;
+
+        const response = await fetch("https://forum-api.vercel.app/create-discussion", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ categoryId, title, body })
+        });
+
+        const data = await response.json();
+        alert(data.message);
+    });
+    </script>
+
+    <style>
+        .forum-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .forum-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </body>
 </html>
