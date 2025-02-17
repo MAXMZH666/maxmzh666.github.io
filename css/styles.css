@@ -179,3 +179,14 @@ iframe {
 	font-weight: bold;
 }
 .STYLE2 {color: #CC0000}
+
+
+@media (max-width: 600px) {
+    nav ul {
+        flex-direction: column;
+        align-items: center;
+    }
+    main {
+        width: 90%;
+    }
+}
