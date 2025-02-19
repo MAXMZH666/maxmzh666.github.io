@@ -74,11 +74,21 @@ Space Waves 于 2024 年 12 月由 MAX至臻星域（MAX Apex Xenith）发布，
         <p>&copy; 2024 MAXMZH. 保留所有权利。</p>
     </footer>
 	<script>
-  // 检查 URL 是否包含 ?embed=true
-  if (new URLSearchParams(window.location.search).has("embed")) {
-      document.querySelector("header")?.style.display = "none";
-      document.querySelector("footer")?.style.display = "none";
-  }
+  window.addEventListener("DOMContentLoaded", function() {
+    if (new URLSearchParams(window.location.search).has("embed")) {
+        const header = document.querySelector("header");
+        const footer = document.querySelector("footer");
+        if (header) {
+            header.style.visibility = "hidden";
+            header.style.display = "none";
+        }
+        if (footer) {
+            footer.style.visibility = "hidden";
+            footer.style.display = "none";
+        }
+    }
+  });
 </script>
+
 </body>
 </html>
