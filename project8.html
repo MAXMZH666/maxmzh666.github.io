@@ -40,8 +40,6 @@ Space Waves 于 2024 年 12 月由 MAX至臻星域（MAX Apex Xenith）发布，
 无数障碍
 太空隧道不断生成，确保每次玩游戏时都能获得独特而富有挑战性的体验。沿途会出现障碍物，例如墙壁、尖刺和旋转齿轮。控制你的箭头以避免与这些障碍物相撞会有所帮助。
 
-敌方飞船
-请小心，因为敌方飞船会定期出现并向您射击。摧毁它们以获得积分和能量提升。收集能量提升来增强您的飞船的能力，例如增加火力、暂时无敌或减慢游戏速度。
 
 如何控制
 进行无尽模式和关卡模式时，点击任意键或屏幕操作箭头改变方向
@@ -75,6 +73,13 @@ Space Waves 于 2024 年 12 月由 MAX至臻星域（MAX Apex Xenith）发布，
     <footer>
         <p>&copy; 2024 MAXMZH. 保留所有权利。</p>
     </footer>
+	<script>
+  // 检查 URL 是否包含 ?embed=true
+  if (new URLSearchParams(window.location.search).has("embed")) {
+      document.querySelector("header")?.style.display = "none";
+      document.querySelector("footer")?.style.display = "none";
+  }
+</script>
     <script src="js/scripts.js"></script>
 </body>
 </html>
