@@ -69,8 +69,8 @@ img { max-width: 100%; height: auto; }
 }
 .brand:hover { text-decoration: none; }
 .brand img {
-    width: 34px; height: 34px;
-    border-radius: 8px;
+    height: 40px; width: auto;
+    border-radius: 10px;
     display: block;
 }
 
@@ -544,6 +544,11 @@ form button[type="submit"]:hover, form input[type="submit"]:hover {
     transform: translateY(-2px);
 }
 .form-hint { color: var(--muted); font-size: .88rem; text-align: center; margin-top: 12px; }
+.form-note { font-size: .92rem; text-align: center; margin-top: 12px; min-height: 1.4em; }
+.form-note.sending { color: var(--muted); }
+.form-note.ok { color: #4ade80; }
+.form-note.err { color: #f87171; }
+.contact-form button[disabled] { opacity: .6; cursor: wait; }
 
 /* ---------- 论坛 ---------- */
 .forum-actions {
