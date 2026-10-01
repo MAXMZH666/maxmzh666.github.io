@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="MAX 论坛：由 GitHub Discussions 提供支持，欢迎踊跃发言。">
+    <meta name="description" content="MAXMZH 的博客：Scratch 游戏开发教程、建站心得和开发随笔。">
     <meta name="theme-color" content="#0b0b0e">
-    <meta property="og:title" content="MAXMZH - 论坛">
+    <meta property="og:title" content="MAXMZH - 博客">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">    <title>MAXMZH - 论坛</title>
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>MAXMZH - 博客</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="manifest" href="manifest.json">
@@ -26,7 +27,7 @@
                 <li><a href="index.html">主页</a></li>
                 <li><a href="about.html">个人简介</a></li>
                 <li><a href="portfolio.html">作品集</a></li>
-                <li><a href="blog.html">博客</a></li>
+                <li><a href="blog.html" class="active">博客</a></li>
                 <li><a href="downloads.html">下载中心</a></li>
                 <li><a href="forum.html">论坛</a></li>
                 <li><a href="contact.html">联系方式</a></li>
@@ -35,33 +36,38 @@
     </header>
 
     <main>
-        <section class="forum">
-            <h1 class="section-title reveal">MAX 论坛</h1>
-            <p class="section-sub reveal">欢迎来到 MAX 论坛，基于 GitHub Discussions，登录 GitHub 账号即可参与讨论。</p>
+        <section class="portfolio">
+            <h1 class="section-title reveal">博客</h1>
+            <p class="section-sub reveal">Scratch 游戏开发教程、建站心得和一些随笔。</p>
 
-            <div class="forum-actions reveal">
-                <a class="btn btn-blue" href="https://github.com/MAXMZH666/maxmzh666.github.io/discussions" target="_blank" rel="noopener">进入论坛</a>
-                <a class="btn btn-ghost" href="https://github.com/MAXMZH666/maxmzh666.github.io/discussions/new" target="_blank" rel="noopener">发表新帖</a>
-            </div>
-
-            <div class="card reveal">
-                <h2>留言板</h2>
-                <p class="section-sub" style="margin-top: 0;">在这里留言、反馈问题或分享想法，留言会同步到论坛的综合区。</p>
-                <script src="https://giscus.app/client.js"
-                    data-repo="MAXMZH666/maxmzh666.github.io"
-                    data-repo-id="R_kgDOMQDQVQ"
-                    data-category="General"
-                    data-category-id="DIC_kwDOMQDQVc4CnAri"
-                    data-mapping="pathname"
-                    data-strict="0"
-                    data-reactions-enabled="1"
-                    data-emit-metadata="0"
-                    data-input-position="top"
-                    data-theme="dark"
-                    data-lang="zh-CN"
-                    crossorigin="anonymous"
-                    async>
-                </script>
+            <div class="card-grid">
+                <a class="card reveal" href="blog-scratch-tips.html">
+                    <div class="card-cover"><span class="monogram">技</span></div>
+                    <div class="card-body">
+                        <h3>用 Scratch 做射击游戏的 5 个实用技巧</h3>
+                        <p>从审判行动系列里总结的经验：打击感、弹道、音效、性能优化，一篇讲透。</p>
+                        <div class="card-tags"><span class="tag">Scratch</span><span class="tag blue">教程</span></div>
+                        <p class="post-date">2026-10-01</p>
+                    </div>
+                </a>
+                <a class="card reveal" href="blog-spxd-dev.html">
+                    <div class="card-cover"><span class="monogram">审</span></div>
+                    <div class="card-body">
+                        <h3>审判行动系列开发回顾：从第一版到致命瞄准</h3>
+                        <p>五年时间，一个狙击游戏系列是怎么一步步做出来的。聊聊踩过的坑和学到的东西。</p>
+                        <div class="card-tags"><span class="tag">审判行动</span><span class="tag blue">随笔</span></div>
+                        <p class="post-date">2026-10-01</p>
+                    </div>
+                </a>
+                <a class="card reveal" href="blog-github-pages.html">
+                    <div class="card-cover"><span class="monogram">站</span></div>
+                    <div class="card-body">
+                        <h3>用 GitHub Pages 免费搭建个人网站</h3>
+                        <p>零成本建站全流程：仓库、Pages、评论区、表单、统计，照着做就能上线。</p>
+                        <div class="card-tags"><span class="tag">建站</span><span class="tag blue">教程</span></div>
+                        <p class="post-date">2026-10-01</p>
+                    </div>
+                </a>
             </div>
         </section>
     </main>

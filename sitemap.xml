@@ -16,4 +16,9 @@
   <url><loc>https://maxmzh666.github.io/project9.html</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://maxmzh666.github.io/update%20log.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
   <url><loc>https://maxmzh666.github.io/operating%20instructions.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://maxmzh666.github.io/blog.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://maxmzh666.github.io/downloads.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://maxmzh666.github.io/blog-scratch-tips.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://maxmzh666.github.io/blog-spxd-dev.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://maxmzh666.github.io/blog-github-pages.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
 </urlset>

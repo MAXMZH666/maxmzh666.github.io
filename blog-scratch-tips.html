@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="MAX 论坛：由 GitHub Discussions 提供支持，欢迎踊跃发言。">
+    <meta name="description" content="从审判行动系列里总结的经验：打击感、弹道、音效、性能优化，一篇讲透。">
     <meta name="theme-color" content="#0b0b0e">
-    <meta property="og:title" content="MAXMZH - 论坛">
-    <meta property="og:type" content="website">
-    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">    <title>MAXMZH - 论坛</title>
+    <meta property="og:title" content="用 Scratch 做射击游戏的 5 个实用技巧 - MAXMZH 博客">
+    <meta property="og:type" content="article">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>用 Scratch 做射击游戏的 5 个实用技巧 - MAXMZH 博客</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="manifest" href="manifest.json">
@@ -26,7 +27,7 @@
                 <li><a href="index.html">主页</a></li>
                 <li><a href="about.html">个人简介</a></li>
                 <li><a href="portfolio.html">作品集</a></li>
-                <li><a href="blog.html">博客</a></li>
+                <li><a href="blog.html" class="active">博客</a></li>
                 <li><a href="downloads.html">下载中心</a></li>
                 <li><a href="forum.html">论坛</a></li>
                 <li><a href="contact.html">联系方式</a></li>
@@ -35,35 +36,30 @@
     </header>
 
     <main>
-        <section class="forum">
-            <h1 class="section-title reveal">MAX 论坛</h1>
-            <p class="section-sub reveal">欢迎来到 MAX 论坛，基于 GitHub Discussions，登录 GitHub 账号即可参与讨论。</p>
+        <article class="article reveal">
+            <p class="article-back"><a href="blog.html">← 返回博客</a></p>
+            <h1>用 Scratch 做射击游戏的 5 个实用技巧</h1>
+            <p class="article-meta">2026-10-01 · 标签：<span class="tag">Scratch</span> <span class="tag blue">教程</span></p>
 
-            <div class="forum-actions reveal">
-                <a class="btn btn-blue" href="https://github.com/MAXMZH666/maxmzh666.github.io/discussions" target="_blank" rel="noopener">进入论坛</a>
-                <a class="btn btn-ghost" href="https://github.com/MAXMZH666/maxmzh666.github.io/discussions/new" target="_blank" rel="noopener">发表新帖</a>
-            </div>
+            <p>做了几年 Scratch 射击游戏（比如<a href="project1.html">审判行动系列</a>），总结出 5 个最实用的技巧，分享给想入坑的朋友。</p>
 
-            <div class="card reveal">
-                <h2>留言板</h2>
-                <p class="section-sub" style="margin-top: 0;">在这里留言、反馈问题或分享想法，留言会同步到论坛的综合区。</p>
-                <script src="https://giscus.app/client.js"
-                    data-repo="MAXMZH666/maxmzh666.github.io"
-                    data-repo-id="R_kgDOMQDQVQ"
-                    data-category="General"
-                    data-category-id="DIC_kwDOMQDQVc4CnAri"
-                    data-mapping="pathname"
-                    data-strict="0"
-                    data-reactions-enabled="1"
-                    data-emit-metadata="0"
-                    data-input-position="top"
-                    data-theme="dark"
-                    data-lang="zh-CN"
-                    crossorigin="anonymous"
-                    async>
-                </script>
-            </div>
-        </section>
+            <h2>1. 打击感靠"三件套"</h2>
+            <p>开枪瞬间的屏幕震动、枪口火光、命中音效，这三样加起来，打击感直接翻倍。屏幕震动用"将 x 坐标随机偏移几帧"就能实现，成本极低，效果极好。</p>
+
+            <h2>2. 子弹别用克隆堆数量</h2>
+            <p>新手最容易犯的错：每发子弹一个克隆，屏幕上几十个克隆一起跑，帧数直接崩。做法是限制同屏子弹数量，或者用"图章"画弹道，性能好得多。</p>
+
+            <h2>3. 音效自己录</h2>
+            <p>Scratch 自带的音效库很有限。用手机录一段拍手、敲桌子的声音，稍微调一下音调，就是独一无二的枪声。审判行动里的很多音效都是这么来的。</p>
+
+            <h2>4. 瞄准镜做"放大"假象</h2>
+            <p>真正的画面放大在 Scratch 里很难做。取巧的办法：开镜时把准星周围画一个圆框，同时把目标造型放大 1.5 倍，玩家感知上就是"放大了"。</p>
+
+            <h2>5. 先做核心循环，再堆内容</h2>
+            <p>射击 → 命中 → 反馈 → 下一波，这个核心循环先调到好玩，再去加关卡、武器、皮肤。很多半途而废的作品都是反过来的。</p>
+
+            <p>有问题欢迎来<a href="forum.html">论坛</a>交流，或者看看我的<a href="portfolio.html">作品集</a>实际效果。</p>
+        </article>
     </main>
 
     <footer>

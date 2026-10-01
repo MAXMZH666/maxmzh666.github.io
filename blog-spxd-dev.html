@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="MAX 论坛：由 GitHub Discussions 提供支持，欢迎踊跃发言。">
+    <meta name="description" content="五年时间，一个狙击游戏系列是怎么一步步做出来的。聊聊踩过的坑和学到的东西。">
     <meta name="theme-color" content="#0b0b0e">
-    <meta property="og:title" content="MAXMZH - 论坛">
-    <meta property="og:type" content="website">
-    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">    <title>MAXMZH - 论坛</title>
+    <meta property="og:title" content="审判行动系列开发回顾：从第一版到致命瞄准 - MAXMZH 博客">
+    <meta property="og:type" content="article">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>审判行动系列开发回顾：从第一版到致命瞄准 - MAXMZH 博客</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="manifest" href="manifest.json">
@@ -26,7 +27,7 @@
                 <li><a href="index.html">主页</a></li>
                 <li><a href="about.html">个人简介</a></li>
                 <li><a href="portfolio.html">作品集</a></li>
-                <li><a href="blog.html">博客</a></li>
+                <li><a href="blog.html" class="active">博客</a></li>
                 <li><a href="downloads.html">下载中心</a></li>
                 <li><a href="forum.html">论坛</a></li>
                 <li><a href="contact.html">联系方式</a></li>
@@ -35,35 +36,27 @@
     </header>
 
     <main>
-        <section class="forum">
-            <h1 class="section-title reveal">MAX 论坛</h1>
-            <p class="section-sub reveal">欢迎来到 MAX 论坛，基于 GitHub Discussions，登录 GitHub 账号即可参与讨论。</p>
+        <article class="article reveal">
+            <p class="article-back"><a href="blog.html">← 返回博客</a></p>
+            <h1>审判行动系列开发回顾：从第一版到致命瞄准</h1>
+            <p class="article-meta">2026-10-01 · 标签：<span class="tag">审判行动</span> <span class="tag blue">随笔</span></p>
 
-            <div class="forum-actions reveal">
-                <a class="btn btn-blue" href="https://github.com/MAXMZH666/maxmzh666.github.io/discussions" target="_blank" rel="noopener">进入论坛</a>
-                <a class="btn btn-ghost" href="https://github.com/MAXMZH666/maxmzh666.github.io/discussions/new" target="_blank" rel="noopener">发表新帖</a>
-            </div>
+            <p><a href="project1.html">审判行动系列</a>是我做得最久的一个系列。从 2021 年的第一版，到后来的<a href="project9.html">致命瞄准</a>，中间踩了不少坑，也学到了不少东西。</p>
 
-            <div class="card reveal">
-                <h2>留言板</h2>
-                <p class="section-sub" style="margin-top: 0;">在这里留言、反馈问题或分享想法，留言会同步到论坛的综合区。</p>
-                <script src="https://giscus.app/client.js"
-                    data-repo="MAXMZH666/maxmzh666.github.io"
-                    data-repo-id="R_kgDOMQDQVQ"
-                    data-category="General"
-                    data-category-id="DIC_kwDOMQDQVc4CnAri"
-                    data-mapping="pathname"
-                    data-strict="0"
-                    data-reactions-enabled="1"
-                    data-emit-metadata="0"
-                    data-input-position="top"
-                    data-theme="dark"
-                    data-lang="zh-CN"
-                    crossorigin="anonymous"
-                    async>
-                </script>
-            </div>
-        </section>
+            <h2>第一版：能跑就行</h2>
+            <p>最早的版本很简陋：一个准星、几个靶子、计分。代码全堆在一个角色里，改一个 bug 冒出三个。但它验证了一件事——这个玩法有人愿意玩。</p>
+
+            <h2>中间几版：加法做上瘾</h2>
+            <p>武器、关卡、皮肤、排行榜，能想到的全往里加。结果是代码越来越乱，更新日志里有一半是在"修复已知问题"。教训：加法容易减法难，每个新功能都要问一句"不加会死吗"。</p>
+
+            <h2>致命瞄准：做减法</h2>
+            <p>最新的一版反而砍掉了不少东西，把精力全放在射击手感和画面表现上。反而是评价最好的一版。有时候少即是多。</p>
+
+            <h2>三点体会</h2>
+            <p>第一，长期项目一定要写更新日志，不然三个月后你自己都忘了改过什么（本站的<a href="update%20log.html">更新日志</a>就是这么来的）。第二，玩家的反馈比自己的直觉准，多发出去让人玩。第三，Scratch 的上限比很多人想象的高，瓶颈往往在设计，不在工具。</p>
+
+            <p>系列还在继续做，敬请期待。</p>
+        </article>
     </main>
 
     <footer>
