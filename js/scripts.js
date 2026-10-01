@@ -80,3 +80,82 @@
         });
     }
 })();
+
+/* ---------- 深色 / 浅色模式 ---------- */
+(function () {
+    var KEY = 'maxmzh-theme';
+    var btn = document.getElementById('theme-toggle');
+
+    function current() {
+        return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+    }
+    function paint() {
+        if (btn) btn.textContent = current() === 'light' ? '🌙' : '☀️';
+    }
+    function syncGiscus() {
+        var frame = document.querySelector('iframe.giscus-frame');
+        if (!frame) return;
+        try {
+            frame.contentWindow.postMessage({ giscus: { setConfig: { theme: current() } } }, 'https://giscus.app');
+        } catch (e) {}
+    }
+    if (btn) {
+        btn.addEventListener('click', function () {
+            var next = current() === 'light' ? 'dark' : 'light';
+            if (next === 'light') document.documentElement.setAttribute('data-theme', 'light');
+            else document.documentElement.removeAttribute('data-theme');
+            try { localStorage.setItem(KEY, next); } catch (e) {}
+            paint();
+            syncGiscus();
+        });
+    }
+    paint();
+    // 论坛页：giscus 加载完成后同步一次主题
+    if (document.querySelector('script[src*="giscus"]')) {
+        var tries = 0;
+        var timer = setInterval(function () {
+            tries++;
+            var frame = document.querySelector('iframe.giscus-frame');
+            if (frame || tries > 20) {
+                clearInterval(timer);
+                if (frame && current() === 'light') syncGiscus();
+            }
+        }, 500);
+    }
+})();
+
+/* ---------- 作品集搜索与筛选 ---------- */
+(function () {
+    var input = document.getElementById('work-search');
+    var grid = document.getElementById('work-grid');
+    if (!input || !grid) return;
+    var chips = document.querySelectorAll('.filter-chip');
+    var empty = document.getElementById('work-empty');
+    var count = document.getElementById('work-count');
+    var cards = Array.prototype.slice.call(grid.querySelectorAll('.card'));
+    var cat = 'all';
+
+    function apply() {
+        var q = input.value.trim().toLowerCase();
+        var shown = 0;
+        cards.forEach(function (card) {
+            var okCat = cat === 'all' || card.getAttribute('data-category') === cat;
+            var okQ = !q || (card.getAttribute('data-search') || '').toLowerCase().indexOf(q) !== -1;
+            var show = okCat && okQ;
+            card.style.display = show ? '' : 'none';
+            if (show) shown++;
+        });
+        if (empty) empty.style.display = shown ? 'none' : 'block';
+        if (count) count.textContent = '共 ' + shown + ' 个作品';
+    }
+    input.addEventListener('input', apply);
+    chips.forEach(function (chip) {
+        chip.addEventListener('click', function () {
+            chips.forEach(function (c) { c.classList.remove('active'); });
+            chip.classList.add('active');
+            cat = chip.getAttribute('data-filter');
+            apply();
+        });
+    });
+    apply();
+})();
