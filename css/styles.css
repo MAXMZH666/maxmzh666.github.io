@@ -792,3 +792,45 @@ button:hover { background-color: #ffd633; }
 }
 #back-top.show { opacity: 1; visibility: visible; transform: none; }
 #back-top:hover { background: var(--surface); border-color: var(--gold); transform: translateY(-2px); }
+
+/* ---------- 博客文章 ---------- */
+.article {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 48px 20px 64px;
+}
+.article h1 {
+    font-size: 1.9rem;
+    line-height: 1.4;
+    margin: 12px 0 10px;
+}
+.article-back { margin: 0 0 6px; font-size: .92rem; }
+.article-back a { color: var(--muted); }
+.article-back a:hover { color: var(--gold); }
+.article-meta { color: var(--muted); font-size: .88rem; margin-bottom: 28px; }
+.article-meta .tag { font-size: .78rem; }
+.article h2 {
+    font-size: 1.25rem;
+    margin: 32px 0 12px;
+    padding-left: 12px;
+    border-left: 3px solid var(--gold);
+}
+.article p { color: var(--text); line-height: 1.9; margin: 0 0 16px; }
+.article a { color: var(--gold); }
+.article code {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1px 7px;
+    font-size: .88em;
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+}
+.post-date { color: var(--muted); font-size: .82rem; margin: 10px 0 0 !important; }
+
+/* ---------- 下载中心 ---------- */
+.dl-group-title {
+    font-size: 1.3rem;
+    margin: 40px 0 4px;
+    padding-left: 12px;
+    border-left: 3px solid var(--blue);
+}
