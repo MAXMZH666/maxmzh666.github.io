@@ -47,17 +47,36 @@
         revealEls.forEach(function (el) { el.classList.add('visible'); });
     }
 
-    /* 联系表单：用 mailto 打开用户邮箱发送 */
+    /* 联系表单：通过 FormSubmit 真实发送邮件到站长邮箱 */
     var cform = document.getElementById('contactForm');
     if (cform) {
         cform.addEventListener('submit', function (e) {
             e.preventDefault();
+            var note = document.getElementById('form-note');
+            var btn = cform.querySelector('button[type="submit"]');
             var name = document.getElementById('cf-name').value.trim();
             var email = document.getElementById('cf-email').value.trim();
             var msg = document.getElementById('cf-message').value.trim();
-            var subject = encodeURIComponent('来自个人网站的留言 - ' + name);
-            var body = encodeURIComponent('姓名：' + name + '\n邮箱：' + email + '\n\n' + msg);
-            location.href = 'mailto:2926357395@qq.com?subject=' + subject + '&body=' + body;
+            if (note) { note.textContent = '发送中…'; note.className = 'form-note sending'; }
+            if (btn) btn.disabled = true;
+            fetch('https://formsubmit.co/ajax/2926357395@qq.com', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({
+                    name: name,
+                    email: email,
+                    message: msg,
+                    _subject: '网站联系表单：' + name,
+                    _template: 'table'
+                })
+            }).then(function (r) { return r.json(); }).then(function () {
+                if (note) { note.textContent = '发送成功！我会尽快回复你。'; note.className = 'form-note ok'; }
+                cform.reset();
+            }).catch(function () {
+                if (note) { note.textContent = '发送失败，请稍后重试，或直接发邮件到 2926357395@qq.com'; note.className = 'form-note err'; }
+            }).finally(function () {
+                if (btn) btn.disabled = false;
+            });
         });
     }
 })();
