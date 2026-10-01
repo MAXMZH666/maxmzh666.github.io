@@ -8,13 +8,13 @@
     <meta property="og:title" content="MAXMZH - 论坛">
     <meta property="og:type" content="website">
     <title>MAXMZH - 论坛</title>
-    <link rel="icon" type="image/png" href="MAXMZH.png">
+    <link rel="icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
     <header class="site-header">
         <nav class="nav" aria-label="主导航">
-            <a class="brand" href="index.html"><img src="MAXMZH.png" alt="MAXMZH logo">MAXMZH</a>
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
             <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
             <ul class="nav-links">
                 <li><a href="index.html">主页</a></li>
@@ -29,35 +29,31 @@
     <main>
         <section class="forum">
             <h1 class="section-title reveal">MAX 论坛</h1>
-            <p class="section-sub reveal">欢迎来到 MAX 论坛，本论坛由 GitHub Discussions 提供支持，欢迎大家踊跃发言！</p>
+            <p class="section-sub reveal">欢迎来到 MAX 论坛，基于 GitHub Discussions，登录 GitHub 账号即可参与讨论。</p>
 
             <div class="forum-actions reveal">
                 <a class="btn btn-blue" href="https://github.com/MAXMZH666/maxmzh666.github.io/discussions" target="_blank" rel="noopener">进入论坛</a>
                 <a class="btn btn-ghost" href="https://github.com/MAXMZH666/maxmzh666.github.io/discussions/new" target="_blank" rel="noopener">发表新帖</a>
             </div>
 
-            <div class="contact-form reveal">
-                <h2>快速发帖</h2>
-                <form id="postForm">
-                    <label for="category">选择分类</label>
-                    <select id="category">
-                        <option value="DIC_kwDOMQDQVc4CnArh">Announcements 公告</option>
-                        <option value="DIC_kwDOMQDQVc4CnAri">General 综合</option>
-                        <option value="DIC_kwDOMQDQVc4CnArk">Ideas 想法</option>
-                        <option value="DIC_kwDOMQDQVc4CnArm">Polls 投票</option>
-                        <option value="DIC_kwDOMQDQVc4CnArk">Q&amp;A 问答</option>
-                        <option value="DIC_kwDOMQDQVc4CnArl">Show and tell 作品展示</option>
-                    </select>
-
-                    <label for="title">标题</label>
-                    <input type="text" id="title" required placeholder="帖子标题">
-
-                    <label for="body">内容</label>
-                    <textarea id="body" required placeholder="写下你的想法…"></textarea>
-
-                    <button type="submit">发布帖子</button>
-                    <p class="form-hint">也可以直接去 GitHub Discussions 发帖，效果相同。</p>
-                </form>
+            <div class="card reveal">
+                <h2>留言板</h2>
+                <p class="section-sub" style="margin-top: 0;">在这里留言、反馈问题或分享想法，留言会同步到论坛的综合区。</p>
+                <script src="https://giscus.app/client.js"
+                    data-repo="MAXMZH666/maxmzh666.github.io"
+                    data-repo-id="R_kgDOMQDQVQ"
+                    data-category="General"
+                    data-category-id="DIC_kwDOMQDQVc4CnAri"
+                    data-mapping="pathname"
+                    data-strict="0"
+                    data-reactions-enabled="1"
+                    data-emit-metadata="0"
+                    data-input-position="top"
+                    data-theme="dark"
+                    data-lang="zh-CN"
+                    crossorigin="anonymous"
+                    async>
+                </script>
             </div>
         </section>
     </main>
@@ -75,28 +71,6 @@
         <p>本站托管于 GitHub Pages</p>
     </footer>
 
-    <script>
-    document.getElementById("postForm").addEventListener("submit", async function (event) {
-        event.preventDefault();
-
-        var categoryId = document.getElementById("category").value;
-        var title = document.getElementById("title").value;
-        var body = document.getElementById("body").value;
-
-        try {
-            var response = await fetch("https://max-forum-api.vercel.app/create-discussion", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ categoryId: categoryId, title: title, body: body })
-            });
-            var data = await response.json();
-            alert(data.message || "发布成功！");
-            if (response.ok) event.target.reset();
-        } catch (err) {
-            alert("发布失败，请稍后重试，或直接去 GitHub Discussions 发帖。");
-        }
-    });
-    </script>
     <script src="js/scripts.js"></script>
 </body>
 </html>
