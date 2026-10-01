@@ -618,3 +618,74 @@ button:hover { background-color: #ffd633; }
     .profile-hero { padding: 24px 20px; }
     .contact-form { padding: 22px 18px; }
 }
+
+/* ---------- 工具页 ---------- */
+.tool-qr {
+    width: 190px; height: 190px;
+    border-radius: 16px;
+    display: block;
+    margin: 0 auto 8px;
+}
+.tool-result { text-align: center; color: var(--muted); margin-top: 16px; font-size: .92rem; }
+.tool-result iframe {
+    width: 265px; height: 38px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface-2);
+    vertical-align: middle;
+}
+.steps { line-height: 2; padding-left: 1.4em; margin: 12px 0 0; }
+.steps li { margin-bottom: 4px; }
+.steps a { color: var(--gold); }
+
+/* ---------- 更新日志时间线 ---------- */
+.timeline {
+    position: relative;
+    max-width: 720px;
+    margin: 36px auto 0;
+    padding-left: 30px;
+}
+.timeline::before {
+    content: "";
+    position: absolute;
+    left: 9px; top: 8px; bottom: 8px;
+    width: 2px;
+    background: linear-gradient(var(--gold), var(--blue));
+    border-radius: 2px;
+}
+.timeline-item { position: relative; margin-bottom: 24px; }
+.timeline-item::before {
+    content: "";
+    position: absolute;
+    left: -27px; top: 5px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 2px solid var(--gold);
+}
+.timeline-date {
+    display: inline-block;
+    font-size: .85rem;
+    font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 4px;
+    letter-spacing: .5px;
+}
+.timeline-item p { margin: 0; color: var(--muted); line-height: 1.7; }
+.timeline-item a { color: var(--gold); }
+
+/* ---------- 404 ---------- */
+.error-page { text-align: center; padding: 90px 20px 70px; }
+.error-code {
+    font-size: clamp(4.5rem, 14vw, 8rem);
+    font-weight: 800;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--gold), var(--blue));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 12px;
+}
+.error-page h1 { font-size: 1.6rem; margin-bottom: 10px; }
+.error-page p { color: var(--muted); margin-bottom: 28px; }
+.error-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
