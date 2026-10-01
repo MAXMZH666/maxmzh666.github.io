@@ -11,12 +11,16 @@
     <link rel="icon" type="image/png" href="favicon.png">
     <title>MAXMZH的MAX科技云</title>
     <link rel="stylesheet" href="css/styles.css">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
 </head>
 <body>
     <header class="site-header">
         <nav class="nav" aria-label="主导航">
             <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
-            <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
             <ul class="nav-links">
                 <li><a href="index.html">主页</a></li>
                 <li><a href="about.html">个人简介</a></li>
@@ -63,7 +67,9 @@
         </div>
         <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
         <p>本站托管于 GitHub Pages</p>
+        <p class="foot-stats"><span id="busuanzi_container_site_pv">本站总访问量 <span id="busuanzi_value_site_pv">统计中…</span> 次</span><span> · </span><span id="busuanzi_container_page_pv">本页访问 <span id="busuanzi_value_page_pv">统计中…</span> 次</span></p>
     </footer>
     <script src="js/scripts.js"></script>
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
 </body>
 </html>
