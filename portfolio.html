@@ -1,77 +1,140 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAXMZH 的作品集：审判行动、穿越火线、PUBG-PVZ 等 Scratch 游戏与实用工具。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="MAXMZH - 作品集">
+    <meta property="og:type" content="website">
     <title>MAXMZH - 作品集</title>
     <link rel="icon" type="image/png" href="MAXMZH.png">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <header>
-        <nav>
-            <ul>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="MAXMZH.png" alt="MAXMZH logo">MAXMZH</a>
+            <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            <ul class="nav-links">
                 <li><a href="index.html">主页</a></li>
                 <li><a href="about.html">个人简介</a></li>
                 <li><a href="portfolio.html">作品集</a></li>
                 <li><a href="forum.html">论坛</a></li>
                 <li><a href="contact.html">联系方式</a></li>
-                <li><a href="http://maxmzh.xzin.top/" target="_blank">MAXMZH个人网站(新版)</a></li>
             </ul>
         </nav>
     </header>
+
     <main>
         <section class="portfolio">
-            <h1>作品集</h1>
-            <p>一些作品不列于此处。其他网站、社区中，有不少我的零散作品，如阿儿法营、Gitee。也有的存于原网站服务器上，或因迁移困难且价值不大，故不再服务。</p>
-            <div class="project">
-                <h2><a href="project1.html">审判行动系列</a></h2>
-                <p>一系列模拟类型的狙击游戏。（使用scratch制作）</p>
-            </div>
-            <div class="project">
-                <h2><a href="project2.html">穿越火线系列</a></h2>
-                <p>一系列拟3D的FPS射击游戏。（使用scratch制作）</p>
-            </div>
-            <div class="project">
-                <h2><a href="project3.html">审判战争</a></h2>
-                <p>一款沙盒类多人竞技射击游戏。（使用scratch制作）</p>
-            </div>
-            <div class="project">
-                <h2><a href="project5.html">PUBG-PVZ</a></h2>
-                <p>一款第一人称拟3D的PVZ枪战游戏。（使用scratch制作）</p>
-            </div>
-            <div class="project">
-                <h2><a href="https://gitblock.cn/Projects/878270">避难所-生存2--正式版</a></h2>
-                <p>一款剧情模拟末日生存类游戏。（使用scratch制作）</p>
-            </div>
-            <div class="project">
-                <h2><a href="https://world.xiaomawang.com/community/main/compose/bv2F666J">Banana</a></h2>
-                <p>香蕉是一款点击游戏，你可以点击香蕉！在“香蕉”中，单击“香蕉”可获得更多香蕉！每隔1.5到9个小时，你就会掉一根香蕉。每根香蕉也是由作者制作的。来和我们一起玩吧，让我们成长为一个了不起的人！（使用scratch制作）</p>
-            </div>
-            <div class="project">
-                <h2><a href="project4.html">MAX科技云（APP）</a></h2>
-                <p>一款有关MAX工作室服务的手机APP</p>
-            </div>
-            <div class="project">
-                <h2><a href="project6.html">MAX微信步数修改</a></h2>
-                <p>一款一键刷微信步数的网站</p>
-            </div>
-            <div class="project">
-                <h2><a href="project7.html">MAX Agar</a></h2>
-                <p>一款球球大作战游戏</p>
-            </div>
-            <div class="project">
-                <h2><a href="project8.html">Space Waves（太空波）</a></h2>
-                <p>一款激动人心的横向卷轴游戏，结合了快节奏的动作和挑战。控制一支箭飞过充满障碍物的太空隧道。（使用scratch制作）</p>
-            </div>
-            <div class="project">
-                <h2><a href="project9.html">审判行动：致命瞄准</a></h2>
-                <p>一款全scratch最真实的模拟类型的狙击游戏。</p>
+            <h1 class="section-title reveal">作品集</h1>
+            <p class="section-sub reveal">一些作品不列于此处。其他网站、社区中，有不少我的零散作品，如阿儿法营、Gitee。也有的存于原网站服务器上，或因迁移困难且价值不大，故不再服务。</p>
+
+            <div class="card-grid">
+                <a class="card reveal" href="project1.html">
+                    <div class="card-cover"><img src="picture/spxd.png" alt="审判行动系列" loading="lazy"></div>
+                    <div class="card-body">
+                        <h3>审判行动系列</h3>
+                        <p>一系列模拟类型的狙击游戏。</p>
+                        <div class="card-tags"><span class="tag">Scratch</span><span class="tag blue">射击</span></div>
+                    </div>
+                </a>
+                <a class="card reveal" href="project2.html">
+                    <div class="card-cover"><img src="picture/cyhx.png" alt="穿越火线系列" loading="lazy"></div>
+                    <div class="card-body">
+                        <h3>穿越火线系列</h3>
+                        <p>一系列拟 3D 的 FPS 射击游戏。</p>
+                        <div class="card-tags"><span class="tag">Scratch</span><span class="tag blue">射击</span></div>
+                    </div>
+                </a>
+                <a class="card reveal" href="project3.html">
+                    <div class="card-cover"><span class="monogram">审</span></div>
+                    <div class="card-body">
+                        <h3>审判战争</h3>
+                        <p>一款沙盒类多人竞技射击游戏。</p>
+                        <div class="card-tags"><span class="tag">Scratch</span><span class="tag blue">竞技</span></div>
+                    </div>
+                </a>
+                <a class="card reveal" href="project5.html">
+                    <div class="card-cover"><img src="picture/PUBG-PVZ.png" alt="PUBG-PVZ" loading="lazy"></div>
+                    <div class="card-body">
+                        <h3>PUBG-PVZ</h3>
+                        <p>一款第一人称拟 3D 的 PVZ 枪战游戏。</p>
+                        <div class="card-tags"><span class="tag">Scratch</span><span class="tag blue">射击</span></div>
+                    </div>
+                </a>
+                <a class="card reveal" href="https://gitblock.cn/Projects/878270" target="_blank" rel="noopener">
+                    <div class="card-cover"><span class="monogram">避</span></div>
+                    <div class="card-body">
+                        <h3>避难所 - 生存 2 · 正式版</h3>
+                        <p>一款剧情模拟末日生存类游戏。</p>
+                        <div class="card-tags"><span class="tag">Scratch</span><span class="tag blue">生存</span></div>
+                    </div>
+                </a>
+                <a class="card reveal" href="https://world.xiaomawang.com/community/main/compose/bv2F666J" target="_blank" rel="noopener">
+                    <div class="card-cover"><span class="monogram">🍌</span></div>
+                    <div class="card-body">
+                        <h3>Banana</h3>
+                        <p>香蕉是一款点击游戏：单击香蕉获得更多香蕉！每隔一段时间还会掉落一根香蕉，快来一起玩吧。</p>
+                        <div class="card-tags"><span class="tag">Scratch</span><span class="tag blue">休闲</span></div>
+                    </div>
+                </a>
+                <a class="card reveal" href="project4.html">
+                    <div class="card-cover"><span class="monogram">科</span></div>
+                    <div class="card-body">
+                        <h3>MAX 科技云（APP）</h3>
+                        <p>一款有关 MAX 工作室服务的手机 APP。</p>
+                        <div class="card-tags"><span class="tag blue">APP</span></div>
+                    </div>
+                </a>
+                <a class="card reveal" href="project6.html">
+                    <div class="card-cover"><img src="picture/MAX%E4%B8%80%E9%94%AE%E5%88%B7%E5%BE%AE%E4%BF%A1%E6%AD%A5%E6%95%B0.png" alt="MAX 微信步数修改" loading="lazy"></div>
+                    <div class="card-body">
+                        <h3>MAX 微信步数修改</h3>
+                        <p>一款一键刷微信步数的网站。</p>
+                        <div class="card-tags"><span class="tag blue">工具</span></div>
+                    </div>
+                </a>
+                <a class="card reveal" href="project7.html">
+                    <div class="card-cover"><img src="picture/Agar.png" alt="MAX Agar" loading="lazy"></div>
+                    <div class="card-body">
+                        <h3>MAX Agar</h3>
+                        <p>一款球球大作战游戏。</p>
+                        <div class="card-tags"><span class="tag">Scratch</span><span class="tag blue">休闲</span></div>
+                    </div>
+                </a>
+                <a class="card reveal" href="project8.html">
+                    <div class="card-cover"><img src="picture/Spaces%20Waves.jpg" alt="Space Waves 太空波" loading="lazy"></div>
+                    <div class="card-body">
+                        <h3>Space Waves（太空波）</h3>
+                        <p>激动人心的横向卷轴游戏：控制一支箭飞过充满障碍物的太空隧道。</p>
+                        <div class="card-tags"><span class="tag">Scratch</span><span class="tag blue">动作</span></div>
+                    </div>
+                </a>
+                <a class="card reveal" href="project9.html">
+                    <div class="card-cover"><img src="picture/spxdzmmz1.png" alt="审判行动：致命瞄准" loading="lazy"></div>
+                    <div class="card-body">
+                        <h3>审判行动：致命瞄准</h3>
+                        <p>一款全 Scratch 最真实的模拟类型狙击游戏。</p>
+                        <div class="card-tags"><span class="tag">Scratch</span><span class="tag blue">射击</span></div>
+                    </div>
+                </a>
             </div>
         </section>
     </main>
+
     <footer>
-        <p>&copy; 2024 MAXMZH. 保留所有权利。</p>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="portfolio.html">作品集</a>
+            <a href="forum.html">论坛</a>
+            <a href="contact.html">联系方式</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
     </footer>
     <script src="js/scripts.js"></script>
 </body>

@@ -1,47 +1,82 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAXMZH 的个人简介：开发者、MAX 工作室成员，Scratch 游戏创作者。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="MAXMZH - 个人简介">
+    <meta property="og:type" content="website">
     <title>MAXMZH - 个人简介</title>
     <link rel="icon" type="image/png" href="MAXMZH.png">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <header>
-        <nav>
-            <ul>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="MAXMZH.png" alt="MAXMZH logo">MAXMZH</a>
+            <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            <ul class="nav-links">
                 <li><a href="index.html">主页</a></li>
                 <li><a href="about.html">个人简介</a></li>
                 <li><a href="portfolio.html">作品集</a></li>
                 <li><a href="forum.html">论坛</a></li>
                 <li><a href="contact.html">联系方式</a></li>
-                <li><a href="http://maxmzh.xzin.top/" target="_blank">MAXMZH个人网站(新版)</a></li>
             </ul>
         </nav>
     </header>
+
     <main>
         <section class="about">
-            <h1>个人简介</h1>
-            <p>你好，我是 MAXMZH，一名充满热情的开发者。</p>
-			<h1>网站</h1>
-	<p>个人网站：<a href="https://maxmzh666.github.io" target="_blank">https://maxmzh666.github.io</a></p >
-	<p>MAX工作室官方网站：<a href="https://maxgzs3.mysxl.cn" target="_blank">https://maxgzs3.mysxl.cn</a></p >
-        <p>MAX至臻星域官方网站：<a href="https://max-a-x.github.io" target="_blank">https://max-a-x.github.io</a></p >
-            <h1>所属工作室</h1>
-            <p>MAX工作室&蓝洞公司&MAX至臻星域（MAX Apex Xenith）</p>
-            <h1>找到我</h1>
-             
-            <p><td><span><a target="_blank" href="https://gitblock.cn/Users/1206413">阿儿法营（稽木世界）</a></span></td></p>
-            <p><td><span><a target="_blank" href="https://www.ccw.site/student/636e245eaebcbe21311a02d8">共创世界（很少使用）</a></span></td></p>
-            <p><td><span><a target="_blank" href="https://kada.163.com/u/4295198.htm">网易卡搭（无法使用）</a></span></td></p>
-            <p><td><span><a target="_blank" href="https://world.xiaomawang.com/w/person/project/all/2106864">小码王社区（经常使用）</a></span></td></p>
-            <p><td><span><a target="_blank" href="2926357395@qq.com">2926357395@qq.com</a></span></td></p>
-            <p>点击这里返回 <a href="index.html">主页</a>。</p>
+            <div class="profile-hero reveal">
+                <img class="avatar" src="MAXMZH.png" alt="MAXMZH 头像">
+                <div>
+                    <h1>你好，我是 MAXMZH</h1>
+                    <p>一名充满热情的开发者，热爱用 Scratch 创造游戏，也折腾各种实用小工具。<br>MAX 工作室 · 蓝洞公司 · MAX 至臻星域（MAX Apex Xenith）成员。</p>
+                </div>
+            </div>
+
+            <div class="info-block reveal">
+                <h2>我的网站</h2>
+                <ul class="link-list">
+                    <li><a href="https://maxmzh666.github.io" target="_blank" rel="noopener"><span>个人网站<span class="desc">maxmzh666.github.io · 就是本站</span></span><span class="go">→</span></a></li>
+                    <li><a href="https://maxgzs3.mysxl.cn" target="_blank" rel="noopener"><span>MAX 工作室官方网站<span class="desc">maxgzs3.mysxl.cn</span></span><span class="go">→</span></a></li>
+                    <li><a href="https://max-a-x.github.io" target="_blank" rel="noopener"><span>MAX 至臻星域官方网站<span class="desc">max-a-x.github.io · MAX 工作室子工作室</span></span><span class="go">→</span></a></li>
+                </ul>
+            </div>
+
+            <div class="info-block reveal">
+                <h2>所属工作室</h2>
+                <p style="margin:0">MAX 工作室 &amp; 蓝洞公司 &amp; MAX 至臻星域（MAX Apex Xenith）</p>
+            </div>
+
+            <div class="info-block reveal">
+                <h2>找到我</h2>
+                <ul class="link-list">
+                    <li><a href="https://gitblock.cn/Users/1206413" target="_blank" rel="noopener"><span>阿儿法营（稽木世界）<span class="desc">gitblock.cn · 我的作品主页</span></span><span class="go">→</span></a></li>
+                    <li><a href="https://world.xiaomawang.com/w/person/project/all/2106864" target="_blank" rel="noopener"><span>小码王社区<span class="desc">经常使用</span></span><span class="go">→</span></a></li>
+                    <li><a href="https://www.ccw.site/student/636e245eaebcbe21311a02d8" target="_blank" rel="noopener"><span>共创世界<span class="desc">很少使用</span></span><span class="go">→</span></a></li>
+                    <li><a href="https://kada.163.com/u/4295198.htm" target="_blank" rel="noopener"><span>网易卡搭<span class="desc">目前无法使用</span></span><span class="go">→</span></a></li>
+                    <li><a href="mailto:2926357395@qq.com"><span>电子邮箱<span class="desc">2926357395@qq.com</span></span><span class="go">→</span></a></li>
+                    <li><a href="https://github.com/MAXMZH666" target="_blank" rel="noopener"><span>GitHub<span class="desc">MAXMZH666</span></span><span class="go">→</span></a></li>
+                </ul>
+            </div>
+
+            <p style="text-align:center"><a class="btn btn-ghost" href="index.html">← 返回主页</a></p>
         </section>
     </main>
+
     <footer>
-        <p>&copy; 2024 MAXMZH. 保留所有权利。</p>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="portfolio.html">作品集</a>
+            <a href="forum.html">论坛</a>
+            <a href="contact.html">联系方式</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
     </footer>
     <script src="js/scripts.js"></script>
 </body>

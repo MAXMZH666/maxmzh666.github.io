@@ -1,102 +1,102 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAX 论坛：由 GitHub Discussions 提供支持，欢迎踊跃发言。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="MAXMZH - 论坛">
+    <meta property="og:type" content="website">
     <title>MAXMZH - 论坛</title>
+    <link rel="icon" type="image/png" href="MAXMZH.png">
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="icon" type="image/png" href="favicon.png">
 </head>
 <body>
-    <header>
-        <nav>
-            <ul>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="MAXMZH.png" alt="MAXMZH logo">MAXMZH</a>
+            <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            <ul class="nav-links">
                 <li><a href="index.html">主页</a></li>
                 <li><a href="about.html">个人简介</a></li>
                 <li><a href="portfolio.html">作品集</a></li>
                 <li><a href="forum.html">论坛</a></li>
                 <li><a href="contact.html">联系方式</a></li>
-                <li><a href="http://maxmzh.xzin.top/" target="_blank">MAXMZH个人网站(新版)</a></li>
             </ul>
         </nav>
     </header>
+
     <main>
         <section class="forum">
-            <h1>MAX论坛</h1>
-            <p>欢迎来到MAX论坛，此本论坛由Github的讨论提供支持。欢迎大家踊跃发言！</p>
+            <h1 class="section-title reveal">MAX 论坛</h1>
+            <p class="section-sub reveal">欢迎来到 MAX 论坛，本论坛由 GitHub Discussions 提供支持，欢迎大家踊跃发言！</p>
 
-            <!-- 访问论坛按钮 -->
-            <a href="https://github.com/MAXMZH666/maxmzh666.github.io/discussions" 
-               class="forum-btn" target="_blank">
-               进入 GitHub Discussions 论坛
-            </a>
+            <div class="forum-actions reveal">
+                <a class="btn btn-blue" href="https://github.com/MAXMZH666/maxmzh666.github.io/discussions" target="_blank" rel="noopener">进入论坛</a>
+                <a class="btn btn-ghost" href="https://github.com/MAXMZH666/maxmzh666.github.io/discussions/new" target="_blank" rel="noopener">发表新帖</a>
+            </div>
 
-            <!-- 创建新帖子 -->
-            <a href="https://github.com/MAXMZH666/maxmzh666.github.io/discussions/new" 
-               class="forum-btn" target="_blank">
-               发表新帖
-            </a>
+            <div class="contact-form reveal">
+                <h2>快速发帖</h2>
+                <form id="postForm">
+                    <label for="category">选择分类</label>
+                    <select id="category">
+                        <option value="DIC_kwDOMQDQVc4CnArh">Announcements 公告</option>
+                        <option value="DIC_kwDOMQDQVc4CnAri">General 综合</option>
+                        <option value="DIC_kwDOMQDQVc4CnArk">Ideas 想法</option>
+                        <option value="DIC_kwDOMQDQVc4CnArm">Polls 投票</option>
+                        <option value="DIC_kwDOMQDQVc4CnArk">Q&amp;A 问答</option>
+                        <option value="DIC_kwDOMQDQVc4CnArl">Show and tell 作品展示</option>
+                    </select>
 
-            <!-- 发帖表单 -->
-            <form id="postForm">
-                <label for="category">选择分类：</label>
-                <select id="category">
-                    <option value="DIC_kwDOMQDQVc4CnArh">Announcements</option>
-                    <option value="DIC_kwDOMQDQVc4CnAri">General</option>
-                    <option value="DIC_kwDOMQDQVc4CnArk">Ideas</option>
-                    <option value="DIC_kwDOMQDQVc4CnArm">Polls</option>
-                    <option value="DIC_kwDOMQDQVc4CnArk">Q&A</option>
-                    <option value="DIC_kwDOMQDQVc4CnArl">Show and tell</option>
-                </select>
-                
-                <label for="title">标题：</label>
-                <input type="text" id="title" required>
-                
-                <label for="body">内容：</label>
-                <textarea id="body" required></textarea>
-                
-                <button type="submit">发布帖子</button>
-            </form>
+                    <label for="title">标题</label>
+                    <input type="text" id="title" required placeholder="帖子标题">
+
+                    <label for="body">内容</label>
+                    <textarea id="body" required placeholder="写下你的想法…"></textarea>
+
+                    <button type="submit">发布帖子</button>
+                    <p class="form-hint">也可以直接去 GitHub Discussions 发帖，效果相同。</p>
+                </form>
+            </div>
         </section>
     </main>
+
     <footer>
-        <p>&copy; 2024 MAXMZH. 保留所有权利。</p>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="portfolio.html">作品集</a>
+            <a href="forum.html">论坛</a>
+            <a href="contact.html">联系方式</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
     </footer>
 
     <script>
-    document.getElementById("postForm").addEventListener("submit", async function(event) {
+    document.getElementById("postForm").addEventListener("submit", async function (event) {
         event.preventDefault();
-        
-        const categoryId = document.getElementById("category").value;
-        const title = document.getElementById("title").value;
-        const body = document.getElementById("body").value;
 
-        const response = await fetch("https://max-forum-api.vercel.app/create-discussion", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ categoryId, title, body })
-        });
+        var categoryId = document.getElementById("category").value;
+        var title = document.getElementById("title").value;
+        var body = document.getElementById("body").value;
 
-        const data = await response.json();
-        alert(data.message);
+        try {
+            var response = await fetch("https://max-forum-api.vercel.app/create-discussion", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ categoryId: categoryId, title: title, body: body })
+            });
+            var data = await response.json();
+            alert(data.message || "发布成功！");
+            if (response.ok) event.target.reset();
+        } catch (err) {
+            alert("发布失败，请稍后重试，或直接去 GitHub Discussions 发帖。");
+        }
     });
     </script>
-
-    <style>
-        .forum-btn {
-            display: inline-block;
-            padding: 10px 20px;
-            margin: 10px;
-            background-color: #007bff;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-        }
-        .forum-btn:hover {
-            background-color: #0056b3;
-        }
-    </style>
+    <script src="js/scripts.js"></script>
 </body>
 </html>

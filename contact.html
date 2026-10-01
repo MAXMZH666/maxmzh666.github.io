@@ -1,50 +1,81 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="联系 MAXMZH：邮箱、GitHub，或通过表单留言。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="MAXMZH - 联系方式">
+    <meta property="og:type" content="website">
     <title>MAXMZH - 联系方式</title>
     <link rel="icon" type="image/png" href="MAXMZH.png">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <header>
-        <nav>
-            <ul>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="MAXMZH.png" alt="MAXMZH logo">MAXMZH</a>
+            <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            <ul class="nav-links">
                 <li><a href="index.html">主页</a></li>
                 <li><a href="about.html">个人简介</a></li>
                 <li><a href="portfolio.html">作品集</a></li>
                 <li><a href="forum.html">论坛</a></li>
                 <li><a href="contact.html">联系方式</a></li>
-                <li><a href="http://maxmzh.xzin.top/" target="_blank">MAXMZH个人网站(新版)</a></li>
             </ul>
         </nav>
     </header>
+
     <main>
         <section class="contact">
-            <h1>联系方式</h1>
-            <p>欢迎联系我！以下是我的联系方式：</p >
-            <ul>
-                <li>邮箱：2926357395@qq.com</li>
-                <li>GitHub：MAXMZH666</li>
-            </ul>
-            <p>你也可以通过下面的表单直接发送消息给我：</p >
-            <form action="2926357395@qq.com" method="post" enctype="text/plain">
-                <label for="name">姓名：</label>
-                <input type="text" id="name" name="name" required>
-                <br>
-                <label for="email">邮箱：</label>
-                <input type="email" id="email" name="email" required>
-                <br>
-                <label for="message">消息：</label>
-                <textarea id="message" name="message" rows="4" required></textarea>
-                <br>
-                <input type="submit" value="发送">
-            </form>
+            <h1 class="section-title reveal">联系方式</h1>
+            <p class="section-sub reveal">欢迎联系我！以下是我的联系方式：</p>
+
+            <div class="contact-cards">
+                <div class="contact-card reveal">
+                    <span class="cc-icon">✉️</span>
+                    <h3>邮箱</h3>
+                    <p>2926357395@qq.com</p>
+                    <a class="btn btn-blue" href="mailto:2926357395@qq.com">发邮件</a>
+                </div>
+                <div class="contact-card reveal">
+                    <span class="cc-icon">💻</span>
+                    <h3>GitHub</h3>
+                    <p>MAXMZH666</p>
+                    <a class="btn btn-ghost" href="https://github.com/MAXMZH666" target="_blank" rel="noopener">访问主页</a>
+                </div>
+            </div>
+
+            <div class="contact-form reveal">
+                <h2>给我留言</h2>
+                <form id="contactForm">
+                    <label for="cf-name">姓名</label>
+                    <input type="text" id="cf-name" name="name" required placeholder="你的名字">
+
+                    <label for="cf-email">邮箱</label>
+                    <input type="email" id="cf-email" name="email" required placeholder="方便我回复你">
+
+                    <label for="cf-message">消息</label>
+                    <textarea id="cf-message" name="message" rows="5" required placeholder="想说什么？"></textarea>
+
+                    <button type="submit">发送留言</button>
+                    <p class="form-hint">点击发送后会打开你的邮箱 App，把写好的内容发给我。</p>
+                </form>
+            </div>
         </section>
     </main>
+
     <footer>
-        <p>&copy; 2024 MAXMZH. 保留所有权利。</p >
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="portfolio.html">作品集</a>
+            <a href="forum.html">论坛</a>
+            <a href="contact.html">联系方式</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
     </footer>
     <script src="js/scripts.js"></script>
 </body>
