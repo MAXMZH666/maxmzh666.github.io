@@ -159,3 +159,20 @@
     });
     apply();
 })();
+
+/* ---------- 回到顶部 ---------- */
+(function () {
+    var btn = document.createElement('button');
+    btn.id = 'back-top';
+    btn.setAttribute('aria-label', '回到顶部');
+    btn.textContent = '↑';
+    document.body.appendChild(btn);
+    function onScroll() {
+        btn.classList.toggle('show', window.scrollY > 400);
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    btn.addEventListener('click', function () {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+})();
