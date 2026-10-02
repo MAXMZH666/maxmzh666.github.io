@@ -111,3 +111,19 @@ async function uploadWithProgress(bucket, path, file, contentType, onProgress) {
     }
     return pub();
 }
+
+/* ===== 社区 v3：通知小红点 ===== */
+async function renderNavBell() {
+    var el = document.getElementById('nav-bell');
+    if (!el) return;
+    var me = await currentUser();
+    if (!me) { el.style.display = 'none'; return; }
+    try {
+        var r = await window.sb.from('notifications')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', me.id).eq('is_read', false);
+        var n = r.count || 0;
+        el.innerHTML = '<a href="community-notify.html" aria-label="通知">🔔' +
+            (n > 0 ? '<span class="bell-badge">' + (n > 99 ? '99+' : n) + '</span>' : '') + '</a>';
+    } catch (e) { el.innerHTML = '<a href="community-notify.html">🔔</a>'; }
+}
