@@ -64,9 +64,11 @@
                     allow="autoplay; fullscreen; clipboard-read; clipboard-write"></iframe>
             </div>
             <div class="editor-bar">
+                <button class="btn btn-blue" id="direct-publish">📤 直接发布到社区</button>
                 <a class="btn btn-ghost" id="open-editor-tab" href="tw-editor/editor.html" target="_blank" rel="noopener">↗ 新标签页打开编辑器</a>
-                <a class="btn btn-blue" href="community-publish.html">📤 去发布作品</a>
+                <a class="btn btn-ghost" href="community-publish.html">去发布页手动上传</a>
             </div>
+            <p class="form-hint" id="dp-note" style="display:none">正在从编辑器获取作品…</p>
         </section>
     </main>
 
@@ -96,6 +98,47 @@
         var frame = document.getElementById('tw-editor');
         var loading = document.getElementById('editor-loading');
         frame.addEventListener('load', function () { loading.style.display = 'none'; });
+
+        /* 编辑器直接发布：向 iframe 要 sb3，上传后跳到发布页 */
+        var dpBtn = document.getElementById('direct-publish');
+        var dpNote = document.getElementById('dp-note');
+        dpBtn.addEventListener('click', async function () {
+            var me = await currentUser();
+            if (!me) { authRequiredRedirect(); return; }
+            dpBtn.disabled = true;
+            dpNote.style.display = 'block';
+            dpNote.textContent = '正在从编辑器获取作品…';
+            var done = false;
+            var finish = function (msg) {
+                done = true;
+                window.removeEventListener('message', onMsg);
+                dpBtn.disabled = false;
+                dpNote.style.display = 'none';
+                if (msg) alert(msg);
+            };
+            var onMsg = async function (e) {
+                var d = e.data;
+                if (!d || (d.type !== 'MMC_SB3_DATA' && d.type !== 'MMC_SB3_ERROR')) return;
+                if (d.type === 'MMC_SB3_ERROR' || !d.buffer) {
+                    finish('获取失败：' + (d.message || '未知错误') + '，请用编辑器"文件 → 保存到电脑"后手动上传。');
+                    return;
+                }
+                try {
+                    dpNote.textContent = '正在上传…';
+                    var blob = new Blob([d.buffer], { type: 'application/octet-stream' });
+                    var url = await uploadWithProgress('sb3', me.id + '/' + Date.now() + '.sb3', blob, 'application/octet-stream', null);
+                    window.removeEventListener('message', onMsg);
+                    location.href = 'community-publish.html?sb3=' + encodeURIComponent(url) + '&title=' + encodeURIComponent(d.title || '未命名作品');
+                } catch (err) {
+                    finish('上传失败：' + err.message);
+                }
+            };
+            window.addEventListener('message', onMsg);
+            try { frame.contentWindow.postMessage({ type: 'MMC_REQUEST_SB3' }, '*'); } catch (e) {}
+            setTimeout(function () {
+                if (!done) finish('编辑器没有响应，请用编辑器"文件 → 保存到电脑"后手动上传。');
+            }, 15000);
+        });
         /* ?edit=作品ID：编辑器自动载入已发布的 Scratch 作品继续改 */
         var editId = new URLSearchParams(location.search).get('edit');
         if (editId) {

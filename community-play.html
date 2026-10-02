@@ -212,11 +212,11 @@
             var embedUrl = 'https://turbowarp.org/embed?project_url=' + encodeURIComponent(w.sb3_url) +
                 '&project_title=' + encodeURIComponent(w.title) + '&autoplay';
             previewHtml = '<div class="player-wrap"><iframe src="' + esc(embedUrl) + '" allowtransparency="true" scrolling="no" allowfullscreen title="' + esc(w.title) + '"></iframe></div>' +
-                (isAuthor ? '<p class="form-hint" style="margin-top:10px">💻 <a href="community-code.html?edit=' + id + '">在在线编程里继续编辑这个作品</a></p>' : '');
+                (isAuthor && wtype === 'scratch' ? '<p class="form-hint" style="margin-top:10px">💻 <a href="community-code.html?edit=' + id + '">在在线编程里继续编辑这个作品</a></p>' : '');
         } else if (wtype === 'python' || wtype === 'cpp') {
             previewHtml = '<pre class="code-view"><code id="code-block" class="' + (wtype === 'python' ? 'language-python' : 'language-cpp') + '">' +
                 esc(w.code || '') + '</code></pre>' + runnerHtml();
-        } else if (wtype === 'apk') {
+        } else if (wtype === 'apk' || wtype === 'windows' || wtype === 'linux') {
             var shots = w.screenshots || [];
             var shotHtml = '';
             if (shots.length) {
@@ -226,18 +226,27 @@
             } else if (w.cover_url) {
                 shotHtml = '<div class="shots"><img src="' + esc(w.cover_url) + '" alt="封面"></div>';
             }
-            var fileName = 'app.apk';
+            var fileName = 'app.bin';
             try { fileName = decodeURIComponent(String(w.apk_url).split('/').pop().split('?')[0]) || fileName; } catch (e) {}
+            var binMeta = {
+                apk: { icon: '📱', title: 'Android 安装包', dl: '下载 APK',
+                       steps: ['在安卓手机上点击上面的下载按钮', '下载完成后点击文件，允许"安装未知来源应用"', '按提示完成安装，即可打开使用'],
+                       note: 'APK 无法在网页直接运行，请下载到安卓手机安装。' },
+                windows: { icon: '🪟', title: 'Windows 应用程序', dl: '下载 Windows 版',
+                       steps: ['在 Windows 电脑上点击上面的下载按钮', '如果是 .zip 压缩包，先解压；双击 .exe / .msi 运行', '如弹出"未知发布者"警告，选择"仍要运行"'],
+                       note: 'Windows 程序无法在网页直接运行，请下载到电脑使用。文件由作者上传，运行前请自行判断。' },
+                linux: { icon: '🐧', title: 'Linux 应用程序', dl: '下载 Linux 版',
+                       steps: ['在 Linux 电脑上点击上面的下载按钮', 'AppImage：右键属性 → 允许作为程序执行（或 chmod +x），双击运行', '.deb：双击用软件中心安装；.zip/.tar.gz：解压后按说明运行'],
+                       note: 'Linux 程序无法在网页直接运行，请下载到电脑使用。文件由作者上传，运行前请自行判断。' }
+            }[wtype];
             previewHtml = '<div class="apk-card">' +
-                '<div class="apk-head">📱 <b>Android 安装包</b></div>' +
+                '<div class="apk-head">' + binMeta.icon + ' <b>' + binMeta.title + '</b></div>' +
                 shotHtml +
                 '<p class="work-meta">文件：' + esc(fileName) + ' · 发布于 ' + fmtDate(w.created_at) + '</p>' +
-                '<a class="btn btn-blue" href="' + esc(w.apk_url) + '" download>⬇ 下载 APK</a>' +
+                '<a class="btn btn-blue" href="' + esc(w.apk_url) + '" download>⬇ ' + binMeta.dl + '</a>' +
                 '<h3>安装步骤</h3><ol class="apk-steps">' +
-                '<li>在安卓手机上点击上面的下载按钮</li>' +
-                '<li>下载完成后点击文件，允许"安装未知来源应用"</li>' +
-                '<li>按提示完成安装，即可打开使用</li></ol>' +
-                '<p class="form-hint">APK 无法在网页直接运行，请下载到安卓手机安装。</p></div>';
+                binMeta.steps.map(function (st) { return '<li>' + st + '</li>'; }).join('') + '</ol>' +
+                '<p class="form-hint">' + binMeta.note + '</p></div>';
         }
 
         wrap.innerHTML =
@@ -250,7 +259,7 @@
             (w.description ? '<p style="margin-top:18px;line-height:1.8">' + esc(w.description) + '</p>' : '') +
             '<div class="work-actions">' +
                 '<button class="like-btn" id="like-btn">❤ <span id="like-count">…</span></button>' +
-                '<button class="fav-btn" id="fav-btn">⭐ <span id="fav-text">收藏</span></button>' +
+                '<button class="fav-btn" id="fav-btn">⭐ <span id="fav-text">收藏</span> <span id="fav-count"></span></button>' +
                 (!isAuthor ? '<button class="follow-btn" id="follow-btn">＋ 关注作者</button>' : '') +
                 (isAuthor
                     ? '<a href="community-publish.html?edit=' + id + '">编辑作品</a><a href="#" class="link-danger" id="del-work">删除作品</a>'
@@ -313,11 +322,18 @@
         /* 收藏 */
         var favBtn = document.getElementById('fav-btn');
         var favText = document.getElementById('fav-text');
+        var favCountEl = document.getElementById('fav-count');
         var faved = false;
+        var favCount = 0;
         async function refreshFav() {
             favText.textContent = faved ? '已收藏' : '收藏';
+            favCountEl.textContent = favCount > 0 ? favCount : '';
             favBtn.classList.toggle('faved', faved);
         }
+        try {
+            var fc = await sb.from('favorites').select('id', { count: 'exact', head: true }).eq('work_id', id);
+            favCount = fc.count || 0;
+        } catch (e) {}
         if (me) {
             var fr0 = await sb.from('favorites').select('work_id')
                 .eq('work_id', id).eq('user_id', me.id).maybeSingle();
@@ -330,11 +346,11 @@
             try {
                 if (faved) {
                     await sb.from('favorites').delete().eq('work_id', id).eq('user_id', me.id);
-                    faved = false;
+                    faved = false; favCount = Math.max(0, favCount - 1);
                 } else {
                     var fir = await sb.from('favorites').insert({ work_id: id, user_id: me.id });
                     if (fir.error) throw fir.error;
-                    faved = true;
+                    faved = true; favCount++;
                 }
             } catch (e) { alert('操作失败：' + e.message); }
             favBtn.disabled = false;
@@ -483,8 +499,8 @@
                     ph = '<pre class="code-view"><code>' + esc(v.code || '') + '</code></pre>';
                 } else if (t === 'scratch' && v.sb3_url) {
                     ph = '<button class="btn btn-blue btn-sm" data-vplay="' + v.id + '">在播放器中试玩此版本</button> ';
-                } else if (t === 'apk' && v.apk_url) {
-                    ph = '<a class="btn btn-blue btn-sm" href="' + esc(v.apk_url) + '" download>下载此版本 APK</a> ';
+                } else if ((t === 'apk' || t === 'windows' || t === 'linux') && v.apk_url) {
+                    ph = '<a class="btn btn-blue btn-sm" href="' + esc(v.apk_url) + '" download>下载此版本安装包</a> ';
                 }
                 if (!ph) ph = '<p class="form-hint">该版本无可预览内容</p>';
                 box.innerHTML = ph;

@@ -68,6 +68,10 @@
                         <span class="tc-icon">⚙️</span><span class="tc-name">C++</span><span class="tc-desc">代码直接在网页运行</span></label>
                     <label class="type-card"><input type="radio" name="wtype" value="apk">
                         <span class="tc-icon">📱</span><span class="tc-name">APK</span><span class="tc-desc">安卓安装包，下载安装</span></label>
+                    <label class="type-card"><input type="radio" name="wtype" value="windows">
+                        <span class="tc-icon">🪟</span><span class="tc-name">Windows</span><span class="tc-desc">exe/zip，下载运行</span></label>
+                    <label class="type-card"><input type="radio" name="wtype" value="linux">
+                        <span class="tc-icon">🐧</span><span class="tc-name">Linux</span><span class="tc-desc">AppImage/deb，下载运行</span></label>
                 </div>
 
                 <label for="f-title">作品名称 *</label>
@@ -99,14 +103,15 @@
                     <p class="form-hint" id="code-info"></p>
                 </div>
 
-                <!-- APK -->
-                <div id="sec-apk" style="display:none">
-                    <label for="f-apk">APK 文件 * <span class="form-hint">（小于 100MB）</span></label>
-                    <input type="file" id="f-apk" accept=".apk">
-                    <p class="form-hint" id="apk-info"></p>
+                <!-- 安装包：APK / Windows / Linux 共用 -->
+                <div id="sec-bin" style="display:none">
+                    <label for="f-bin" id="bin-label">安装包文件 *</label>
+                    <input type="file" id="f-bin">
+                    <p class="form-hint" id="bin-info"></p>
+                    <p class="form-hint" id="bin-check"></p>
                     <label for="f-shots">应用截图（选填，最多 3 张）</label>
                     <input type="file" id="f-shots" accept="image/*" multiple>
-                    <p class="form-hint">APK 无法在网页直接运行，发布后大家下载到安卓手机安装。</p>
+                    <p class="form-hint" id="bin-hint"></p>
                 </div>
 
                 <label for="f-cover">封面图（选填）</label>
@@ -236,11 +241,46 @@
 
         var curType = 'scratch';
         var cards = document.getElementById('type-cards');
+        /* 安装包类型配置：apk_url 字段复用为安装包下载地址 */
+        var BIN_TYPES = {
+            apk: { label: 'APK', accept: '.apk', ext: /\.apk$/i, maxMB: 100, bucket: 'apks',
+                   mime: 'application/vnd.android.package-archive',
+                   hint: 'APK 无法在网页直接运行，发布后大家下载到安卓手机安装。',
+                   magics: [[0x50, 0x4B]] },
+            windows: { label: 'Windows 程序', accept: '.exe,.msi,.zip', ext: /\.(exe|msi|zip)$/i, maxMB: 200, bucket: 'appfiles',
+                   mime: 'application/octet-stream',
+                   hint: '支持 .exe / .msi / .zip（绿色版请打成 zip 包）。发布后大家下载到 Windows 电脑运行，网页上无法直接运行。',
+                   magics: [[0x4D, 0x5A], [0x50, 0x4B], [0xD0, 0xCF, 0x11, 0xE0]] },
+            linux: { label: 'Linux 程序', accept: '.AppImage,.deb,.zip,.tar.gz', ext: /\.(AppImage|deb|zip|tar\.gz)$/i, maxMB: 200, bucket: 'appfiles',
+                   mime: 'application/octet-stream',
+                   hint: '支持 .AppImage / .deb / .zip / .tar.gz。发布后大家下载到 Linux 电脑运行，网页上无法直接运行。',
+                   magics: [[0x50, 0x4B], [0x1F, 0x8B], [0x7F, 0x45, 0x4C, 0x46], [0x21, 0x3C, 0x61, 0x72, 0x63, 0x68]] }
+        };
+        /* 安装包安全检查：扩展名白名单 + 文件头魔数校验（防假冒文件，非完整杀毒） */
+        async function validateBinary(file, type) {
+            var cfg = BIN_TYPES[type];
+            if (!cfg.ext.test(file.name)) return '扩展名不符合要求，应为：' + cfg.accept;
+            if (file.size > cfg.maxMB * 1024 * 1024) return '文件太大，请小于 ' + cfg.maxMB + 'MB';
+            try {
+                var head = new Uint8Array(await file.slice(0, 8).arrayBuffer());
+                var ok = cfg.magics.some(function (m) {
+                    return m.every(function (b, i) { return head[i] === b; });
+                });
+                if (!ok) return '\uD83D\uDEE1 安全检查未通过：文件头与扩展名不符，可能不是有效的' + cfg.label + '文件';
+            } catch (e) { return '文件读取失败，请重试'; }
+            return null;
+        }
         function setType(t) {
             curType = t;
             document.getElementById('sec-scratch').style.display = t === 'scratch' ? '' : 'none';
             document.getElementById('sec-code').style.display = (t === 'python' || t === 'cpp') ? '' : 'none';
-            document.getElementById('sec-apk').style.display = t === 'apk' ? '' : 'none';
+            document.getElementById('sec-bin').style.display = BIN_TYPES[t] ? '' : 'none';
+            if (BIN_TYPES[t]) {
+                var bc = BIN_TYPES[t];
+                document.getElementById('bin-label').innerHTML = bc.label + '文件 * <span class="form-hint">（小于 ' + bc.maxMB + 'MB）</span>';
+                document.getElementById('f-bin').accept = bc.accept;
+                document.getElementById('bin-hint').textContent = bc.hint;
+            }
             document.getElementById('code-ext').textContent = t === 'cpp' ? '.cpp' : '.py';
             document.getElementById('f-codefile').accept = t === 'cpp' ? '.cpp,.cc,.cxx' : '.py';
             cards.querySelectorAll('input[name="wtype"]').forEach(function (r) { r.checked = r.value === t; });
@@ -274,11 +314,22 @@
             if (et === 'scratch') {
                 document.querySelector('label[for="f-sb3"]').textContent = '游戏文件（.sb3，不换请留空）';
             }
-            if (et === 'apk') {
-                document.querySelector('label[for="f-apk"]').innerHTML = 'APK 文件 <span class="form-hint">（不换请留空）</span>';
+            if (BIN_TYPES[et]) {
+                document.getElementById('bin-label').innerHTML = BIN_TYPES[et].label + '文件 <span class="form-hint">（不换请留空）</span>';
             }
         } else {
             setType('scratch');
+            /* 从编辑器"直接发布"跳过来：?sb3=地址&title=名称 */
+            var qs = new URLSearchParams(location.search);
+            var preSb3Url = qs.get('sb3');
+            if (preSb3Url) {
+                window._preSb3Url = preSb3Url;
+                var preTitle = qs.get('title') || '';
+                if (preTitle) document.getElementById('f-title').value = preTitle;
+                document.getElementById('file-info').textContent = '已从编辑器接收 .sb3 ✓，可直接发布';
+                document.getElementById('f-sb3').disabled = true;
+                document.querySelector('label[for="f-sb3"]').innerHTML = '游戏文件（.sb3） * <span class="form-hint">（已从编辑器接收）</span>';
+            }
         }
 
         var form = document.getElementById('pub-form');
@@ -289,19 +340,35 @@
 
         function setNote(msg, cls) { note.textContent = msg; note.className = 'form-note ' + (cls || ''); }
         function setProgress(p) {
-            if (p < 0) { bar.style.display = 'none'; return; }
             bar.style.display = 'block';
+            if (p < 0) { /* 进度未知：显示滚动条 */
+                barIn.className = 'progress-bar indeterminate';
+                barIn.style.width = '100%';
+                barIn.textContent = '上传中…';
+                return;
+            }
+            barIn.className = 'progress-bar';
             barIn.style.width = Math.round(p * 100) + '%';
             barIn.textContent = Math.round(p * 100) + '%';
         }
+        function hideProgress() { bar.style.display = 'none'; }
 
         document.getElementById('f-sb3').addEventListener('change', function (e) {
             var f = e.target.files[0];
             document.getElementById('file-info').textContent = f ? ('已选择：' + f.name + '（' + fmtMB(f.size) + '）') : '';
         });
-        document.getElementById('f-apk').addEventListener('change', function (e) {
+        document.getElementById('f-bin').addEventListener('change', async function (e) {
             var f = e.target.files[0];
-            document.getElementById('apk-info').textContent = f ? ('已选择：' + f.name + '（' + fmtMB(f.size) + '）') : '';
+            var info = document.getElementById('bin-info');
+            var chk = document.getElementById('bin-check');
+            info.textContent = f ? ('已选择：' + f.name + '（' + fmtMB(f.size) + '）') : '';
+            chk.textContent = '';
+            if (f && BIN_TYPES[curType]) {
+                chk.textContent = '\uD83D\uDEE1 正在安全检查…';
+                var verr = await validateBinary(f, curType);
+                chk.textContent = verr ? verr : '✅ 安全检查通过';
+                chk.style.color = verr ? '#ff6b6b' : '#51cf66';
+            }
         });
         document.getElementById('f-codefile').addEventListener('change', function (e) {
             var f = e.target.files[0];
@@ -341,7 +408,8 @@
                 if (curType === 'scratch') {
                     var sb3File = document.getElementById('f-sb3').files[0];
                     var wantCompress = document.getElementById('f-compress').checked;
-                    if (!sb3File && !editWork) { setNote('请选择 .sb3 文件', 'err'); btn.disabled = false; return; }
+                    var preSb3 = window._preSb3Url || null;
+                    if (!sb3File && !editWork && !preSb3) { setNote('请选择 .sb3 文件', 'err'); btn.disabled = false; return; }
                     if (sb3File && !/\.sb3$/i.test(sb3File.name)) { setNote('游戏文件必须是 .sb3 格式', 'err'); btn.disabled = false; return; }
                     if (sb3File && sb3File.size > 50 * 1024 * 1024) { setNote('文件太大，请小于 50MB', 'err'); btn.disabled = false; return; }
                     var sb3Url = editWork ? editWork.sb3_url : null;
@@ -358,6 +426,7 @@
                             else setProgress(-1);
                         });
                     }
+                    if (!sb3Url && preSb3) sb3Url = preSb3;
                     payload.sb3_url = sb3Url;
                     payload.work_type = 'scratch';
                 } else if (curType === 'python' || curType === 'cpp') {
@@ -367,17 +436,21 @@
                     payload.work_type = curType;
                     payload.code = code;
                     if (editWork && !code.trim()) payload.code = editWork.code;
-                } else if (curType === 'apk') {
-                    var apkFile = document.getElementById('f-apk').files[0];
-                    if (!apkFile && !editWork) { setNote('请选择 .apk 文件', 'err'); btn.disabled = false; return; }
-                    if (apkFile && !/\.apk$/i.test(apkFile.name)) { setNote('必须是 .apk 文件', 'err'); btn.disabled = false; return; }
-                    if (apkFile && apkFile.size > 100 * 1024 * 1024) { setNote('文件太大，请小于 100MB', 'err'); btn.disabled = false; return; }
-                    var apkUrl = editWork ? editWork.apk_url : null;
-                    if (apkFile) {
-                        setNote('正在上传 APK…', 'sending');
-                        apkUrl = await uploadWithProgress('apks', me.id + '/' + Date.now() + '.apk', apkFile, 'application/vnd.android.package-archive', function (p) {
-                            if (p >= 0) { setProgress(p); setNote('正在上传 APK… ' + Math.round(p * 100) + '%', 'sending'); }
-                            else setProgress(-1);
+                } else if (BIN_TYPES[curType]) {
+                    var bcfg = BIN_TYPES[curType];
+                    var binFile = document.getElementById('f-bin').files[0];
+                    if (!binFile && !editWork) { setNote('请选择' + bcfg.label + '文件', 'err'); btn.disabled = false; return; }
+                    if (binFile) {
+                        var bverr = await validateBinary(binFile, curType);
+                        if (bverr) { setNote(bverr, 'err'); btn.disabled = false; return; }
+                    }
+                    var binUrl = editWork ? editWork.apk_url : null;
+                    if (binFile) {
+                        setNote('正在上传' + bcfg.label + '…', 'sending');
+                        var bext = (binFile.name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin';
+                        binUrl = await uploadWithProgress(bcfg.bucket, me.id + '/' + Date.now() + '.' + bext, binFile, bcfg.mime, function (p) {
+                            if (p >= 0) { setProgress(p); setNote('正在上传' + bcfg.label + '… ' + Math.round(p * 100) + '%', 'sending'); }
+                            else { setProgress(-1); setNote('正在上传' + bcfg.label + '…', 'sending'); }
                         });
                     }
                     var shots = editWork ? (editWork.screenshots || []) : [];
@@ -393,8 +466,8 @@
                             shots.push(surl);
                         }
                     }
-                    payload.work_type = 'apk';
-                    payload.apk_url = apkUrl;
+                    payload.work_type = curType;
+                    payload.apk_url = binUrl; /* 安装包下载地址（apk/windows/linux 共用字段） */
                     payload.screenshots = shots;
                 }
 
@@ -427,7 +500,7 @@
             } catch (err) {
                 setNote('发布失败：' + err.message, 'err');
                 btn.disabled = false;
-                setProgress(-1);
+                hideProgress();
             }
         });
     })();
