@@ -1072,3 +1072,37 @@ form input[type="file"]:focus {
     color: var(--text);
 }
 .mini-user-list a:hover { border-color: var(--gold); text-decoration: none; }
+
+/* ---------- 举报弹窗 ---------- */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 420px;
+    width: 100%;
+}
+.modal h3 { margin: 0 0 8px; }
+.modal textarea {
+    width: 100%;
+    min-height: 90px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface-2);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 1rem;
+    resize: vertical;
+}
+.modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 6px; }
