@@ -53,19 +53,19 @@
         <section class="portfolio">
             <p class="article-back"><a href="community.html">← 返回社区</a></p>
             <h1 class="section-title">Scratch 在线编程</h1>
-            <p class="section-sub">在浏览器里直接编程（TurboWarp 编辑器），做完导出 <b>.sb3</b> 去发布页上传，作品就能上线了。</p>
+            <p class="section-sub" id="code-sub">在浏览器里直接编程（TurboWarp 编辑器），做完导出 <b>.sb3</b> 去发布页上传，作品就能上线了。</p>
             <div class="tip-box">
-                <b>三步发布：</b>① 在下面编辑器里编程 → ② 编辑器左上角 <b>文件 → 保存到电脑</b>，得到 .sb3 文件 →
-                ③ <a href="community-publish.html">去发布作品</a>上传。已有作品想继续改？在试玩页也能一键跳回来接着编。
+                <b>三步发布：</b>① 点下面按钮打开编辑器编程 → ② 编辑器左上角 <b>文件 → 保存到电脑</b>，得到 .sb3 文件 →
+                ③ <a href="community-publish.html">去发布作品</a>上传。
             </div>
             <div class="editor-bar">
-                <a class="btn btn-blue" href="community-publish.html">📤 去发布作品</a>
-                <a class="btn" href="https://turbowarp.org/editor" target="_blank" rel="noopener">↗️ 新标签页打开编辑器</a>
+                <a class="btn btn-blue btn-big" id="open-editor" href="https://turbowarp.org/editor" target="_blank" rel="noopener">💻 打开在线编辑器</a>
+                <a class="btn btn-ghost" href="community-publish.html">📤 去发布作品</a>
             </div>
-            <div class="editor-wrap">
-                <iframe id="tw-editor" title="TurboWarp 在线编辑器" allow="autoplay; fullscreen"></iframe>
+            <div class="tip-box">
+                <b>小提示：</b>TurboWarp 不允许把编辑器嵌进别的网页，所以这里用新标签页打开，功能完全一样。
+                已有 Scratch 作品想继续改？去它的试玩页点"在在线编程里继续编辑"，编辑器会自动载入那个作品。
             </div>
-            <p class="form-hint">编辑器由 TurboWarp 提供；如果内嵌加载不出来，请用上面的"新标签页打开"。</p>
         </section>
     </main>
 
@@ -92,20 +92,19 @@
     <script>
     (async function () {
         await renderSubHeader();
-        /* ?edit=作品ID：把已发布的 Scratch 作品载入编辑器继续改 */
+        /* ?edit=作品ID：打开编辑器时自动载入已发布的 Scratch 作品继续改 */
         var editId = new URLSearchParams(location.search).get('edit');
-        var src = 'https://turbowarp.org/editor';
+        var btn = document.getElementById('open-editor');
         if (editId) {
             try {
                 var r = await sb.from('works').select('sb3_url,work_type,title').eq('id', editId).single();
                 if (r.data && (r.data.work_type || 'scratch') === 'scratch' && r.data.sb3_url) {
-                    src += '?project_url=' + encodeURIComponent(r.data.sb3_url);
-                    document.querySelector('.section-sub').innerHTML =
-                        '正在载入《' + esc(r.data.title || '') + '》，改完后 <b>文件 → 保存到电脑</b>，再去发布页更新。';
+                    btn.href = 'https://turbowarp.org/editor?project_url=' + encodeURIComponent(r.data.sb3_url);
+                    document.getElementById('code-sub').innerHTML =
+                        '点击打开编辑器，会自动载入《' + esc(r.data.title || '') + '》，改完后 <b>文件 → 保存到电脑</b>，再去发布页更新。';
                 }
             } catch (e) {}
         }
-        document.getElementById('tw-editor').src = src;
     })();
     </script>
     <script defer src="https://vercount.one/js"></script>
