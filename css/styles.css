@@ -1019,7 +1019,7 @@ form input[type="file"]:focus {
 .stat-line { color: var(--muted); font-size: .9rem; margin: 6px 0 0; }
 
 /* ---------- 社区 v3 ---------- */
-#nav-bell a { position: relative; font-size: 1.1rem; }
+#sub-bell { position: relative; }
 .bell-badge {
     position: absolute;
     top: 2px; right: 4px;
@@ -1106,3 +1106,71 @@ form input[type="file"]:focus {
     resize: vertical;
 }
 .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 6px; }
+
+/* ---------- 社区独立子页眉 ---------- */
+.sub-header {
+    position: sticky;
+    top: var(--header-h);
+    z-index: 90;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+}
+.sub-header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.sub-brand {
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: var(--text);
+    white-space: nowrap;
+}
+.sub-brand:hover { text-decoration: none; color: var(--gold); }
+.sub-links { display: flex; align-items: center; gap: 2px; }
+.sub-links a {
+    padding: 8px 14px;
+    border-radius: 999px;
+    color: var(--muted);
+    font-size: .92rem;
+    white-space: nowrap;
+}
+.sub-links a:hover { color: var(--text); background: rgba(255, 255, 255, 0.06); text-decoration: none; }
+.sub-links a.active { color: var(--gold); background: rgba(255, 204, 0, 0.1); font-weight: 700; }
+#sub-auth {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: 6px;
+    padding-left: 8px;
+    border-left: 1px solid var(--border);
+}
+#sub-auth a { padding: 8px 10px; }
+@media (max-width: 560px) {
+    .sub-brand span { display: none; }
+    .sub-links a { padding: 8px 10px; font-size: .85rem; }
+    #sub-auth { margin-left: 2px; padding-left: 4px; }
+}
+
+/* ---------- 骨架屏 ---------- */
+.skeleton-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    min-height: 280px;
+}
+.skeleton {
+    background: linear-gradient(90deg, var(--surface-2) 25%, var(--border) 50%, var(--surface-2) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.2s infinite;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+.skeleton-cover { height: 160px; }
+.skeleton-line { height: 14px; margin: 14px 16px 0; border-radius: 7px; }
+.skeleton-line.short { width: 55%; margin-bottom: 16px; }
