@@ -12,6 +12,8 @@
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="stylesheet" href="css/styles.css">
     <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
 </head>
@@ -26,7 +28,6 @@
             <ul class="nav-links">
                 <li><a href="index.html">主页</a></li>
                 <li><a href="about.html">个人简介</a></li>
-                <li><a href="portfolio.html">作品集</a></li>
                 <li><a href="blog.html">博客</a></li>
                 <li><a href="community.html" class="active">社区</a></li>
                 <li><a href="forum.html">论坛</a></li>
@@ -85,7 +86,6 @@
         <div class="foot-links">
             <a href="index.html">主页</a>
             <a href="about.html">个人简介</a>
-            <a href="portfolio.html">作品集</a>
             <a href="blog.html">博客</a>
             <a href="community.html">社区</a>
             <a href="forum.html">论坛</a>
@@ -158,9 +158,25 @@
 
     function escLike(s) { return s.replace(/[%_\\]/g, function (c) { return '\\' + c; }); }
 
+    /* 列表缓存：60 秒内相同筛选直接读缓存，秒开 */
+    function cacheKey() { return 'works_cache_' + state.cat + '_' + state.type + '_' + state.sort + '_' + state.q; }
+    function readCache() {
+        try {
+            var c = JSON.parse(sessionStorage.getItem(cacheKey()) || 'null');
+            if (c && Date.now() - c.t < 60000) return c;
+        } catch (e) {}
+        return null;
+    }
     async function loadWorks() {
         var grid = document.getElementById('works-grid');
         var note = document.getElementById('works-note');
+        var cached = readCache();
+        if (cached) {
+            grid.innerHTML = cached.html;
+            document.getElementById('list-title').textContent = cached.title;
+            note.style.display = 'none';
+            return;
+        }
         grid.innerHTML = skeletonHtml(6);
         note.style.display = 'none';
         try {
@@ -189,8 +205,11 @@
                 return;
             }
             grid.innerHTML = works.map(function (w) { return workCard(w, counts, favCounts); }).join('');
-            document.getElementById('list-title').textContent =
-                state.q ? '搜索：' + state.q : (state.cat === '全部' ? '全部作品' : state.cat);
+            var listTitle = state.q ? '搜索：' + state.q : (state.cat === '全部' ? '全部作品' : state.cat);
+            document.getElementById('list-title').textContent = listTitle;
+            try {
+                sessionStorage.setItem(cacheKey(), JSON.stringify({ t: Date.now(), html: grid.innerHTML, title: listTitle }));
+            } catch (e) {}
         } catch (e) {
             grid.innerHTML = '';
             note.textContent = '加载失败：' + e.message;

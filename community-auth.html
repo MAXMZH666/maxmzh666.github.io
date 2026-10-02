@@ -12,6 +12,8 @@
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="stylesheet" href="css/styles.css">
     <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
 </head>
@@ -26,7 +28,6 @@
             <ul class="nav-links">
                 <li><a href="index.html">主页</a></li>
                 <li><a href="about.html">个人简介</a></li>
-                <li><a href="portfolio.html">作品集</a></li>
                 <li><a href="blog.html">博客</a></li>
                 <li><a href="community.html" class="active">社区</a></li>
                 <li><a href="forum.html">论坛</a></li>
@@ -70,6 +71,14 @@
                     </div>
                     <label for="a-email">邮箱</label>
                     <input type="email" id="a-email" required placeholder="you@example.com">
+                    <div id="row-email-code" style="display:none">
+                        <label for="a-email-code">邮箱验证码</label>
+                        <div class="captcha-row">
+                            <input type="text" id="a-email-code" maxlength="6" placeholder="6 位数字" autocomplete="off" inputmode="numeric">
+                            <button type="button" id="send-otp" class="btn btn-ghost btn-sm" style="white-space:nowrap">发送验证码</button>
+                        </div>
+                        <p class="form-hint">先填好上面的图形验证码再发送；邮件 10 分钟内有效</p>
+                    </div>
                     <label for="a-password">密码</label>
                     <input type="password" id="a-password" required minlength="6" placeholder="至少 6 位">
                     <label for="a-captcha">验证码 <span class="form-hint">（人机验证）</span></label>
@@ -88,7 +97,6 @@
         <div class="foot-links">
             <a href="index.html">主页</a>
             <a href="about.html">个人简介</a>
-            <a href="portfolio.html">作品集</a>
             <a href="blog.html">博客</a>
             <a href="community.html">社区</a>
             <a href="forum.html">论坛</a>
@@ -135,6 +143,7 @@
             tabLogin.classList.toggle('active', m === 'login');
             tabSignup.classList.toggle('active', m === 'signup');
             rowUser.style.display = m === 'signup' ? 'block' : 'none';
+            document.getElementById('row-email-code').style.display = m === 'signup' ? 'block' : 'none';
             btn.textContent = m === 'signup' ? '注册' : '登录';
             note.textContent = '';
             note.className = 'form-note';
@@ -179,6 +188,44 @@
         drawCaptcha();
         captchaCanvas.addEventListener('click', drawCaptcha);
 
+        /* 邮箱验证码（注册用，Supabase 发送 6 位数字码） */
+        var otpBtn = document.getElementById('send-otp');
+        var otpTimer = null;
+        otpBtn.addEventListener('click', async function () {
+            var email = document.getElementById('a-email').value.trim();
+            var username = document.getElementById('a-username').value.trim();
+            var captchaInput = document.getElementById('a-captcha').value.trim();
+            if (!email) { note.textContent = '请先填写邮箱'; note.className = 'form-note err'; return; }
+            if (!username) { note.textContent = '请先填写用户名'; note.className = 'form-note err'; return; }
+            if (captchaInput.toLowerCase() !== captchaCode.toLowerCase()) {
+                note.textContent = '图形验证码不对，换一张再试试';
+                note.className = 'form-note err';
+                drawCaptcha();
+                document.getElementById('a-captcha').value = '';
+                return;
+            }
+            otpBtn.disabled = true;
+            note.textContent = '正在发送验证码…';
+            note.className = 'form-note sending';
+            try {
+                var r = await sb.auth.signInWithOtp({ email: email, options: { data: { username: username } } });
+                if (r.error) throw r.error;
+                note.textContent = '验证码已发送到 ' + email + '，请查收（10 分钟内有效）';
+                note.className = 'form-note ok';
+                var sec = 60;
+                otpBtn.textContent = sec + 's 后重发';
+                otpTimer = setInterval(function () {
+                    sec--;
+                    if (sec <= 0) { clearInterval(otpTimer); otpBtn.disabled = false; otpBtn.textContent = '发送验证码'; }
+                    else otpBtn.textContent = sec + 's 后重发';
+                }, 1000);
+            } catch (err) {
+                note.textContent = '发送失败：' + (err.message || '请稍后再试');
+                note.className = 'form-note err';
+                otpBtn.disabled = false;
+            }
+        });
+
         document.getElementById('auth-form').addEventListener('submit', async function (e) {
             e.preventDefault();
             var email = document.getElementById('a-email').value.trim();
@@ -199,18 +246,20 @@
             note.className = 'form-note sending';
             try {
                 if (mode === 'signup') {
-                    var r = await sb.auth.signUp({
-                        email: email, password: password,
-                        options: { data: { username: username } }
-                    });
-                    if (r.error) throw r.error;
-                    if (r.data.session) {
-                        location.href = next;
-                    } else {
-                        note.textContent = '注册成功！请去邮箱点击确认链接，然后再登录。';
-                        note.className = 'form-note ok';
-                        setMode('login');
+                    /* 注册 = 邮箱验证码验证身份 + 设置密码 */
+                    var emailCode = document.getElementById('a-email-code').value.trim();
+                    if (!emailCode) { note.textContent = '请填写邮箱验证码'; note.className = 'form-note err'; btn.disabled = false; return; }
+                    var v = await sb.auth.verifyOtp({ email: email, token: emailCode, type: 'email' });
+                    if (v.error) throw v.error;
+                    var vu = v.data.user;
+                    var isNew = vu && vu.created_at && (Date.now() - new Date(vu.created_at).getTime() < 5 * 60 * 1000);
+                    if (isNew) {
+                        /* 新用户：设置登录密码 */
+                        var u = await sb.auth.updateUser({ password: password });
+                        if (u.error) throw u.error;
                     }
+                    try { await ensureProfile(); } catch (e) {}
+                    location.href = next;
                 } else {
                     var r2 = await sb.auth.signInWithPassword({ email: email, password: password });
                     if (r2.error) throw r2.error;
@@ -221,6 +270,8 @@
                 if (/already registered|already exists/i.test(msg)) msg = '这个邮箱已经注册过，直接登录即可';
                 if (/invalid login credentials/i.test(msg)) msg = '邮箱或密码不对（新注册的请先去邮箱点确认链接）';
                 if (/duplicate key|username/i.test(msg)) msg = '这个用户名已被占用，换一个试试';
+                if (/expired|invalid/i.test(msg)) msg = '邮箱验证码不对或已过期，请重新发送';
+                if (/already registered|already exists/i.test(msg)) msg = '这个邮箱已经注册过，直接登录即可';
                 note.textContent = msg;
                 note.className = 'form-note err';
                 btn.disabled = false;
