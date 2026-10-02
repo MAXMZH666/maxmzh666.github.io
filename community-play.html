@@ -290,17 +290,33 @@
                 text: '我在 MAXMZH 游戏社区发现了《' + w.title + '》，来玩玩看！',
                 url: location.href
             };
+            function copied(btn) {
+                btn.textContent = '✅ 链接已复制';
+                setTimeout(function () { btn.textContent = '🔗 分享'; }, 2000);
+            }
+            var btn = this;
             if (navigator.share) {
                 try { await navigator.share(shareData); } catch (e) {}
             } else {
+                var done = false;
                 try {
                     await navigator.clipboard.writeText(location.href);
-                    this.textContent = '✅ 链接已复制';
-                    var b = this;
-                    setTimeout(function () { b.textContent = '🔗 分享'; }, 2000);
-                } catch (e) {
-                    prompt('复制下面的链接分享给朋友：', location.href);
+                    done = true;
+                } catch (e) {}
+                if (!done) {
+                    /* 兼容旧浏览器：隐藏 textarea + execCommand */
+                    try {
+                        var ta = document.createElement('textarea');
+                        ta.value = location.href;
+                        ta.style.cssText = 'position:fixed;opacity:0;';
+                        document.body.appendChild(ta);
+                        ta.select();
+                        done = document.execCommand('copy');
+                        ta.remove();
+                    } catch (e) {}
                 }
+                if (done) copied(btn);
+                else prompt('复制下面的链接分享给朋友：', location.href);
             }
         });
         /* 播放器点击加载 */
