@@ -45,6 +45,8 @@ async function renderSubHeader() {
     var map = {
         'community.html': 'home',
         'community-publish.html': 'publish',
+        'community-code.html': 'code',
+        'community-rank.html': 'rank',
         'community-notify.html': 'notify',
         'community-user.html': 'mine',
         'community-auth.html': 'auth'
@@ -112,6 +114,33 @@ if (window.sb) {
 
 /* ===== 社区 v2：分类、上传优化 ===== */
 var WORK_CATEGORIES = ['游戏', '动画', '工具', '音乐', '其他'];
+
+/* ===== 社区 v5：作品类型 ===== */
+var WORK_TYPES = {
+    scratch: { name: 'Scratch', icon: '🎮' },
+    python:  { name: 'Python',  icon: '🐍' },
+    cpp:     { name: 'C++',     icon: '⚙️' },
+    apk:     { name: 'APK',     icon: '📱' }
+};
+function workTypeOf(w) {
+    var t = w && w.work_type;
+    return WORK_TYPES[t] ? t : 'scratch';
+}
+function typeBadge(t) {
+    var m = WORK_TYPES[t] || WORK_TYPES.scratch;
+    return '<span class="tag type">' + m.icon + ' ' + m.name + '</span>';
+}
+/* 动态加载外部脚本（Pyodide / JSCPP 按需加载） */
+function loadScriptOnce(src) {
+    if (document.querySelector('script[src="' + src + '"]')) return Promise.resolve();
+    return new Promise(function (resolve, reject) {
+        var s = document.createElement('script');
+        s.src = src;
+        s.onload = function () { resolve(); };
+        s.onerror = function () { reject(new Error('脚本加载失败')); };
+        document.head.appendChild(s);
+    });
+}
 
 /* 带进度的上传：优先用 signed URL + XHR 显示进度，失败回退普通上传 */
 async function uploadWithProgress(bucket, path, file, contentType, onProgress) {

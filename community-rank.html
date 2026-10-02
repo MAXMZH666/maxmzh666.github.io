@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAXMZH 游戏社区排行榜：点赞榜、浏览榜、作者人气榜。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="MAXMZH - 社区排行榜">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>排行榜 - MAXMZH 社区</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/styles.css">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">主页</a></li>
+                <li><a href="about.html">个人简介</a></li>
+                <li><a href="portfolio.html">作品集</a></li>
+                <li><a href="blog.html">博客</a></li>
+                <li><a href="downloads.html">下载中心</a></li>
+                <li><a href="community.html" class="active">社区</a></li>
+                <li><a href="forum.html">论坛</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="sub-header">
+        <div class="sub-header-inner">
+            <a class="sub-brand" href="community.html">🎮 <span>游戏社区</span></a>
+            <nav class="sub-links" aria-label="社区导航">
+                <a href="community.html" data-sub="home">首页</a>
+                <a href="community-publish.html" data-sub="publish">发布作品</a>
+                <a href="community-code.html" data-sub="code">💻 在线编程</a>
+                <a href="community-rank.html" data-sub="rank">🏆 排行榜</a>
+                <a href="community-notify.html" data-sub="notify" id="sub-bell" style="display:none">🔔 通知</a>
+                <span id="sub-auth"><a href="community-auth.html">登录</a></span>
+            </nav>
+        </div>
+    </div>
+
+    <main>
+        <section class="portfolio">
+            <p class="article-back"><a href="community.html">← 返回社区</a></p>
+            <h1 class="section-title">🏆 社区排行榜</h1>
+            <p class="section-sub">看看社区里最受欢迎的作品和最有人气的作者。</p>
+            <div class="sort-tabs" id="rank-tabs">
+                <button data-rank="likes" class="active">❤ 点赞榜</button>
+                <button data-rank="views">👁 浏览榜</button>
+                <button data-rank="authors">⭐ 作者人气榜</button>
+            </div>
+            <p id="rank-note" class="works-note">加载中…</p>
+            <div id="rank-list"></div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="portfolio.html">作品集</a>
+            <a href="blog.html">博客</a>
+            <a href="downloads.html">下载中心</a>
+            <a href="community.html">社区</a>
+            <a href="forum.html">论坛</a>
+            <a href="contact.html">联系方式</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
+        <p class="foot-stats"><span id="busuanzi_container_site_pv">本站总访问量 <span id="busuanzi_value_site_pv">统计中…</span> 次</span><span> · </span><span id="busuanzi_container_page_pv">本页访问 <span id="busuanzi_value_page_pv">统计中…</span> 次</span></p>
+    </footer>
+
+    <script src="js/scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/community.js"></script>
+    <script>
+    var rankTab = 'likes';
+    var nameMap = {};
+
+    function medal(i) {
+        return i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '<span class="rank-num">' + (i + 1) + '</span>';
+    }
+
+    async function fillNames(ids) {
+        var fresh = ids.filter(function (x) { return !nameMap[x]; });
+        if (!fresh.length) return;
+        try {
+            var pr = await sb.from('profiles').select('id,username').in('id', fresh);
+            (pr.data || []).forEach(function (p) { nameMap[p.id] = p.username; });
+        } catch (e) {}
+    }
+
+    async function countLikes(ids) {
+        var counts = {};
+        if (!ids.length) return counts;
+        try {
+            var lr = await sb.from('likes').select('work_id').in('work_id', ids);
+            (lr.data || []).forEach(function (l) { counts[l.work_id] = (counts[l.work_id] || 0) + 1; });
+        } catch (e) {}
+        return counts;
+    }
+
+    function workRow(w, i, stat) {
+        var cover = w.cover_url
+            ? '<img src="' + esc(w.cover_url) + '" alt="" loading="lazy">'
+            : '<span class="monogram">' + esc((w.title || '游').charAt(0)) + '</span>';
+        return '<a class="rank-row" href="community-play.html?id=' + w.id + '">' +
+            '<span class="rank-medal">' + medal(i) + '</span>' +
+            '<span class="rank-thumb">' + cover + '</span>' +
+            '<span class="rank-info"><b>' + esc(w.title) + '</b>' +
+            '<span>' + esc(nameMap[w.author_id] || '未知') + ' · ' + typeBadge(workTypeOf(w)) + '</span></span>' +
+            '<span class="rank-stat">' + stat + '</span></a>';
+    }
+
+    async function loadLikes() {
+        var res = await sb.from('works').select('id,title,cover_url,author_id,work_type')
+            .order('created_at', { ascending: false }).limit(100);
+        if (res.error) throw res.error;
+        var works = res.data || [];
+        var counts = await countLikes(works.map(function (w) { return w.id; }));
+        works.sort(function (a, b) { return (counts[b.id] || 0) - (counts[a.id] || 0); });
+        await fillNames(works.map(function (w) { return w.author_id; }));
+        return works.slice(0, 20).map(function (w, i) {
+            return workRow(w, i, '❤ ' + (counts[w.id] || 0));
+        });
+    }
+
+    async function loadViews() {
+        var res = await sb.from('works').select('id,title,cover_url,author_id,work_type,views')
+            .order('views', { ascending: false }).limit(20);
+        if (res.error) throw res.error;
+        var works = res.data || [];
+        await fillNames(works.map(function (w) { return w.author_id; }));
+        return works.map(function (w, i) {
+            return workRow(w, i, '👁 ' + (w.views || 0));
+        });
+    }
+
+    async function loadAuthors() {
+        var results = await Promise.all([
+            sb.from('profiles').select('id,username').limit(200),
+            sb.from('follows').select('following_id'),
+            sb.from('works').select('author_id')
+        ]);
+        if (results[0].error) throw results[0].error;
+        var fans = {}, workN = {};
+        (results[1].data || []).forEach(function (f) { fans[f.following_id] = (fans[f.following_id] || 0) + 1; });
+        (results[2].data || []).forEach(function (w) { workN[w.author_id] = (workN[w.author_id] || 0) + 1; });
+        var authors = (results[0].data || []).map(function (p) {
+            return { id: p.id, username: p.username, fans: fans[p.id] || 0, works: workN[p.id] || 0 };
+        });
+        authors.sort(function (a, b) { return (b.fans - a.fans) || (b.works - a.works); });
+        return authors.slice(0, 20).map(function (a, i) {
+            return '<a class="rank-row" href="community-user.html?id=' + a.id + '">' +
+                '<span class="rank-medal">' + medal(i) + '</span>' +
+                '<span class="rank-thumb"><span class="monogram">' + esc((a.username || '用').charAt(0)) + '</span></span>' +
+                '<span class="rank-info"><b>' + esc(a.username || '未知') + '</b>' +
+                '<span>' + a.works + ' 个作品</span></span>' +
+                '<span class="rank-stat">⭐ ' + a.fans + ' 粉丝</span></a>';
+        });
+    }
+
+    async function loadRank() {
+        var list = document.getElementById('rank-list');
+        var note = document.getElementById('rank-note');
+        list.innerHTML = '';
+        note.textContent = '加载中…';
+        note.style.display = 'block';
+        try {
+            var rows = rankTab === 'likes' ? await loadLikes()
+                : rankTab === 'views' ? await loadViews() : await loadAuthors();
+            note.style.display = 'none';
+            list.innerHTML = rows.length ? rows.join('') : '<p class="works-note">还没有数据，快来发布第一个作品吧！</p>';
+        } catch (e) {
+            note.textContent = '加载失败：' + e.message;
+        }
+    }
+
+    (async function () {
+        await renderSubHeader();
+        document.getElementById('rank-tabs').addEventListener('click', function (e) {
+            var b = e.target.closest('button[data-rank]');
+            if (!b) return;
+            rankTab = b.getAttribute('data-rank');
+            this.querySelectorAll('button').forEach(function (x) { x.classList.toggle('active', x === b); });
+            loadRank();
+        });
+        await loadRank();
+    })();
+    </script>
+    <script defer src="https://vercount.one/js"></script>
+</body>
+</html>

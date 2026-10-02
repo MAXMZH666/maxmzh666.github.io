@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="在 MAXMZH 游戏社区发布你的 Scratch 作品。">
+    <meta name="description" content="在 MAXMZH 游戏社区发布作品：Scratch、Python、C++、APK 都可以。">
     <meta name="theme-color" content="#0b0b0e">
     <meta property="og:title" content="MAXMZH - 发布作品">
     <meta property="og:type" content="website">
@@ -44,6 +44,8 @@
             <nav class="sub-links" aria-label="社区导航">
                 <a href="community.html" data-sub="home">首页</a>
                 <a href="community-publish.html" data-sub="publish">发布作品</a>
+                <a href="community-code.html" data-sub="code">💻 在线编程</a>
+                <a href="community-rank.html" data-sub="rank">🏆 排行榜</a>
                 <a href="community-notify.html" data-sub="notify" id="sub-bell" style="display:none">🔔 通知</a>
                 <span id="sub-auth"><a href="community-auth.html">登录</a></span>
             </nav>
@@ -54,8 +56,20 @@
         <section class="portfolio">
             <p class="article-back"><a href="community.html">← 返回社区</a></p>
             <h1 class="section-title">发布作品</h1>
-            <p class="section-sub">上传你的 .sb3 文件，大家就能在线试玩了。文件请小于 50MB。</p>
+            <p class="section-sub" id="pub-sub">选择作品类型，填好信息就能发布了。</p>
             <form id="pub-form" class="contact-form">
+                <label>作品类型 * <span class="form-hint" id="type-locked" style="display:none">（编辑时不可更改类型）</span></label>
+                <div class="type-cards" id="type-cards">
+                    <label class="type-card"><input type="radio" name="wtype" value="scratch" checked>
+                        <span class="tc-icon">🎮</span><span class="tc-name">Scratch</span><span class="tc-desc">.sb3 文件，在线试玩</span></label>
+                    <label class="type-card"><input type="radio" name="wtype" value="python">
+                        <span class="tc-icon">🐍</span><span class="tc-name">Python</span><span class="tc-desc">代码直接在网页运行</span></label>
+                    <label class="type-card"><input type="radio" name="wtype" value="cpp">
+                        <span class="tc-icon">⚙️</span><span class="tc-name">C++</span><span class="tc-desc">代码直接在网页运行</span></label>
+                    <label class="type-card"><input type="radio" name="wtype" value="apk">
+                        <span class="tc-icon">📱</span><span class="tc-name">APK</span><span class="tc-desc">安卓安装包，下载安装</span></label>
+                </div>
+
                 <label for="f-title">作品名称 *</label>
                 <input type="text" id="f-title" maxlength="60" required placeholder="给作品起个名字">
                 <label for="f-cat">分类</label>
@@ -64,12 +78,39 @@
                 </select>
                 <label for="f-desc">作品简介</label>
                 <textarea id="f-desc" maxlength="500" placeholder="玩法介绍、操作说明…（选填）"></textarea>
-                <label for="f-sb3">游戏文件（.sb3） *</label>
-                <input type="file" id="f-sb3" accept=".sb3" required>
-                <p class="form-hint" id="file-info"></p>
+
+                <!-- Scratch -->
+                <div id="sec-scratch">
+                    <label for="f-sb3">游戏文件（.sb3） *</label>
+                    <input type="file" id="f-sb3" accept=".sb3">
+                    <p class="form-hint" id="file-info"></p>
+                    <label class="check-row"><input type="checkbox" id="f-compress" checked> 压缩音频以加快上传（推荐，大文件效果明显）</label>
+                    <p class="form-hint">没有 .sb3？<a href="community-code.html">去在线编程做一个</a></p>
+                </div>
+
+                <!-- Python / C++ -->
+                <div id="sec-code" style="display:none">
+                    <label for="f-code">源代码 * <span class="form-hint">（只支持控制台程序：print/input、cout/cin，图形库暂不支持）</span></label>
+                    <textarea id="f-code" class="code-input" spellcheck="false" placeholder="# 在这里粘贴代码，或用下面的按钮导入文件"></textarea>
+                    <div class="row-btns">
+                        <label class="btn btn-ghost file-btn">📁 导入 <span id="code-ext">.py</span> 文件<input type="file" id="f-codefile" hidden></label>
+                        <button type="button" class="btn btn-ghost" id="code-sample">填入示例代码</button>
+                    </div>
+                    <p class="form-hint" id="code-info"></p>
+                </div>
+
+                <!-- APK -->
+                <div id="sec-apk" style="display:none">
+                    <label for="f-apk">APK 文件 * <span class="form-hint">（小于 100MB）</span></label>
+                    <input type="file" id="f-apk" accept=".apk">
+                    <p class="form-hint" id="apk-info"></p>
+                    <label for="f-shots">应用截图（选填，最多 3 张）</label>
+                    <input type="file" id="f-shots" accept="image/*" multiple>
+                    <p class="form-hint">APK 无法在网页直接运行，发布后大家下载到安卓手机安装。</p>
+                </div>
+
                 <label for="f-cover">封面图（选填）</label>
                 <input type="file" id="f-cover" accept="image/*">
-                <label class="check-row"><input type="checkbox" id="f-compress" checked> 压缩音频以加快上传（推荐，大文件效果明显）</label>
                 <div class="progress" id="progress" style="display:none">
                     <div class="progress-bar" id="progress-bar"></div>
                 </div>
@@ -101,6 +142,11 @@
     <script src="js/community.js"></script>
     <script>
     function fmtMB(n) { return (n / 1048576).toFixed(1) + 'MB'; }
+
+    var CODE_SAMPLES = {
+        python: '# Python 示例：猜数字\nimport random\nsecret = random.randint(1, 100)\nprint("我想了一个 1~100 的数字，猜猜看！")\nfor i in range(7):\n    g = int(input("第" + str(i + 1) + "次："))\n    if g == secret:\n        print("猜对了！🎉")\n        break\n    print("太大了" if g > secret else "太小了")\nelse:\n    print("答案是", secret)',
+        cpp: '#include <iostream>\nusing namespace std;\n// C++ 示例：九九乘法表\nint main() {\n    for (int i = 1; i <= 9; i++) {\n        for (int j = 1; j <= i; j++)\n            cout << j << "x" << i << "=" << i * j << "\\t";\n        cout << endl;\n    }\n    return 0;\n}'
+    };
 
     /* 把 sb3 里大于 512KB 的 wav 音频转成 mp3，显著减小体积 */
     async function compressSb3(file, onStep) {
@@ -188,7 +234,22 @@
         var me = await currentUser();
         if (!me) { authRequiredRedirect(); return; }
 
-        /* 编辑模式：?edit=作品ID */
+        var curType = 'scratch';
+        var cards = document.getElementById('type-cards');
+        function setType(t) {
+            curType = t;
+            document.getElementById('sec-scratch').style.display = t === 'scratch' ? '' : 'none';
+            document.getElementById('sec-code').style.display = (t === 'python' || t === 'cpp') ? '' : 'none';
+            document.getElementById('sec-apk').style.display = t === 'apk' ? '' : 'none';
+            document.getElementById('code-ext').textContent = t === 'cpp' ? '.cpp' : '.py';
+            document.getElementById('f-codefile').accept = t === 'cpp' ? '.cpp,.cc,.cxx' : '.py';
+            cards.querySelectorAll('input[name="wtype"]').forEach(function (r) { r.checked = r.value === t; });
+        }
+        cards.addEventListener('change', function (e) {
+            if (e.target.name === 'wtype') setType(e.target.value);
+        });
+
+        /* 编辑模式：?edit=作品ID（类型不可改） */
         var editId = new URLSearchParams(location.search).get('edit');
         var editWork = null;
         if (editId) {
@@ -198,13 +259,26 @@
                 return;
             }
             editWork = er.data;
+            var et = workTypeOf(editWork);
             document.querySelector('.section-title').textContent = '编辑作品';
             document.getElementById('f-title').value = editWork.title || '';
             document.getElementById('f-desc').value = editWork.description || '';
             document.getElementById('f-cat').value = editWork.category || '游戏';
-            document.getElementById('f-sb3').removeAttribute('required');
-            document.querySelector('label[for="f-sb3"]').textContent = '游戏文件（.sb3，不换请留空）';
             document.getElementById('pub-btn').textContent = '保存修改';
+            document.getElementById('type-locked').style.display = '';
+            cards.querySelectorAll('input[name="wtype"]').forEach(function (r) { r.disabled = r.value !== et; });
+            setType(et);
+            if (et === 'python' || et === 'cpp') {
+                document.getElementById('f-code').value = editWork.code || '';
+            }
+            if (et === 'scratch') {
+                document.querySelector('label[for="f-sb3"]').textContent = '游戏文件（.sb3，不换请留空）';
+            }
+            if (et === 'apk') {
+                document.querySelector('label[for="f-apk"]').innerHTML = 'APK 文件 <span class="form-hint">（不换请留空）</span>';
+            }
+        } else {
+            setType('scratch');
         }
 
         var form = document.getElementById('pub-form');
@@ -212,7 +286,6 @@
         var btn = document.getElementById('pub-btn');
         var bar = document.getElementById('progress');
         var barIn = document.getElementById('progress-bar');
-        var fileInfo = document.getElementById('file-info');
 
         function setNote(msg, cls) { note.textContent = msg; note.className = 'form-note ' + (cls || ''); }
         function setProgress(p) {
@@ -224,7 +297,24 @@
 
         document.getElementById('f-sb3').addEventListener('change', function (e) {
             var f = e.target.files[0];
-            fileInfo.textContent = f ? ('已选择：' + f.name + '（' + fmtMB(f.size) + '）') : '';
+            document.getElementById('file-info').textContent = f ? ('已选择：' + f.name + '（' + fmtMB(f.size) + '）') : '';
+        });
+        document.getElementById('f-apk').addEventListener('change', function (e) {
+            var f = e.target.files[0];
+            document.getElementById('apk-info').textContent = f ? ('已选择：' + f.name + '（' + fmtMB(f.size) + '）') : '';
+        });
+        document.getElementById('f-codefile').addEventListener('change', function (e) {
+            var f = e.target.files[0];
+            if (!f) return;
+            var rd = new FileReader();
+            rd.onload = function () {
+                document.getElementById('f-code').value = String(rd.result || '');
+                document.getElementById('code-info').textContent = '已导入：' + f.name;
+            };
+            rd.readAsText(f);
+        });
+        document.getElementById('code-sample').addEventListener('click', function () {
+            document.getElementById('f-code').value = CODE_SAMPLES[curType] || CODE_SAMPLES.python;
         });
 
         form.addEventListener('submit', async function (e) {
@@ -232,65 +322,92 @@
             var title = document.getElementById('f-title').value.trim();
             var cat = document.getElementById('f-cat').value;
             var desc = document.getElementById('f-desc').value.trim();
-            var sb3File = document.getElementById('f-sb3').files[0];
-            var coverFile = document.getElementById('f-cover').files[0];
-            var wantCompress = document.getElementById('f-compress').checked;
-
             if (!title) { setNote('请填写作品名称', 'err'); return; }
-            if (!sb3File && !editWork) { setNote('请选择 .sb3 文件', 'err'); return; }
-            if (sb3File && !/\.sb3$/i.test(sb3File.name)) { setNote('游戏文件必须是 .sb3 格式', 'err'); return; }
-            if (sb3File && sb3File.size > 50 * 1024 * 1024) { setNote('文件太大，请小于 50MB', 'err'); return; }
 
             btn.disabled = true;
             setProgress(0);
             try {
-                var sb3Url = editWork ? editWork.sb3_url : null;
-                if (sb3File) {
-                    var uploadBlob = sb3File;
-                    if (wantCompress) {
-                        setNote('正在分析文件…', 'sending');
-                        var cr = await compressSb3(sb3File, function (s) { setNote(s, 'sending'); });
-                        if (cr.compressed) {
-                            uploadBlob = cr.blob;
-                            setNote(cr.info + '，开始上传…', 'sending');
-                        }
-                    }
-                    setNote('正在上传游戏文件…', 'sending');
-                    var sb3Path = me.id + '/' + Date.now() + '.sb3';
-                    sb3Url = await uploadWithProgress('sb3', sb3Path, uploadBlob, 'application/octet-stream', function (p) {
-                        if (p >= 0) {
-                            setProgress(p);
-                            setNote('正在上传游戏文件… ' + Math.round(p * 100) + '%', 'sending');
-                        } else {
-                            setProgress(-1);
-                        }
-                    });
-                }
-
+                var coverFile = document.getElementById('f-cover').files[0];
                 var coverUrl = editWork ? editWork.cover_url : null;
                 if (coverFile) {
                     setNote('正在上传封面…', 'sending');
                     setProgress(-1);
                     var ext = (coverFile.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
-                    var coverPath = me.id + '/' + Date.now() + '.' + ext;
-                    coverUrl = await uploadWithProgress('covers', coverPath, coverFile, coverFile.type || 'image/jpeg', null);
+                    coverUrl = await uploadWithProgress('covers', me.id + '/' + Date.now() + '.' + ext, coverFile, coverFile.type || 'image/jpeg', null);
+                }
+
+                var payload = { title: title, description: desc, category: cat, cover_url: coverUrl };
+
+                if (curType === 'scratch') {
+                    var sb3File = document.getElementById('f-sb3').files[0];
+                    var wantCompress = document.getElementById('f-compress').checked;
+                    if (!sb3File && !editWork) { setNote('请选择 .sb3 文件', 'err'); btn.disabled = false; return; }
+                    if (sb3File && !/\.sb3$/i.test(sb3File.name)) { setNote('游戏文件必须是 .sb3 格式', 'err'); btn.disabled = false; return; }
+                    if (sb3File && sb3File.size > 50 * 1024 * 1024) { setNote('文件太大，请小于 50MB', 'err'); btn.disabled = false; return; }
+                    var sb3Url = editWork ? editWork.sb3_url : null;
+                    if (sb3File) {
+                        var uploadBlob = sb3File;
+                        if (wantCompress) {
+                            setNote('正在分析文件…', 'sending');
+                            var cr = await compressSb3(sb3File, function (s) { setNote(s, 'sending'); });
+                            if (cr.compressed) { uploadBlob = cr.blob; setNote(cr.info + '，开始上传…', 'sending'); }
+                        }
+                        setNote('正在上传游戏文件…', 'sending');
+                        sb3Url = await uploadWithProgress('sb3', me.id + '/' + Date.now() + '.sb3', uploadBlob, 'application/octet-stream', function (p) {
+                            if (p >= 0) { setProgress(p); setNote('正在上传游戏文件… ' + Math.round(p * 100) + '%', 'sending'); }
+                            else setProgress(-1);
+                        });
+                    }
+                    payload.sb3_url = sb3Url;
+                    payload.work_type = 'scratch';
+                } else if (curType === 'python' || curType === 'cpp') {
+                    var code = document.getElementById('f-code').value;
+                    if (!code.trim() && !editWork) { setNote('请填写或导入源代码', 'err'); btn.disabled = false; return; }
+                    if (code.length > 200 * 1024) { setNote('代码太长，请小于 200KB', 'err'); btn.disabled = false; return; }
+                    payload.work_type = curType;
+                    payload.code = code;
+                    if (editWork && !code.trim()) payload.code = editWork.code;
+                } else if (curType === 'apk') {
+                    var apkFile = document.getElementById('f-apk').files[0];
+                    if (!apkFile && !editWork) { setNote('请选择 .apk 文件', 'err'); btn.disabled = false; return; }
+                    if (apkFile && !/\.apk$/i.test(apkFile.name)) { setNote('必须是 .apk 文件', 'err'); btn.disabled = false; return; }
+                    if (apkFile && apkFile.size > 100 * 1024 * 1024) { setNote('文件太大，请小于 100MB', 'err'); btn.disabled = false; return; }
+                    var apkUrl = editWork ? editWork.apk_url : null;
+                    if (apkFile) {
+                        setNote('正在上传 APK…', 'sending');
+                        apkUrl = await uploadWithProgress('apks', me.id + '/' + Date.now() + '.apk', apkFile, 'application/vnd.android.package-archive', function (p) {
+                            if (p >= 0) { setProgress(p); setNote('正在上传 APK… ' + Math.round(p * 100) + '%', 'sending'); }
+                            else setProgress(-1);
+                        });
+                    }
+                    var shots = editWork ? (editWork.screenshots || []) : [];
+                    var shotFiles = Array.prototype.slice.call(document.getElementById('f-shots').files || []).slice(0, 3);
+                    if (shotFiles.length) {
+                        setNote('正在上传截图…', 'sending');
+                        setProgress(-1);
+                        shots = [];
+                        for (var si = 0; si < shotFiles.length; si++) {
+                            var sf = shotFiles[si];
+                            var sext = (sf.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+                            var surl = await uploadWithProgress('covers', 'shots/' + me.id + '_' + Date.now() + '_' + si + '.' + sext, sf, sf.type || 'image/jpeg', null);
+                            shots.push(surl);
+                        }
+                    }
+                    payload.work_type = 'apk';
+                    payload.apk_url = apkUrl;
+                    payload.screenshots = shots;
                 }
 
                 if (editWork) {
                     setNote('正在保存…', 'sending');
-                    var ur = await sb.from('works').update({
-                        title: title, description: desc, category: cat,
-                        sb3_url: sb3Url, cover_url: coverUrl
-                    }).eq('id', editWork.id);
+                    var ur = await sb.from('works').update(payload).eq('id', editWork.id);
                     if (ur.error) throw ur.error;
                     setNote('保存成功，正在跳转…', 'ok');
                     location.href = 'community-play.html?id=' + editWork.id;
                 } else {
                     setNote('正在发布…', 'sending');
-                    var ins = await sb.from('works').insert({
-                        title: title, description: desc, category: cat,
-                        sb3_url: sb3Url, cover_url: coverUrl, author_id: me.id
-                    }).select('id').single();
+                    payload.author_id = me.id;
+                    var ins = await sb.from('works').insert(payload).select('id').single();
                     if (ins.error) throw ins.error;
                     setNote('发布成功，正在跳转…', 'ok');
                     location.href = 'community-play.html?id=' + ins.data.id;

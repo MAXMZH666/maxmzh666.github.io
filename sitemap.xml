@@ -22,6 +22,11 @@
   <url><loc>https://maxmzh666.github.io/blog-spxd-dev.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
   <url><loc>https://maxmzh666.github.io/blog-github-pages.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
   <url><loc>https://maxmzh666.github.io/community.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://maxmzh666.github.io/community-play.html</loc><changefreq>daily</changefreq><priority>0.6</priority></url>
   <url><loc>https://maxmzh666.github.io/community-publish.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://maxmzh666.github.io/community-code.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://maxmzh666.github.io/community-rank.html</loc><changefreq>daily</changefreq><priority>0.6</priority></url>
+  <url><loc>https://maxmzh666.github.io/community-user.html</loc><changefreq>daily</changefreq><priority>0.5</priority></url>
+  <url><loc>https://maxmzh666.github.io/community-notify.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://maxmzh666.github.io/community-auth.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
 </urlset>

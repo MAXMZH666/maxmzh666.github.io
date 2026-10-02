@@ -41,6 +41,8 @@
             <nav class="sub-links" aria-label="社区导航">
                 <a href="community.html" data-sub="home">首页</a>
                 <a href="community-publish.html" data-sub="publish">发布作品</a>
+                <a href="community-code.html" data-sub="code">💻 在线编程</a>
+                <a href="community-rank.html" data-sub="rank">🏆 排行榜</a>
                 <a href="community-notify.html" data-sub="notify" id="sub-bell" style="display:none">🔔 通知</a>
                 <span id="sub-auth"><a href="community-auth.html">登录</a></span>
             </nav>
@@ -52,7 +54,7 @@
             <div class="community-head reveal">
                 <div>
                     <h1 class="section-title" style="margin:0">游戏社区</h1>
-                    <p class="section-sub" style="margin:8px 0 0">分享你的 Scratch 作品，在线试玩、评论、点赞。</p>
+                    <p class="section-sub" style="margin:8px 0 0">分享 Scratch、Python、C++、APK 作品，在线试玩运行、评论、点赞。</p>
                 </div>
                 <a class="btn btn-blue" href="community-publish.html">＋ 发布作品</a>
             </div>
@@ -62,6 +64,7 @@
                 <button class="btn btn-blue" id="q-btn">搜索</button>
             </div>
             <div class="filter-chips reveal" id="cat-chips"></div>
+            <div class="filter-chips reveal" id="type-chips"></div>
             <div class="sort-tabs reveal" id="sort-tabs">
                 <button data-sort="new" class="active">最新发布</button>
                 <button data-sort="hot">最多点赞</button>
@@ -100,8 +103,15 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/community.js"></script>
     <script>
-    var state = { q: '', cat: '全部', sort: 'new' };
+    var state = { q: '', cat: '全部', type: 'all', sort: 'new' };
     var nameMap = {};
+    var TYPE_FILTERS = [
+        { v: 'all', label: '全部类型' },
+        { v: 'scratch', label: '🎮 Scratch' },
+        { v: 'python', label: '🐍 Python' },
+        { v: 'cpp', label: '⚙️ C++' },
+        { v: 'apk', label: '📱 APK' }
+    ];
 
     function workCard(w, counts) {
         var cover = w.cover_url
@@ -112,7 +122,7 @@
             '<div class="card-body"><h3>' + esc(w.title) + '</h3>' +
             '<p>' + esc(nameMap[w.author_id] || '未知') + ' · ' + fmtDate(w.created_at) + '</p>' +
             '<div class="card-tags"><span class="tag">❤ ' + (counts[w.id] || 0) + '</span>' +
-            '<span class="tag">👁 ' + (w.views || 0) + '</span>' +
+            '<span class="tag">👁 ' + (w.views || 0) + '</span>' + typeBadge(workTypeOf(w)) +
             (w.category ? '<span class="tag blue">' + esc(w.category) + '</span>' : '') + '</div>' +
             '</div></a>';
     }
@@ -143,8 +153,9 @@
         grid.innerHTML = skeletonHtml(6);
         note.style.display = 'none';
         try {
-            var query = sb.from('works').select('id,title,cover_url,created_at,author_id,category,views');
+            var query = sb.from('works').select('id,title,cover_url,created_at,author_id,category,views,work_type');
             if (state.cat !== '全部') query = query.eq('category', state.cat);
+            if (state.type !== 'all') query = query.eq('work_type', state.type);
             if (state.q) query = query.ilike('title', '%' + escLike(state.q) + '%');
             query = state.sort === 'views'
                 ? query.order('views', { ascending: false })
@@ -187,7 +198,7 @@
     async function loadFeatured() {
         var wrap = document.getElementById('feat-wrap');
         try {
-            var res = await sb.from('works').select('id,title,cover_url,created_at,author_id,category,views')
+            var res = await sb.from('works').select('id,title,cover_url,created_at,author_id,category,views,work_type')
                 .order('created_at', { ascending: false }).limit(50);
             var works = res.data || [];
             if (!works.length) return;
@@ -213,6 +224,17 @@
             if (!b) return;
             state.cat = b.getAttribute('data-cat');
             chips.querySelectorAll('button').forEach(function (x) { x.classList.toggle('active', x === b); });
+            loadWorks();
+        });
+        var tChips = document.getElementById('type-chips');
+        tChips.innerHTML = TYPE_FILTERS.map(function (t) {
+            return '<button class="filter-chip' + (t.v === 'all' ? ' active' : '') + '" data-type="' + t.v + '">' + t.label + '</button>';
+        }).join('');
+        tChips.addEventListener('click', function (e) {
+            var b = e.target.closest('button[data-type]');
+            if (!b) return;
+            state.type = b.getAttribute('data-type');
+            tChips.querySelectorAll('button').forEach(function (x) { x.classList.toggle('active', x === b); });
             loadWorks();
         });
         document.getElementById('sort-tabs').addEventListener('click', function (e) {

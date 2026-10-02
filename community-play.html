@@ -41,6 +41,8 @@
             <nav class="sub-links" aria-label="社区导航">
                 <a href="community.html" data-sub="home">首页</a>
                 <a href="community-publish.html" data-sub="publish">发布作品</a>
+                <a href="community-code.html" data-sub="code">💻 在线编程</a>
+                <a href="community-rank.html" data-sub="rank">🏆 排行榜</a>
                 <a href="community-notify.html" data-sub="notify" id="sub-bell" style="display:none">🔔 通知</a>
                 <span id="sub-auth"><a href="community-auth.html">登录</a></span>
             </nav>
@@ -74,6 +76,102 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/community.js"></script>
     <script>
+    var pyodide = null;
+
+    function injectHljsTheme() {
+        if (document.querySelector('link[data-hljs]')) return;
+        var l = document.createElement('link');
+        l.rel = 'stylesheet';
+        l.setAttribute('data-hljs', '1');
+        l.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css';
+        document.head.appendChild(l);
+    }
+
+    /* Python 网页运行（Pyodide） */
+    async function runPython(code, inputText, say, append) {
+        say('正在加载 Python 环境（首次约 10MB，请稍候）…');
+        await loadScriptOnce('https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js');
+        if (!pyodide) pyodide = await loadPyodide();
+        var pos = 0;
+        try {
+            pyodide.setStdin({ stdin: function () {
+                return pos >= inputText.length ? null : inputText.charCodeAt(pos++);
+            } });
+        } catch (e) {}
+        pyodide.setStdout({ batched: function (s) { append(s); } });
+        pyodide.setStderr({ batched: function (s) { append(s); } });
+        say('运行中…');
+        try {
+            await pyodide.runPythonAsync(code);
+            say('运行结束');
+        } catch (e) {
+            append('\n[错误] ' + (e && e.message ? e.message : e));
+            say('运行出错');
+        }
+    }
+
+    /* C++ 网页运行（JSCPP 解释器） */
+    async function runCpp(code, inputText, say, append) {
+        say('正在加载 C++ 运行环境…');
+        await loadScriptOnce('https://cdn.jsdelivr.net/npm/JSCPP@2.0.9/lib/commonjs.min.js');
+        if (!window.JSCPP || !JSCPP.run) throw new Error('C++ 环境加载失败');
+        say('运行中…');
+        var total = 0;
+        await new Promise(function (resolve) {
+            setTimeout(function () {
+                try {
+                    JSCPP.run(code, inputText, {
+                        stdio: { write: function (s) {
+                            total += s.length;
+                            if (total < 30000) append(s);
+                        } }
+                    });
+                    if (total >= 30000) append('\n[输出过长，已截断]');
+                    say('运行结束');
+                } catch (e) {
+                    append('\n[错误] ' + (e && e.message ? e.message : e));
+                    say('运行出错');
+                }
+                resolve();
+            }, 30);
+        });
+    }
+
+    function runnerHtml() {
+        return '<div class="runner">' +
+            '<div class="runner-bar"><button class="btn btn-blue" id="run-btn" type="button">▶ 运行</button>' +
+            '<button class="btn btn-ghost" id="clear-btn" type="button">清空输出</button>' +
+            '<span class="run-status" id="run-status"></span></div>' +
+            '<label for="run-input">程序输入 <span class="form-hint">（代码里有 input()/cin 时，在这里按行填写）</span></label>' +
+            '<textarea id="run-input" class="code-input" rows="3" spellcheck="false" placeholder="例如：\n42\nhello"></textarea>' +
+            '<label>输出</label>' +
+            '<pre id="run-output" class="console">点击"运行"开始…</pre>' +
+            '<p class="form-hint">⚠️ 只支持控制台程序（print/input、cout/cin）；图形库暂不支持。请确认代码没有死循环，否则页面会卡住。</p>' +
+            '</div>';
+    }
+
+    function bindRunner(kind, code) {
+        var out = document.getElementById('run-output');
+        var status = document.getElementById('run-status');
+        var runBtn = document.getElementById('run-btn');
+        function say(t) { status.textContent = t; }
+        function append(s) { out.textContent += s; out.scrollTop = out.scrollHeight; }
+        document.getElementById('clear-btn').addEventListener('click', function () { out.textContent = ''; });
+        runBtn.addEventListener('click', async function () {
+            runBtn.disabled = true;
+            out.textContent = '';
+            try {
+                var inputText = document.getElementById('run-input').value;
+                if (kind === 'python') await runPython(code, inputText, say, append);
+                else await runCpp(code, inputText, say, append);
+            } catch (e) {
+                append('[错误] ' + (e && e.message ? e.message : e));
+                say('运行出错');
+            }
+            runBtn.disabled = false;
+        });
+    }
+
     (async function () {
         await renderSubHeader();
         var wrap = document.getElementById('play-wrap');
@@ -86,6 +184,7 @@
             return;
         }
         var w = res.data;
+        var wtype = workTypeOf(w);
         var authorName = '未知';
         try {
             var pr = await sb.from('profiles').select('username').eq('id', w.author_id).single();
@@ -104,17 +203,50 @@
                 try { localStorage.setItem(key, today); } catch (e) {}
             }
         })();
-        var embedUrl = 'https://turbowarp.org/embed?project_url=' + encodeURIComponent(w.sb3_url) +
-            '&project_title=' + encodeURIComponent(w.title) + '&autoplay';
         var me = await currentUser();
         var isAuthor = me && me.id === w.author_id;
+
+        /* ---- 按类型渲染预览区 ---- */
+        var previewHtml = '';
+        if (wtype === 'scratch') {
+            var embedUrl = 'https://turbowarp.org/embed?project_url=' + encodeURIComponent(w.sb3_url) +
+                '&project_title=' + encodeURIComponent(w.title) + '&autoplay';
+            previewHtml = '<div class="player-wrap"><iframe src="' + esc(embedUrl) + '" allowtransparency="true" scrolling="no" allowfullscreen title="' + esc(w.title) + '"></iframe></div>' +
+                (isAuthor ? '<p class="form-hint" style="margin-top:10px">💻 <a href="community-code.html?edit=' + id + '">在在线编程里继续编辑这个作品</a></p>' : '');
+        } else if (wtype === 'python' || wtype === 'cpp') {
+            previewHtml = '<pre class="code-view"><code id="code-block" class="' + (wtype === 'python' ? 'language-python' : 'language-cpp') + '">' +
+                esc(w.code || '') + '</code></pre>' + runnerHtml();
+        } else if (wtype === 'apk') {
+            var shots = w.screenshots || [];
+            var shotHtml = '';
+            if (shots.length) {
+                shotHtml = '<div class="shots">' + shots.map(function (u) {
+                    return '<a href="' + esc(u) + '" target="_blank" rel="noopener"><img src="' + esc(u) + '" loading="lazy" alt="应用截图"></a>';
+                }).join('') + '</div>';
+            } else if (w.cover_url) {
+                shotHtml = '<div class="shots"><img src="' + esc(w.cover_url) + '" alt="封面"></div>';
+            }
+            var fileName = 'app.apk';
+            try { fileName = decodeURIComponent(String(w.apk_url).split('/').pop().split('?')[0]) || fileName; } catch (e) {}
+            previewHtml = '<div class="apk-card">' +
+                '<div class="apk-head">📱 <b>Android 安装包</b></div>' +
+                shotHtml +
+                '<p class="work-meta">文件：' + esc(fileName) + ' · 发布于 ' + fmtDate(w.created_at) + '</p>' +
+                '<a class="btn btn-blue" href="' + esc(w.apk_url) + '" download>⬇ 下载 APK</a>' +
+                '<h3>安装步骤</h3><ol class="apk-steps">' +
+                '<li>在安卓手机上点击上面的下载按钮</li>' +
+                '<li>下载完成后点击文件，允许"安装未知来源应用"</li>' +
+                '<li>按提示完成安装，即可打开使用</li></ol>' +
+                '<p class="form-hint">APK 无法在网页直接运行，请下载到安卓手机安装。</p></div>';
+        }
 
         wrap.innerHTML =
             '<p class="article-back"><a href="community.html">← 返回社区</a></p>' +
             '<h1 class="section-title" style="margin-top:6px">' + esc(w.title) + '</h1>' +
-            '<p class="work-meta">作者：<a href="community-user.html?id=' + w.author_id + '">' + esc(authorName) + '</a>' +
+            '<p class="work-meta">' + typeBadge(wtype) +
+            ' 作者：<a href="community-user.html?id=' + w.author_id + '">' + esc(authorName) + '</a>' +
             ' · ' + fmtDate(w.created_at) + ' · 👁 <span id="view-count">' + (w.views || 0) + '</span></p>' +
-            '<div class="player-wrap"><iframe src="' + esc(embedUrl) + '" allowtransparency="true" scrolling="no" allowfullscreen title="' + esc(w.title) + '"></iframe></div>' +
+            previewHtml +
             (w.description ? '<p style="margin-top:18px;line-height:1.8">' + esc(w.description) + '</p>' : '') +
             '<div class="work-actions">' +
                 '<button class="like-btn" id="like-btn">❤ <span id="like-count">…</span></button>' +
@@ -130,6 +262,16 @@
                 '<p class="form-note" id="c-note"></p>' +
                 '<button type="submit">' + (me ? '发表评论' : '登录后评论') + '</button>' +
             '</form></div>';
+
+        /* 代码高亮（python/cpp） */
+        if ((wtype === 'python' || wtype === 'cpp') && w.code) {
+            injectHljsTheme();
+            try {
+                await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js');
+                if (window.hljs) hljs.highlightElement(document.getElementById('code-block'));
+            } catch (e) {}
+            bindRunner(wtype, w.code || '');
+        }
 
         /* 点赞 */
         var likeBtn = document.getElementById('like-btn');
