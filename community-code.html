@@ -50,21 +50,22 @@
     </div>
 
     <main>
-        <section class="portfolio">
+        <section class="portfolio editor-page">
             <p class="article-back"><a href="community.html">← 返回社区</a></p>
             <h1 class="section-title">Scratch 在线编程</h1>
-            <p class="section-sub" id="code-sub">在浏览器里直接编程（TurboWarp 编辑器），做完导出 <b>.sb3</b> 去发布页上传，作品就能上线了。</p>
+            <p class="section-sub" id="code-sub">在社区里直接编程（TurboWarp 编辑器），做完导出 <b>.sb3</b> 去发布页上传，作品就能上线了。</p>
             <div class="tip-box">
-                <b>三步发布：</b>① 点下面按钮打开编辑器编程 → ② 编辑器左上角 <b>文件 → 保存到电脑</b>，得到 .sb3 文件 →
+                <b>三步发布：</b>① 在下面编辑器里编程 → ② 编辑器左上角 <b>文件 → 保存到电脑</b>，得到 .sb3 文件 →
                 ③ <a href="community-publish.html">去发布作品</a>上传。
             </div>
-            <div class="editor-bar">
-                <a class="btn btn-blue btn-big" id="open-editor" href="https://turbowarp.org/editor" target="_blank" rel="noopener">💻 打开在线编辑器</a>
-                <a class="btn btn-ghost" href="community-publish.html">📤 去发布作品</a>
+            <div class="editor-wrap">
+                <div class="editor-loading" id="editor-loading">编辑器加载中…（首次约十几秒）</div>
+                <iframe id="tw-editor" title="Scratch 在线编辑器" src="tw-editor/editor.html"
+                    allow="autoplay; fullscreen; clipboard-read; clipboard-write"></iframe>
             </div>
-            <div class="tip-box">
-                <b>小提示：</b>TurboWarp 不允许把编辑器嵌进别的网页，所以这里用新标签页打开，功能完全一样。
-                已有 Scratch 作品想继续改？去它的试玩页点"在在线编程里继续编辑"，编辑器会自动载入那个作品。
+            <div class="editor-bar">
+                <a class="btn btn-ghost" id="open-editor-tab" href="tw-editor/editor.html" target="_blank" rel="noopener">↗ 新标签页打开编辑器</a>
+                <a class="btn btn-blue" href="community-publish.html">📤 去发布作品</a>
             </div>
         </section>
     </main>
@@ -92,16 +93,20 @@
     <script>
     (async function () {
         await renderSubHeader();
-        /* ?edit=作品ID：打开编辑器时自动载入已发布的 Scratch 作品继续改 */
+        var frame = document.getElementById('tw-editor');
+        var loading = document.getElementById('editor-loading');
+        frame.addEventListener('load', function () { loading.style.display = 'none'; });
+        /* ?edit=作品ID：编辑器自动载入已发布的 Scratch 作品继续改 */
         var editId = new URLSearchParams(location.search).get('edit');
-        var btn = document.getElementById('open-editor');
         if (editId) {
             try {
                 var r = await sb.from('works').select('sb3_url,work_type,title').eq('id', editId).single();
                 if (r.data && (r.data.work_type || 'scratch') === 'scratch' && r.data.sb3_url) {
-                    btn.href = 'https://turbowarp.org/editor?project_url=' + encodeURIComponent(r.data.sb3_url);
+                    var src = 'tw-editor/editor.html?project_url=' + encodeURIComponent(r.data.sb3_url);
+                    frame.src = src;
+                    document.getElementById('open-editor-tab').href = src;
                     document.getElementById('code-sub').innerHTML =
-                        '点击打开编辑器，会自动载入《' + esc(r.data.title || '') + '》，改完后 <b>文件 → 保存到电脑</b>，再去发布页更新。';
+                        '已载入《' + esc(r.data.title || '') + '》继续编辑，改完后 <b>文件 → 保存到电脑</b>，再去发布页更新。';
                 }
             } catch (e) {}
         }
