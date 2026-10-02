@@ -14,7 +14,6 @@
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="css/styles.css">
     <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <header class="site-header">
@@ -33,11 +32,20 @@
                 <li><a href="community.html" class="active">社区</a></li>
                 <li><a href="forum.html">论坛</a></li>
                 <li><a href="contact.html">联系方式</a></li>
-                <li id="nav-bell"></li>
-                <li id="nav-auth"><a href="community-auth.html">登录</a></li>
             </ul>
         </nav>
     </header>
+    <div class="sub-header">
+        <div class="sub-header-inner">
+            <a class="sub-brand" href="community.html">🎮 <span>游戏社区</span></a>
+            <nav class="sub-links" aria-label="社区导航">
+                <a href="community.html" data-sub="home">首页</a>
+                <a href="community-publish.html" data-sub="publish">发布作品</a>
+                <a href="community-notify.html" data-sub="notify" id="sub-bell" style="display:none">🔔 通知</a>
+                <span id="sub-auth"><a href="community-auth.html">登录</a></span>
+            </nav>
+        </div>
+    </div>
 
     <main>
         <section class="portfolio" id="user-wrap">
@@ -63,11 +71,11 @@
     </footer>
 
     <script src="js/scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/community.js"></script>
     <script>
     (async function () {
-        await renderNavAuth();
-        await renderNavBell();
+        await renderSubHeader();
         var wrap = document.getElementById('user-wrap');
         var uid = new URLSearchParams(location.search).get('id');
         if (!uid) { wrap.innerHTML = '<p class="works-note">缺少用户 ID。<a href="community.html">返回社区</a></p>'; return; }

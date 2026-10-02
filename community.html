@@ -14,7 +14,6 @@
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="css/styles.css">
     <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <header class="site-header">
@@ -33,11 +32,20 @@
                 <li><a href="community.html" class="active">社区</a></li>
                 <li><a href="forum.html">论坛</a></li>
                 <li><a href="contact.html">联系方式</a></li>
-                <li id="nav-bell"></li>
-                <li id="nav-auth"><a href="community-auth.html">登录</a></li>
             </ul>
         </nav>
     </header>
+    <div class="sub-header">
+        <div class="sub-header-inner">
+            <a class="sub-brand" href="community.html">🎮 <span>游戏社区</span></a>
+            <nav class="sub-links" aria-label="社区导航">
+                <a href="community.html" data-sub="home">首页</a>
+                <a href="community-publish.html" data-sub="publish">发布作品</a>
+                <a href="community-notify.html" data-sub="notify" id="sub-bell" style="display:none">🔔 通知</a>
+                <span id="sub-auth"><a href="community-auth.html">登录</a></span>
+            </nav>
+        </div>
+    </div>
 
     <main>
         <section class="portfolio">
@@ -89,6 +97,7 @@
     </footer>
 
     <script src="js/scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/community.js"></script>
     <script>
     var state = { q: '', cat: '全部', sort: 'new' };
@@ -131,9 +140,8 @@
     async function loadWorks() {
         var grid = document.getElementById('works-grid');
         var note = document.getElementById('works-note');
-        grid.innerHTML = '';
-        note.style.display = 'block';
-        note.textContent = '加载中…';
+        grid.innerHTML = skeletonHtml(6);
+        note.style.display = 'none';
         try {
             var query = sb.from('works').select('id,title,cover_url,created_at,author_id,category,views');
             if (state.cat !== '全部') query = query.eq('category', state.cat);
@@ -144,19 +152,36 @@
             var res = await query;
             if (res.error) throw res.error;
             var works = res.data || [];
-            await fillNames(works.map(function (w) { return w.author_id; }));
-            var counts = await countLikes(works.map(function (w) { return w.id; }));
+            var ids = works.map(function (w) { return w.id; });
+            var authorIds = works.map(function (w) { return w.author_id; });
+            var results = await Promise.all([countLikes(ids), fillNames(authorIds)]);
+            var counts = results[0];
             if (state.sort === 'hot') {
                 works.sort(function (a, b) { return (counts[b.id] || 0) - (counts[a.id] || 0); });
             }
-            if (!works.length) { note.textContent = '没有找到作品，换个条件试试。'; return; }
-            note.style.display = 'none';
+            if (!works.length) {
+                grid.innerHTML = '';
+                note.textContent = '没有找到作品，换个条件试试。';
+                note.style.display = 'block';
+                return;
+            }
             grid.innerHTML = works.map(function (w) { return workCard(w, counts); }).join('');
             document.getElementById('list-title').textContent =
                 state.q ? '搜索：' + state.q : (state.cat === '全部' ? '全部作品' : state.cat);
         } catch (e) {
+            grid.innerHTML = '';
             note.textContent = '加载失败：' + e.message;
+            note.style.display = 'block';
         }
+    }
+
+    function skeletonHtml(n) {
+        var s = '';
+        for (var i = 0; i < n; i++) {
+            s += '<div class="skeleton-card"><div class="skeleton skeleton-cover"></div>' +
+                '<div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div>';
+        }
+        return s;
     }
 
     async function loadFeatured() {
@@ -178,8 +203,7 @@
     }
 
     (async function () {
-        await renderNavAuth();
-        await renderNavBell();
+        await renderSubHeader();
         var chips = document.getElementById('cat-chips');
         chips.innerHTML = ['全部'].concat(WORK_CATEGORIES).map(function (c) {
             return '<button class="filter-chip' + (c === '全部' ? ' active' : '') + '" data-cat="' + c + '">' + c + '</button>';
@@ -202,10 +226,14 @@
             state.q = document.getElementById('q').value.trim();
             loadWorks();
         }
+        var searchTimer = null;
         document.getElementById('q-btn').addEventListener('click', doSearch);
         document.getElementById('q').addEventListener('keydown', function (e) { if (e.key === 'Enter') doSearch(); });
-        await loadFeatured();
-        await loadWorks();
+        document.getElementById('q').addEventListener('input', function () {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(doSearch, 400);
+        });
+        await Promise.all([loadFeatured(), loadWorks()]);
     })();
     </script>
     <script defer src="https://vercount.one/js"></script>

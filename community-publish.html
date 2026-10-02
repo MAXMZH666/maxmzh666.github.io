@@ -14,7 +14,6 @@
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="css/styles.css">
     <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/spark-md5@3.0.2/spark-md5.min.js"></script>
@@ -36,11 +35,20 @@
                 <li><a href="community.html" class="active">社区</a></li>
                 <li><a href="forum.html">论坛</a></li>
                 <li><a href="contact.html">联系方式</a></li>
-                <li id="nav-bell"></li>
-                <li id="nav-auth"><a href="community-auth.html">登录</a></li>
             </ul>
         </nav>
     </header>
+    <div class="sub-header">
+        <div class="sub-header-inner">
+            <a class="sub-brand" href="community.html">🎮 <span>游戏社区</span></a>
+            <nav class="sub-links" aria-label="社区导航">
+                <a href="community.html" data-sub="home">首页</a>
+                <a href="community-publish.html" data-sub="publish">发布作品</a>
+                <a href="community-notify.html" data-sub="notify" id="sub-bell" style="display:none">🔔 通知</a>
+                <span id="sub-auth"><a href="community-auth.html">登录</a></span>
+            </nav>
+        </div>
+    </div>
 
     <main>
         <section class="portfolio">
@@ -89,6 +97,7 @@
     </footer>
 
     <script src="js/scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/community.js"></script>
     <script>
     function fmtMB(n) { return (n / 1048576).toFixed(1) + 'MB'; }
@@ -175,8 +184,7 @@
     }
 
     (async function () {
-        await renderNavAuth();
-        await renderNavBell();
+        await renderSubHeader();
         var me = await currentUser();
         if (!me) { authRequiredRedirect(); return; }
 
