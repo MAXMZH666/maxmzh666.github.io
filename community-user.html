@@ -28,7 +28,6 @@
                 <li><a href="about.html">个人简介</a></li>
                 <li><a href="portfolio.html">作品集</a></li>
                 <li><a href="blog.html">博客</a></li>
-                <li><a href="downloads.html">下载中心</a></li>
                 <li><a href="community.html" class="active">社区</a></li>
                 <li><a href="forum.html">论坛</a></li>
                 <li><a href="contact.html">联系方式</a></li>
@@ -61,7 +60,6 @@
             <a href="about.html">个人简介</a>
             <a href="portfolio.html">作品集</a>
             <a href="blog.html">博客</a>
-            <a href="downloads.html">下载中心</a>
             <a href="community.html">社区</a>
             <a href="forum.html">论坛</a>
             <a href="contact.html">联系方式</a>
@@ -119,6 +117,59 @@
                     }).join('') + '</div>'
                     : '<p class="stat-line">暂无</p>';
             };
+            /* 未发布的作品：草稿箱（仅自己可见） */
+            var draftHtml = '';
+            if (isSelf) {
+                try {
+                    var dr = await sb.from('drafts').select('*').eq('user_id', uid).order('updated_at', { ascending: false });
+                    var drafts = dr.data || [];
+                    var typeIcon = { scratch: '🎮', python: '🐍', cpp: '\u2699\uFE0F' };
+                    draftHtml = '<h2 class="feat-title">📝 未发布的作品</h2>' +
+                        (drafts.length
+                            ? drafts.map(function (d) {
+                                var pubUrl = d.work_type === 'scratch'
+                                    ? 'community-publish.html?sb3=' + encodeURIComponent(d.sb3_url || '') + '&title=' + encodeURIComponent(d.title || '') + '&draft=' + d.id
+                                    : 'community-publish.html?type=' + d.work_type + '&code=' + encodeURIComponent(d.code || '') + '&title=' + encodeURIComponent(d.title || '') + '&draft=' + d.id;
+                                return '<div class="version-row">' +
+                                    '<span class="version-no">' + (typeIcon[d.work_type] || '🎮') + '</span>' +
+                                    '<span class="version-meta">' + esc(d.title || '未命名草稿') +
+                                    '<br><span class="form-hint">更新于 ' + fmtDate(d.updated_at) + '</span></span>' +
+                                    '<span class="version-btns">' +
+                                    '<a class="btn btn-ghost btn-sm" href="community-code.html?draft=' + d.id + '">继续编辑</a>' +
+                                    '<a class="btn btn-ghost btn-sm" href="' + pubUrl + '">发布</a>' +
+                                    '<button class="btn btn-ghost btn-sm" data-deldraft="' + d.id + '">删除</button>' +
+                                    '</span></div>';
+                            }).join('')
+                            : '<p class="works-note">还没有草稿，去在线编程写点东西吧，系统会自动保存。</p>');
+                } catch (e) {}
+            }
+            /* MAXMZH 的作品集 */
+            var portfolioHtml = '';
+            if (pr.data.username === 'MAXMZH') {
+                var pfItems = [
+                    ['审判行动系列', 'project1.html', 'picture/spxd.png', '一系列模拟类型的狙击游戏。'],
+                    ['穿越火线系列', 'project2.html', 'picture/cyhx.png', '一系列拟 3D 的 FPS 射击游戏。'],
+                    ['审判战争', 'project3.html', '', '一款沙盒类多人竞技射击游戏。'],
+                    ['PUBG-PVZ', 'project5.html', 'picture/PUBG-PVZ.png', '植物大战僵尸题材射击游戏。'],
+                    ['审判行动：致命瞄准', 'project9.html', 'picture/spxdzmmz1.png', '审判行动系列最新作。'],
+                    ['Space Waves（太空波）', 'project8.html', 'picture/Spaces%20Waves.jpg', '太空题材 waves 游戏。'],
+                    ['MAX Agar', 'project7.html', 'picture/Agar.png', 'agar.io 同人版。'],
+                    ['MAX 科技云（APP）', 'project4.html', '', 'MAX 科技云手机应用。'],
+                    ['MAX 微信步数修改', 'project6.html', 'picture/MAX%E4%B8%80%E9%94%AE%E5%88%B7%E5%BE%AE%E4%BF%A1%E6%AD%A5%E6%95%B0.png', '微信步数修改工具。'],
+                    ['Banana', 'https://world.xiaomawang.com/community/main/compose/bv2F666J', '', '小码王社区作品。'],
+                    ['避难所 - 生存 2 · 正式版', 'https://gitblock.cn/Projects/878270', '', 'GitBlock 社区作品。']
+                ];
+                portfolioHtml = '<h2 class="feat-title">🖼 作品集</h2>' +
+                    '<div class="card-grid">' + pfItems.map(function (it) {
+                        var cover = it[2]
+                            ? '<img src="' + it[2] + '" alt="' + esc(it[0]) + '" loading="lazy">'
+                            : '<span class="monogram">' + esc(it[0].charAt(0)) + '</span>';
+                        var ext = /^https?:/.test(it[1]) ? ' target="_blank" rel="noopener"' : '';
+                        return '<a class="card" href="' + it[1] + '"' + ext + '>' +
+                            '<div class="card-cover">' + cover + '</div>' +
+                            '<div class="card-body"><h3>' + esc(it[0]) + '</h3><p>' + esc(it[3]) + '</p></div></a>';
+                    }).join('') + '</div>';
+            }
             /* 我的收藏（仅自己可见） */
             var favHtml = '';
             if (isSelf) {
@@ -178,11 +229,20 @@
                             '</div></a>';
                     }).join('') + '</div>'
                     : '<p class="works-note">TA 还没有发布作品。</p>') +
-                favHtml;
+                draftHtml + favHtml + portfolioHtml;
         } catch (e) {
             wrap.innerHTML = '<p class="works-note">' + esc(e.message) + '。<a href="community.html">返回社区</a></p>';
             return;
         }
+
+        /* 删除草稿 */
+        wrap.addEventListener('click', async function (e) {
+            var del = e.target.closest('button[data-deldraft]');
+            if (!del) return;
+            if (!confirm('删除这篇草稿？')) return;
+            await sb.from('drafts').delete().eq('id', del.getAttribute('data-deldraft'));
+            location.reload();
+        });
 
         /* 关注 / 取关 */
         var uFollowBtn = document.getElementById('u-follow-btn');

@@ -28,7 +28,6 @@
                 <li><a href="about.html">个人简介</a></li>
                 <li><a href="portfolio.html">作品集</a></li>
                 <li><a href="blog.html">博客</a></li>
-                <li><a href="downloads.html">下载中心</a></li>
                 <li><a href="community.html" class="active">社区</a></li>
                 <li><a href="forum.html">论坛</a></li>
                 <li><a href="contact.html">联系方式</a></li>
@@ -73,6 +72,11 @@
                     <input type="email" id="a-email" required placeholder="you@example.com">
                     <label for="a-password">密码</label>
                     <input type="password" id="a-password" required minlength="6" placeholder="至少 6 位">
+                    <label for="a-captcha">验证码 <span class="form-hint">（人机验证）</span></label>
+                    <div class="captcha-row">
+                        <canvas id="captcha-canvas" width="120" height="44" title="看不清？点我换一张"></canvas>
+                        <input type="text" id="a-captcha" maxlength="4" required placeholder="输入图中字符" autocomplete="off">
+                    </div>
                     <p class="form-note" id="auth-note"></p>
                     <button type="submit" id="auth-btn">登录</button>
                 </form>
@@ -86,7 +90,6 @@
             <a href="about.html">个人简介</a>
             <a href="portfolio.html">作品集</a>
             <a href="blog.html">博客</a>
-            <a href="downloads.html">下载中心</a>
             <a href="community.html">社区</a>
             <a href="forum.html">论坛</a>
             <a href="contact.html">联系方式</a>
@@ -135,16 +138,61 @@
             btn.textContent = m === 'signup' ? '注册' : '登录';
             note.textContent = '';
             note.className = 'form-note';
+            drawCaptcha();
+            document.getElementById('a-captcha').value = '';
         }
         tabLogin.addEventListener('click', function () { setMode('login'); });
         tabSignup.addEventListener('click', function () { setMode('signup'); });
+
+        /* 图形验证码（防机器人） */
+        var captchaCode = '';
+        var captchaCanvas = document.getElementById('captcha-canvas');
+        function drawCaptcha() {
+            var chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+            captchaCode = '';
+            for (var i = 0; i < 4; i++) captchaCode += chars.charAt(Math.floor(Math.random() * chars.length));
+            var ctx = captchaCanvas.getContext('2d');
+            ctx.fillStyle = '#16161c';
+            ctx.fillRect(0, 0, 120, 44);
+            for (var n = 0; n < 5; n++) {
+                ctx.strokeStyle = 'rgba(255,204,0,' + (0.15 + Math.random() * 0.25) + ')';
+                ctx.beginPath();
+                ctx.moveTo(Math.random() * 120, Math.random() * 44);
+                ctx.lineTo(Math.random() * 120, Math.random() * 44);
+                ctx.stroke();
+            }
+            for (var j = 0; j < 4; j++) {
+                var ch = captchaCode.charAt(j);
+                ctx.font = 'bold ' + (24 + Math.floor(Math.random() * 6)) + 'px sans-serif';
+                ctx.fillStyle = ['#ffcc00', '#51cf66', '#74c0fc', '#ffa94d'][j % 4];
+                ctx.save();
+                ctx.translate(18 + j * 26, 30);
+                ctx.rotate((Math.random() - 0.5) * 0.5);
+                ctx.fillText(ch, 0, 0);
+                ctx.restore();
+            }
+            for (var d = 0; d < 40; d++) {
+                ctx.fillStyle = 'rgba(255,255,255,' + (Math.random() * 0.3) + ')';
+                ctx.fillRect(Math.random() * 120, Math.random() * 44, 1.5, 1.5);
+            }
+        }
+        drawCaptcha();
+        captchaCanvas.addEventListener('click', drawCaptcha);
 
         document.getElementById('auth-form').addEventListener('submit', async function (e) {
             e.preventDefault();
             var email = document.getElementById('a-email').value.trim();
             var password = document.getElementById('a-password').value;
             var username = document.getElementById('a-username').value.trim();
+            var captchaInput = document.getElementById('a-captcha').value.trim();
             if (!email || !password) { note.textContent = '请填写邮箱和密码'; note.className = 'form-note err'; return; }
+            if (captchaInput.toLowerCase() !== captchaCode.toLowerCase()) {
+                note.textContent = '验证码不对，换一张再试试';
+                note.className = 'form-note err';
+                drawCaptcha();
+                document.getElementById('a-captcha').value = '';
+                return;
+            }
             if (mode === 'signup' && !username) { note.textContent = '请填写用户名'; note.className = 'form-note err'; return; }
             btn.disabled = true;
             note.textContent = mode === 'signup' ? '注册中…' : '登录中…';

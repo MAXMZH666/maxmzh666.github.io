@@ -31,7 +31,6 @@
                 <li><a href="about.html">个人简介</a></li>
                 <li><a href="portfolio.html">作品集</a></li>
                 <li><a href="blog.html">博客</a></li>
-                <li><a href="downloads.html">下载中心</a></li>
                 <li><a href="community.html" class="active">社区</a></li>
                 <li><a href="forum.html">论坛</a></li>
                 <li><a href="contact.html">联系方式</a></li>
@@ -72,6 +71,8 @@
                         <span class="tc-icon">🪟</span><span class="tc-name">Windows</span><span class="tc-desc">exe/zip，下载运行</span></label>
                     <label class="type-card"><input type="radio" name="wtype" value="linux">
                         <span class="tc-icon">🐧</span><span class="tc-name">Linux</span><span class="tc-desc">AppImage/deb，下载运行</span></label>
+                    <label class="type-card"><input type="radio" name="wtype" value="website">
+                        <span class="tc-icon">🌐</span><span class="tc-name">网站</span><span class="tc-desc">链接或单页 HTML，在线访问</span></label>
                 </div>
 
                 <label for="f-title">作品名称 *</label>
@@ -80,12 +81,12 @@
                 <select id="f-cat">
                     <option>游戏</option><option>动画</option><option>工具</option><option>音乐</option><option>其他</option>
                 </select>
-                <label for="f-desc">作品简介</label>
-                <textarea id="f-desc" maxlength="500" placeholder="玩法介绍、操作说明…（选填）"></textarea>
+                <label for="f-desc">作品简介 <span class="form-hint">（支持 Markdown：**加粗**、*斜体*、[链接](url)、- 列表）</span></label>
+                <textarea id="f-desc" maxlength="2000" placeholder="玩法介绍、操作说明…（选填，支持 Markdown）"></textarea>
 
                 <!-- Scratch -->
                 <div id="sec-scratch">
-                    <label for="f-sb3">游戏文件（.sb3） *</label>
+                    <label for="f-sb3">游戏文件（.sb3） * <span class="form-hint">（小于 100MB）</span></label>
                     <input type="file" id="f-sb3" accept=".sb3">
                     <p class="form-hint" id="file-info"></p>
                     <label class="check-row"><input type="checkbox" id="f-compress" checked> 压缩音频以加快上传（推荐，大文件效果明显）</label>
@@ -101,6 +102,17 @@
                         <button type="button" class="btn btn-ghost" id="code-sample">填入示例代码</button>
                     </div>
                     <p class="form-hint" id="code-info"></p>
+                </div>
+
+                <!-- 网站 -->
+                <div id="sec-site" style="display:none">
+                    <label for="f-siteurl">网站地址 <span class="form-hint">（已有网站填这里）</span></label>
+                    <input type="url" id="f-siteurl" placeholder="https://example.com">
+                    <p class="form-hint" style="text-align:center">— 或 —</p>
+                    <label for="f-sitefile">上传单页 HTML <span class="form-hint">（.html，站内直接预览，二选一）</span></label>
+                    <input type="file" id="f-sitefile" accept=".html,.htm">
+                    <p class="form-hint" id="site-info"></p>
+                    <p class="form-hint">上传的页面会在沙箱中预览，无法读取本站数据，请放心。</p>
                 </div>
 
                 <!-- 安装包：APK / Windows / Linux 共用 -->
@@ -131,7 +143,6 @@
             <a href="about.html">个人简介</a>
             <a href="portfolio.html">作品集</a>
             <a href="blog.html">博客</a>
-            <a href="downloads.html">下载中心</a>
             <a href="community.html">社区</a>
             <a href="forum.html">论坛</a>
             <a href="contact.html">联系方式</a>
@@ -243,15 +254,15 @@
         var cards = document.getElementById('type-cards');
         /* 安装包类型配置：apk_url 字段复用为安装包下载地址 */
         var BIN_TYPES = {
-            apk: { label: 'APK', accept: '.apk', ext: /\.apk$/i, maxMB: 100, bucket: 'apks',
+            apk: { label: 'APK', accept: '.apk', ext: /\.apk$/i, maxMB: 200, bucket: 'apks',
                    mime: 'application/vnd.android.package-archive',
                    hint: 'APK 无法在网页直接运行，发布后大家下载到安卓手机安装。',
                    magics: [[0x50, 0x4B]] },
-            windows: { label: 'Windows 程序', accept: '.exe,.msi,.zip', ext: /\.(exe|msi|zip)$/i, maxMB: 200, bucket: 'appfiles',
+            windows: { label: 'Windows 程序', accept: '.exe,.msi,.zip', ext: /\.(exe|msi|zip)$/i, maxMB: 500, bucket: 'appfiles',
                    mime: 'application/octet-stream',
                    hint: '支持 .exe / .msi / .zip（绿色版请打成 zip 包）。发布后大家下载到 Windows 电脑运行，网页上无法直接运行。',
                    magics: [[0x4D, 0x5A], [0x50, 0x4B], [0xD0, 0xCF, 0x11, 0xE0]] },
-            linux: { label: 'Linux 程序', accept: '.AppImage,.deb,.zip,.tar.gz', ext: /\.(AppImage|deb|zip|tar\.gz)$/i, maxMB: 200, bucket: 'appfiles',
+            linux: { label: 'Linux 程序', accept: '.AppImage,.deb,.zip,.tar.gz', ext: /\.(AppImage|deb|zip|tar\.gz)$/i, maxMB: 500, bucket: 'appfiles',
                    mime: 'application/octet-stream',
                    hint: '支持 .AppImage / .deb / .zip / .tar.gz。发布后大家下载到 Linux 电脑运行，网页上无法直接运行。',
                    magics: [[0x50, 0x4B], [0x1F, 0x8B], [0x7F, 0x45, 0x4C, 0x46], [0x21, 0x3C, 0x61, 0x72, 0x63, 0x68]] }
@@ -275,6 +286,7 @@
             document.getElementById('sec-scratch').style.display = t === 'scratch' ? '' : 'none';
             document.getElementById('sec-code').style.display = (t === 'python' || t === 'cpp') ? '' : 'none';
             document.getElementById('sec-bin').style.display = BIN_TYPES[t] ? '' : 'none';
+            document.getElementById('sec-site').style.display = t === 'website' ? '' : 'none';
             if (BIN_TYPES[t]) {
                 var bc = BIN_TYPES[t];
                 document.getElementById('bin-label').innerHTML = bc.label + '文件 * <span class="form-hint">（小于 ' + bc.maxMB + 'MB）</span>';
@@ -318,12 +330,27 @@
                 document.getElementById('bin-label').innerHTML = BIN_TYPES[et].label + '文件 <span class="form-hint">（不换请留空）</span>';
             }
         } else {
-            setType('scratch');
+            var qs2 = new URLSearchParams(location.search);
+            var preType = qs2.get('type');
+            if (preType === 'python' || preType === 'cpp') {
+                setType(preType);
+                var preCode = qs2.get('code') || '';
+                if (preCode) document.getElementById('f-code').value = preCode;
+                var preTitle2 = qs2.get('title') || '';
+                if (preTitle2) document.getElementById('f-title').value = preTitle2;
+                var preDraft = qs2.get('draft');
+                if (preDraft) window._preDraftId = preDraft;
+                document.getElementById('pub-sub').textContent = '从在线编程带来代码，确认信息后发布（发布成功后草稿会自动删除）。';
+            } else {
+                setType('scratch');
+            }
             /* 从编辑器"直接发布"跳过来：?sb3=地址&title=名称 */
             var qs = new URLSearchParams(location.search);
             var preSb3Url = qs.get('sb3');
             if (preSb3Url) {
                 window._preSb3Url = preSb3Url;
+                var preDraft3 = qs.get('draft');
+                if (preDraft3) window._preDraftId = preDraft3;
                 var preTitle = qs.get('title') || '';
                 if (preTitle) document.getElementById('f-title').value = preTitle;
                 document.getElementById('file-info').textContent = '已从编辑器接收 .sb3 ✓，可直接发布';
@@ -357,17 +384,41 @@
             var f = e.target.files[0];
             document.getElementById('file-info').textContent = f ? ('已选择：' + f.name + '（' + fmtMB(f.size) + '）') : '';
         });
+        document.getElementById('f-sitefile').addEventListener('change', function (e) {
+            var f = e.target.files[0];
+            document.getElementById('site-info').textContent = f ? ('已选择：' + f.name + '（' + fmtMB(f.size) + '）') : '';
+        });
         document.getElementById('f-bin').addEventListener('change', async function (e) {
             var f = e.target.files[0];
             var info = document.getElementById('bin-info');
             var chk = document.getElementById('bin-check');
             info.textContent = f ? ('已选择：' + f.name + '（' + fmtMB(f.size) + '）') : '';
             chk.textContent = '';
+            window._binVtOk = true;
             if (f && BIN_TYPES[curType]) {
                 chk.textContent = '\uD83D\uDEE1 正在安全检查…';
                 var verr = await validateBinary(f, curType);
-                chk.textContent = verr ? verr : '✅ 安全检查通过';
-                chk.style.color = verr ? '#ff6b6b' : '#51cf66';
+                if (verr) {
+                    chk.textContent = verr;
+                    chk.style.color = '#ff6b6b';
+                } else {
+                    chk.textContent = '✅ 安全检查通过，🛡 正在云查杀…';
+                    chk.style.color = '#51cf66';
+                    try {
+                        var vt = await vtCheck(f);
+                        if (vt.status === 'malicious') {
+                            window._binVtOk = false;
+                            chk.textContent = '⛔ 云查杀拦截：' + (vt.detail || '检出病毒') + '，禁止发布';
+                            chk.style.color = '#ff6b6b';
+                        } else if (vt.status === 'clean') {
+                            chk.textContent = '✅ 安全检查通过 + 🛡 云查杀通过';
+                        } else if (vt.status === 'unknown') {
+                            chk.textContent = '✅ 安全检查通过（云查杀：未知文件）';
+                        } else {
+                            chk.textContent = '✅ 安全检查通过';
+                        }
+                    } catch (e) { chk.textContent = '✅ 安全检查通过'; }
+                }
             }
         });
         document.getElementById('f-codefile').addEventListener('change', function (e) {
@@ -411,7 +462,7 @@
                     var preSb3 = window._preSb3Url || null;
                     if (!sb3File && !editWork && !preSb3) { setNote('请选择 .sb3 文件', 'err'); btn.disabled = false; return; }
                     if (sb3File && !/\.sb3$/i.test(sb3File.name)) { setNote('游戏文件必须是 .sb3 格式', 'err'); btn.disabled = false; return; }
-                    if (sb3File && sb3File.size > 50 * 1024 * 1024) { setNote('文件太大，请小于 50MB', 'err'); btn.disabled = false; return; }
+                    if (sb3File && sb3File.size > 100 * 1024 * 1024) { setNote('文件太大，请小于 100MB', 'err'); btn.disabled = false; return; }
                     var sb3Url = editWork ? editWork.sb3_url : null;
                     if (sb3File) {
                         var uploadBlob = sb3File;
@@ -436,10 +487,29 @@
                     payload.work_type = curType;
                     payload.code = code;
                     if (editWork && !code.trim()) payload.code = editWork.code;
+                } else if (curType === 'website') {
+                    var siteUrl = document.getElementById('f-siteurl').value.trim();
+                    var siteFile = document.getElementById('f-sitefile').files[0];
+                    if (siteFile) {
+                        if (!/\.html?$/i.test(siteFile.name)) { setNote('请上传 .html 文件', 'err'); btn.disabled = false; return; }
+                        if (siteFile.size > 10 * 1024 * 1024) { setNote('HTML 文件请小于 10MB', 'err'); btn.disabled = false; return; }
+                        var head = await siteFile.slice(0, 200).text();
+                        if (!/<(!doctype|html)/i.test(head)) { setNote('这不是有效的 HTML 文件', 'err'); btn.disabled = false; return; }
+                        setNote('正在上传网站文件…', 'sending');
+                        siteUrl = await uploadWithProgress('appfiles', me.id + '/' + Date.now() + '.html', siteFile, 'text/html', function (p) {
+                            if (p >= 0) { setProgress(p); setNote('正在上传网站文件… ' + Math.round(p * 100) + '%', 'sending'); }
+                            else { setProgress(-1); setNote('正在上传网站文件…', 'sending'); }
+                        });
+                    }
+                    if (!siteUrl && !editWork) { setNote('请填写网站地址或上传 HTML 文件', 'err'); btn.disabled = false; return; }
+                    if (siteUrl && !/^https?:\/\//i.test(siteUrl)) siteUrl = 'https://' + siteUrl;
+                    payload.work_type = 'website';
+                    payload.site_url = siteUrl || (editWork ? editWork.site_url : null);
                 } else if (BIN_TYPES[curType]) {
                     var bcfg = BIN_TYPES[curType];
                     var binFile = document.getElementById('f-bin').files[0];
                     if (!binFile && !editWork) { setNote('请选择' + bcfg.label + '文件', 'err'); btn.disabled = false; return; }
+                    if (binFile && window._binVtOk === false) { setNote('⛔ 云查杀未通过，禁止发布', 'err'); btn.disabled = false; return; }
                     if (binFile) {
                         var bverr = await validateBinary(binFile, curType);
                         if (bverr) { setNote(bverr, 'err'); btn.disabled = false; return; }
@@ -482,7 +552,8 @@
                             work_id: editWork.id, author_id: me.id, version_no: nextNo,
                             title: editWork.title, description: editWork.description, category: editWork.category,
                             work_type: workTypeOf(editWork), code: editWork.code, sb3_url: editWork.sb3_url,
-                            apk_url: editWork.apk_url, screenshots: editWork.screenshots || [], cover_url: editWork.cover_url
+                            apk_url: editWork.apk_url, screenshots: editWork.screenshots || [], cover_url: editWork.cover_url,
+                            site_url: editWork.site_url || null
                         });
                     } catch (se) { console.warn('版本快照失败', se); }
                     var ur = await sb.from('works').update(payload).eq('id', editWork.id);
@@ -494,6 +565,11 @@
                     payload.author_id = me.id;
                     var ins = await sb.from('works').insert(payload).select('id').single();
                     if (ins.error) throw ins.error;
+                    /* 从草稿发布的：删除草稿（文件已作为作品文件保留） */
+                    if (window._preDraftId) {
+                        try { await sb.from('drafts').delete().eq('id', window._preDraftId).eq('user_id', me.id); } catch (e) {}
+                        try { localStorage.removeItem('draft_' + curType); } catch (e) {}
+                    }
                     setNote('发布成功，正在跳转…', 'ok');
                     location.href = 'community-play.html?id=' + ins.data.id;
                 }

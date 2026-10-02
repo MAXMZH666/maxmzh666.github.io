@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAXMZH 游戏社区管理后台。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="MAXMZH - 管理后台">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>管理后台 - MAXMZH 社区</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/styles.css">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">主页</a></li>
+                <li><a href="about.html">个人简介</a></li>
+                <li><a href="portfolio.html">作品集</a></li>
+                <li><a href="blog.html">博客</a></li>
+                <li><a href="community.html" class="active">社区</a></li>
+                <li><a href="forum.html">论坛</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="sub-header">
+        <div class="sub-header-inner">
+            <a class="sub-brand" href="community.html">🎮 <span>游戏社区</span></a>
+            <nav class="sub-links" aria-label="社区导航">
+                <a href="community.html" data-sub="home">首页</a>
+                <a href="community-publish.html" data-sub="publish">发布作品</a>
+                <a href="community-code.html" data-sub="code">💻 在线编程</a>
+                <a href="community-rank.html" data-sub="rank">🏆 排行榜</a>
+                <a href="community-notify.html" data-sub="notify" id="sub-bell" style="display:none">🔔 通知</a>
+                <span id="sub-auth"><a href="community-auth.html">登录</a></span>
+            </nav>
+        </div>
+    </div>
+
+    <main>
+        <section class="portfolio" id="admin-wrap">
+            <p class="works-note">加载中…</p>
+        </section>
+    </main>
+
+    <footer>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="portfolio.html">作品集</a>
+            <a href="blog.html">博客</a>
+            <a href="community.html">社区</a>
+            <a href="forum.html">论坛</a>
+            <a href="contact.html">联系方式</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
+        <p class="foot-stats"><span id="busuanzi_container_site_pv">本站总访问量 <span id="busuanzi_value_site_pv">统计中…</span> 次</span><span> · </span><span id="busuanzi_container_page_pv">本页访问 <span id="busuanzi_value_page_pv">统计中…</span> 次</span></p>
+    </footer>
+
+    <script src="js/scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/community.js"></script>
+    <script>
+    (async function () {
+        await renderSubHeader();
+        var wrap = document.getElementById('admin-wrap');
+        var me = await currentUser();
+        if (!me) { location.href = 'community-auth.html?next=' + encodeURIComponent('community-admin.html'); return; }
+        if (!await isAdmin()) {
+            wrap.innerHTML = '<p class="works-note">无权限：只有管理员可以访问。<a href="community.html">返回社区</a></p>';
+            return;
+        }
+        var tab = 'reports';
+        async function loadReports() {
+            var r = await sb.from('reports').select('*').order('created_at', { ascending: false }).limit(50);
+            var rows = r.data || [];
+            if (!rows.length) return '<p class="works-note">暂无举报。</p>';
+            var workIds = rows.filter(function (x) { return x.target_type === 'work'; }).map(function (x) { return x.target_id; });
+            var commentIds = rows.filter(function (x) { return x.target_type === 'comment'; }).map(function (x) { return x.target_id; });
+            var reporterIds = rows.map(function (x) { return x.reporter_id; });
+            var wmap = {}, cmap = {}, pmap = {};
+            if (workIds.length) {
+                var wr = await sb.from('works').select('id,title').in('id', workIds);
+                (wr.data || []).forEach(function (w) { wmap[w.id] = w.title; });
+            }
+            if (commentIds.length) {
+                var cr = await sb.from('comments').select('id,content,work_id').in('id', commentIds);
+                (cr.data || []).forEach(function (c) { cmap[c.id] = c; });
+            }
+            if (reporterIds.length) {
+                var pr = await sb.from('profiles').select('id,username').in('id', Array.from(new Set(reporterIds)));
+                (pr.data || []).forEach(function (p) { pmap[p.id] = p.username; });
+            }
+            return rows.map(function (x) {
+                var target = x.target_type === 'work'
+                    ? '作品《' + esc(wmap[x.target_id] || '(已删除)') + '》'
+                    : '评论"' + esc((cmap[x.target_id] || {}).content || '(已删除)') + '"';
+                return '<div class="version-row">' +
+                    '<span class="version-meta">👤 ' + esc(pmap[x.reporter_id] || '未知') +
+                    ' 举报 ' + target + '<br>理由：' + esc(x.reason || '未填写') +
+                    ' · ' + fmtDate(x.created_at) + '</span>' +
+                    '<span class="version-btns">' +
+                    (x.target_type === 'work'
+                        ? '<button class="btn btn-ghost btn-sm" data-rdel-work="' + x.target_id + '" data-rid="' + x.id + '">删除作品</button>'
+                        : '<button class="btn btn-ghost btn-sm" data-rdel-comment="' + x.target_id + '" data-rid="' + x.id + '">删除评论</button>') +
+                    '<button class="btn btn-ghost btn-sm" data-rignore="' + x.id + '">忽略</button>' +
+                    '</span></div>';
+            }).join('');
+        }
+        async function loadWorks(q) {
+            var query = sb.from('works').select('id,title,work_type,created_at,author_id').order('created_at', { ascending: false }).limit(50);
+            if (q) query = query.ilike('title', '%' + q.replace(/[%_\\]/g, function (c) { return '\\' + c; }) + '%');
+            var r = await query;
+            var rows = r.data || [];
+            if (!rows.length) return '<p class="works-note">没有作品。</p>';
+            var amap = {};
+            var ar = await sb.from('profiles').select('id,username').in('id', Array.from(new Set(rows.map(function (x) { return x.author_id; }))));
+            (ar.data || []).forEach(function (p) { amap[p.id] = p.username; });
+            return rows.map(function (w) {
+                var t = WORK_TYPES[w.work_type] || WORK_TYPES.scratch;
+                return '<div class="version-row">' +
+                    '<span class="version-no">' + t.icon + '</span>' +
+                    '<span class="version-meta"><a href="community-play.html?id=' + w.id + '">' + esc(w.title) + '</a><br>' +
+                    '作者：' + esc(amap[w.author_id] || '未知') + ' · ' + fmtDate(w.created_at) + '</span>' +
+                    '<span class="version-btns"><button class="btn btn-ghost btn-sm" data-adel-work="' + w.id + '">删除</button></span></div>';
+            }).join('');
+        }
+        async function loadUsers() {
+            var r = await sb.from('profiles').select('id,username,is_admin,created_at').order('created_at', { ascending: false }).limit(100);
+            var rows = r.data || [];
+            if (!rows.length) return '<p class="works-note">没有用户。</p>';
+            return rows.map(function (u) {
+                return '<div class="version-row">' +
+                    '<span class="version-meta">👤 ' + esc(u.username) +
+                    (u.is_admin ? ' <span class="tag gold">管理员</span>' : '') +
+                    '<br>加入于 ' + fmtDate(u.created_at) + '</span>' +
+                    '<span class="version-btns"><a class="btn btn-ghost btn-sm" href="community-user.html?id=' + u.id + '">查看</a></span></div>';
+            }).join('');
+        }
+        async function render() {
+            wrap.innerHTML =
+                '<p class="article-back"><a href="community.html">← 返回社区</a></p>' +
+                '<h1 class="section-title">🛡 管理后台</h1>' +
+                '<div class="filter-row">' +
+                '<button class="filter-chip' + (tab === 'reports' ? ' active' : '') + '" data-tab="reports">举报处理</button>' +
+                '<button class="filter-chip' + (tab === 'works' ? ' active' : '') + '" data-tab="works">作品管理</button>' +
+                '<button class="filter-chip' + (tab === 'users' ? ' active' : '') + '" data-tab="users">用户列表</button>' +
+                '</div>' +
+                (tab === 'works' ? '<p><input type="text" id="admin-q" placeholder="搜索作品标题…" style="max-width:300px"></p>' : '') +
+                '<div id="admin-list"><p class="works-note">加载中…</p></div>';
+            var list = document.getElementById('admin-list');
+            if (tab === 'reports') list.innerHTML = await loadReports();
+            else if (tab === 'works') {
+                list.innerHTML = await loadWorks('');
+                var qi = document.getElementById('admin-q');
+                var timer = null;
+                qi.addEventListener('input', function () {
+                    clearTimeout(timer);
+                    timer = setTimeout(async function () { list.innerHTML = await loadWorks(qi.value.trim()); }, 400);
+                });
+            }
+            else list.innerHTML = await loadUsers();
+        }
+        wrap.addEventListener('click', async function (e) {
+            var t = e.target.closest('button[data-tab]');
+            if (t) { tab = t.getAttribute('data-tab'); await render(); return; }
+            var ig = e.target.closest('button[data-rignore]');
+            if (ig) {
+                if (!confirm('忽略这条举报？')) return;
+                await sb.from('reports').delete().eq('id', ig.getAttribute('data-rignore'));
+                await render(); return;
+            }
+            var dw = e.target.closest('button[data-rdel-work]');
+            if (dw) {
+                if (!confirm('删除该作品？相关评论/点赞会一起删除。')) return;
+                await sb.from('works').delete().eq('id', dw.getAttribute('data-rdel-work'));
+                await sb.from('reports').delete().eq('id', dw.getAttribute('data-rid'));
+                await render(); return;
+            }
+            var dc = e.target.closest('button[data-rdel-comment]');
+            if (dc) {
+                if (!confirm('删除这条评论？')) return;
+                await sb.from('comments').delete().eq('id', dc.getAttribute('data-rdel-comment'));
+                await sb.from('reports').delete().eq('id', dc.getAttribute('data-rid'));
+                await render(); return;
+            }
+            var aw = e.target.closest('button[data-adel-work]');
+            if (aw) {
+                if (!confirm('删除这个作品？相关评论/点赞会一起删除。')) return;
+                var dr = await sb.from('works').delete().eq('id', aw.getAttribute('data-adel-work'));
+                if (dr.error) alert('删除失败：' + dr.error.message);
+                await render(); return;
+            }
+        });
+        await render();
+    })();
+    </script>
+    <script defer src="https://vercount.one/js"></script>
+</body>
+</html>

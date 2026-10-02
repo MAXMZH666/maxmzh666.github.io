@@ -28,7 +28,6 @@
                 <li><a href="about.html">个人简介</a></li>
                 <li><a href="portfolio.html">作品集</a></li>
                 <li><a href="blog.html">博客</a></li>
-                <li><a href="downloads.html">下载中心</a></li>
                 <li><a href="community.html" class="active">社区</a></li>
                 <li><a href="forum.html">论坛</a></li>
                 <li><a href="contact.html">联系方式</a></li>
@@ -61,7 +60,6 @@
             <a href="about.html">个人简介</a>
             <a href="portfolio.html">作品集</a>
             <a href="blog.html">博客</a>
-            <a href="downloads.html">下载中心</a>
             <a href="community.html">社区</a>
             <a href="forum.html">论坛</a>
             <a href="contact.html">联系方式</a>
@@ -74,69 +72,10 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
     <script src="js/community.js"></script>
     <script>
-    var pyodide = null;
-
-    function injectHljsTheme() {
-        if (document.querySelector('link[data-hljs]')) return;
-        var l = document.createElement('link');
-        l.rel = 'stylesheet';
-        l.setAttribute('data-hljs', '1');
-        l.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css';
-        document.head.appendChild(l);
-    }
-
-    /* Python 网页运行（Pyodide） */
-    async function runPython(code, inputText, say, append) {
-        say('正在加载 Python 环境（首次约 10MB，请稍候）…');
-        await loadScriptOnce('https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js');
-        if (!pyodide) pyodide = await loadPyodide();
-        var pos = 0;
-        try {
-            pyodide.setStdin({ stdin: function () {
-                return pos >= inputText.length ? null : inputText.charCodeAt(pos++);
-            } });
-        } catch (e) {}
-        pyodide.setStdout({ batched: function (s) { append(s); } });
-        pyodide.setStderr({ batched: function (s) { append(s); } });
-        say('运行中…');
-        try {
-            await pyodide.runPythonAsync(code);
-            say('运行结束');
-        } catch (e) {
-            append('\n[错误] ' + (e && e.message ? e.message : e));
-            say('运行出错');
-        }
-    }
-
-    /* C++ 网页运行（JSCPP 解释器） */
-    async function runCpp(code, inputText, say, append) {
-        say('正在加载 C++ 运行环境…');
-        await loadScriptOnce('https://cdn.jsdelivr.net/gh/felixhao28/JSCPP@gh-pages/dist/JSCPP.es5.min.js');
-        if (!window.JSCPP || !JSCPP.run) throw new Error('C++ 环境加载失败');
-        say('运行中…');
-        var total = 0;
-        await new Promise(function (resolve) {
-            setTimeout(function () {
-                try {
-                    JSCPP.run(code, inputText, {
-                        stdio: { write: function (s) {
-                            total += s.length;
-                            if (total < 30000) append(s);
-                        } }
-                    });
-                    if (total >= 30000) append('\n[输出过长，已截断]');
-                    say('运行结束');
-                } catch (e) {
-                    append('\n[错误] ' + (e && e.message ? e.message : e));
-                    say('运行出错');
-                }
-                resolve();
-            }, 30);
-        });
-    }
-
     function runnerHtml() {
         return '<div class="runner">' +
             '<div class="runner-bar"><button class="btn btn-blue" id="run-btn" type="button">▶ 运行</button>' +
@@ -170,6 +109,16 @@
             }
             runBtn.disabled = false;
         });
+    }
+
+    /* Markdown 渲染（简介） */
+    function renderMarkdown(md) {
+        try {
+            if (window.marked && window.DOMPurify) {
+                return DOMPurify.sanitize(marked.parse(String(md || '')));
+            }
+        } catch (e) {}
+        return esc(String(md || ''));
     }
 
     (async function () {
@@ -216,6 +165,15 @@
         } else if (wtype === 'python' || wtype === 'cpp') {
             previewHtml = '<pre class="code-view"><code id="code-block" class="' + (wtype === 'python' ? 'language-python' : 'language-cpp') + '">' +
                 esc(w.code || '') + '</code></pre>' + runnerHtml();
+        } else if (wtype === 'website') {
+            var siteSrc = w.site_url || '';
+            previewHtml = '<div class="apk-card">' +
+                '<div class="apk-head">🌐 <b>网站作品</b></div>' +
+                (siteSrc
+                    ? '<div class="player-wrap site-frame"><iframe src="' + esc(siteSrc) + '" sandbox="allow-scripts allow-same-origin allow-forms" loading="lazy" title="' + esc(w.title) + '"></iframe></div>' +
+                      '<p style="margin-top:10px"><a class="btn btn-blue" href="' + esc(siteSrc) + '" target="_blank" rel="noopener">🔗 新窗口打开网站</a></p>'
+                    : '<p class="works-note">暂无网站地址</p>') +
+                '<p class="form-hint">站内为沙箱预览；部分网站禁止被嵌套时请点上面的按钮新窗口打开。</p></div>';
         } else if (wtype === 'apk' || wtype === 'windows' || wtype === 'linux') {
             var shots = w.screenshots || [];
             var shotHtml = '';
@@ -256,7 +214,7 @@
             ' 作者：<a href="community-user.html?id=' + w.author_id + '">' + esc(authorName) + '</a>' +
             ' · ' + fmtDate(w.created_at) + ' · 👁 <span id="view-count">' + (w.views || 0) + '</span></p>' +
             previewHtml +
-            (w.description ? '<p style="margin-top:18px;line-height:1.8">' + esc(w.description) + '</p>' : '') +
+            (w.description ? '<div class="work-desc markdown-body">' + renderMarkdown(w.description) + '</div>' : '') +
             '<div class="work-actions">' +
                 '<button class="like-btn" id="like-btn">❤ <span id="like-count">…</span></button>' +
                 '<button class="fav-btn" id="fav-btn">⭐ <span id="fav-text">收藏</span> <span id="fav-count"></span></button>' +
@@ -501,6 +459,8 @@
                     ph = '<button class="btn btn-blue btn-sm" data-vplay="' + v.id + '">在播放器中试玩此版本</button> ';
                 } else if ((t === 'apk' || t === 'windows' || t === 'linux') && v.apk_url) {
                     ph = '<a class="btn btn-blue btn-sm" href="' + esc(v.apk_url) + '" download>下载此版本安装包</a> ';
+                } else if (t === 'website' && v.site_url) {
+                    ph = '<a class="btn btn-blue btn-sm" href="' + esc(v.site_url) + '" target="_blank" rel="noopener">打开此版本网站</a> ';
                 }
                 if (!ph) ph = '<p class="form-hint">该版本无可预览内容</p>';
                 box.innerHTML = ph;
@@ -536,13 +496,15 @@
                         work_id: id, author_id: me.id, version_no: nextNo,
                         title: cur.title, description: cur.description, category: cur.category,
                         work_type: workTypeOf(cur), code: cur.code, sb3_url: cur.sb3_url,
-                        apk_url: cur.apk_url, screenshots: cur.screenshots || [], cover_url: cur.cover_url
+                        apk_url: cur.apk_url, screenshots: cur.screenshots || [], cover_url: cur.cover_url,
+                        site_url: cur.site_url || null
                     });
                     if (snap.error) throw snap.error;
                     var up = await sb.from('works').update({
                         title: rv.title, description: rv.description, category: rv.category,
                         work_type: rv.work_type, code: rv.code, sb3_url: rv.sb3_url,
-                        apk_url: rv.apk_url, screenshots: rv.screenshots || [], cover_url: rv.cover_url
+                        apk_url: rv.apk_url, screenshots: rv.screenshots || [], cover_url: rv.cover_url,
+                        site_url: rv.site_url || null
                     }).eq('id', id);
                     if (up.error) throw up.error;
                     alert('已回溯到 v' + rv.version_no + '，页面将刷新。');

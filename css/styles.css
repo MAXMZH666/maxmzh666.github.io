@@ -1330,3 +1330,39 @@ form input[type="file"]:focus {
     text-align: center;
 }
 @keyframes indeterminate-slide { to { background-position: 40px 0; } }
+
+/* ---------- 图形验证码 ---------- */
+.captcha-row { display: flex; gap: 10px; align-items: center; }
+.captcha-row canvas {
+    border: 1px solid var(--border); border-radius: 8px; cursor: pointer; flex-shrink: 0;
+    background: #16161c;
+}
+.captcha-row input { flex: 1; }
+
+/* ---------- Markdown 简介 ---------- */
+.work-desc { margin-top: 18px; line-height: 1.8; }
+.markdown-body p { margin: 0 0 10px; }
+.markdown-body ul, .markdown-body ol { margin: 0 0 10px 22px; padding: 0; }
+.markdown-body code { background: var(--surface-2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; font-size: .9em; }
+.markdown-body pre { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; overflow-x: auto; }
+.markdown-body pre code { background: none; border: 0; padding: 0; }
+.markdown-body a { color: var(--gold); }
+.markdown-body blockquote { border-left: 3px solid var(--gold); margin: 0 0 10px; padding: 4px 12px; color: var(--muted); }
+.markdown-body h1, .markdown-body h2, .markdown-body h3 { margin: 14px 0 8px; font-size: 1.1em; }
+
+/* ---------- 在线代码编辑器 ---------- */
+.CodeMirror {
+    height: 380px; border: 1px solid var(--border); border-radius: 10px;
+    font-size: 14px; line-height: 1.6; margin: 6px 0 14px;
+}
+.run-status { color: var(--muted); font-size: .9em; margin-left: 10px; }
+
+/* ---------- 网站作品预览 ---------- */
+.player-wrap.site-frame { padding: 0; overflow: hidden; }
+.player-wrap.site-frame iframe {
+    width: 100%; height: 520px; border: 0; display: block; background: #fff;
+}
+@media (max-width: 640px) {
+    .player-wrap.site-frame iframe { height: 380px; }
+    .CodeMirror { height: 300px; }
+}
