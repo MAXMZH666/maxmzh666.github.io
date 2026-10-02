@@ -1,0 +1,8 @@
+{
+    "version": 1.2,
+    "levelData": "level1|level2|level3",
+    "config": {
+        "difficulty": "hard",
+        "lives": 3
+    }
+}

@@ -1,0 +1,142 @@
+{
+  "name": "agar.io-clone",
+  "version": "1.0.0",
+  "description": "A simple Agar.io clone",
+  "main": "server/server.js",
+  "scripts": {
+    "build": "gulp build",
+    "start": "gulp run",
+    "watch": "gulp watch",
+    "test": "gulp test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/owenashurst/agar.io-clone.git"
+  },
+  "author": "Huy Tran",
+  "maintainers": [
+    {
+      "name": "Owen Ashurst"
+    }
+  ],
+  "license": "MIT",
+  "contributors": [
+    {
+      "name": "abalabahaha",
+      "email": "hi@abal.moe",
+      "url": "https://github.com/abalabahaha"
+    },
+    {
+      "name": "Ariamiro",
+      "email": "dossantosgusmaosavio@gmail.com",
+      "url": "https://github.com/Ariamiro"
+    },
+    {
+      "name": "Bjarne Oeverli",
+      "email": "bjarne.oeverli@gmail.com",
+      "url": "https://github.com/bjarneo"
+    },
+    {
+      "name": "Chris Morgan",
+      "email": "chris.j.r.morgan@gmail.com",
+      "url": "https://github.com/drpotato"
+    },
+    {
+      "name": "Damian Dlugosz",
+      "email": "bigfootdd@gmail.com",
+      "url": "https://github.com/bigfoot90"
+    },
+    {
+      "name": "Dan Prince",
+      "email": "dan@astrealdynamics.co.uk",
+      "url": "https://github.com/danprince"
+    },
+    {
+      "name": "Igor Antun",
+      "email": "igorantunc@hotmail.com",
+      "url": "https://github.com/IgorAntun"
+    },
+    {
+      "name": "Juha Tauriainen",
+      "email": "juha@bin.fi",
+      "url": "https://github.com/JuhQ"
+    },
+    {
+      "name": "Keith Groves",
+      "email": "Keithalgroves@gmail.com",
+      "url": "https://github.com/buskcoin"
+    },
+    {
+      "name": "Kostas Bariotis",
+      "email": "konmpar@gmail.com",
+      "url": "https://github.com/kbariotis"
+    },
+    {
+      "name": "Madara Uchiha",
+      "email": "me@madara.ninja",
+      "url": "https://github.com/MadaraUchiha"
+    },
+    {
+      "name": "Nguyen Huu Thanh",
+      "email": "giongto35@yahoo.com",
+      "url": "https://github.com/giongto35"
+    },
+    {
+      "name": "PET Computação UFPR",
+      "email": "pet@inf.ufpr.br",
+      "url": "http://pet.inf.ufpr.br"
+    },
+    {
+      "name": "Saren Currie",
+      "email": "saren@sarencurrie.com",
+      "url": "https://github.com/SarenCurrie"
+    },
+    {
+      "name": "VILLERS Mickaël",
+      "email": "mickael.villers@epitech.eu",
+      "url": "https://github.com/villers"
+    },
+    {
+      "name": "wb9688",
+      "email": "wbertrums@gmail.com",
+      "url": "https://github.com/wb9688"
+    }
+  ],
+  "dependencies": {
+    "@babel/core": "^7.21.8",
+    "@babel/eslint-parser": "^7.21.8",
+    "@babel/preset-env": "^7.21.5",
+    "babel-loader": "^9.1.2",
+    "chai": "^4.3.7",
+    "eslint": "^8.40.0",
+    "eslint-plugin-import": "^2.27.5",
+    "express": "^4.18.2",
+    "gulp": "^4.0.2",
+    "gulp-babel": "^8.0.0",
+    "gulp-eslint": "^6.0.0",
+    "gulp-nodemon": "^2.5.0",
+    "gulp-todo": "^7.1.1",
+    "jshint": "^2.13.6",
+    "mocha": "^10.2.0",
+    "nodemon": "^3.0.1",
+    "sat": "^0.9.0",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.6.1",
+    "sqlite3": "^5.1.6",
+    "uuid": "^9.0.0",
+    "webpack": "^5.82.1",
+    "webpack-stream": "^7.0.0"
+  },
+  "devDependencies": {
+    "@types/sat": "^0.0.32",
+    "plugin-error": "^2.0.1"
+  },
+  "directories": {
+    "test": "test"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/owenashurst/agar.io-clone/issues"
+  },
+  "homepage": "https://github.com/owenashurst/agar.io-clone#readme"
+}

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="在 MAXMZH 游戏社区发布作品：Scratch、Python、C++、APK 都可以。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="MAXMZH - 发布作品">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>发布作品 - MAXMZH 社区</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/styles.css">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/spark-md5@3.0.2/spark-md5.min.js"></script>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">主页</a></li>
+                <li><a href="about.html">个人简介</a></li>
+                <li><a href="portfolio.html">作品集</a></li>
+                <li><a href="blog.html">博客</a></li>
+                <li><a href="downloads.html">下载中心</a></li>
+                <li><a href="community.html" class="active">社区</a></li>
+                <li><a href="forum.html">论坛</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="sub-header">
+        <div class="sub-header-inner">
+            <a class="sub-brand" href="community.html">🎮 <span>游戏社区</span></a>
+            <nav class="sub-links" aria-label="社区导航">
+                <a href="community.html" data-sub="home">首页</a>
+                <a href="community-publish.html" data-sub="publish">发布作品</a>
+                <a href="community-code.html" data-sub="code">💻 在线编程</a>
+                <a href="community-rank.html" data-sub="rank">🏆 排行榜</a>
+                <a href="community-notify.html" data-sub="notify" id="sub-bell" style="display:none">🔔 通知</a>
+                <span id="sub-auth"><a href="community-auth.html">登录</a></span>
+            </nav>
+        </div>
+    </div>
+
+    <main>
+        <section class="portfolio">
+            <p class="article-back"><a href="community.html">← 返回社区</a></p>
+            <h1 class="section-title">发布作品</h1>
+            <p class="section-sub" id="pub-sub">选择作品类型，填好信息就能发布了。</p>
+            <form id="pub-form" class="contact-form">
+                <label>作品类型 * <span class="form-hint" id="type-locked" style="display:none">（编辑时不可更改类型）</span></label>
+                <div class="type-cards" id="type-cards">
+                    <label class="type-card"><input type="radio" name="wtype" value="scratch" checked>
+                        <span class="tc-icon">🎮</span><span class="tc-name">Scratch</span><span class="tc-desc">.sb3 文件，在线试玩</span></label>
+                    <label class="type-card"><input type="radio" name="wtype" value="python">
+                        <span class="tc-icon">🐍</span><span class="tc-name">Python</span><span class="tc-desc">代码直接在网页运行</span></label>
+                    <label class="type-card"><input type="radio" name="wtype" value="cpp">
+                        <span class="tc-icon">⚙️</span><span class="tc-name">C++</span><span class="tc-desc">代码直接在网页运行</span></label>
+                    <label class="type-card"><input type="radio" name="wtype" value="apk">
+                        <span class="tc-icon">📱</span><span class="tc-name">APK</span><span class="tc-desc">安卓安装包，下载安装</span></label>
+                </div>
+
+                <label for="f-title">作品名称 *</label>
+                <input type="text" id="f-title" maxlength="60" required placeholder="给作品起个名字">
+                <label for="f-cat">分类</label>
+                <select id="f-cat">
+                    <option>游戏</option><option>动画</option><option>工具</option><option>音乐</option><option>其他</option>
+                </select>
+                <label for="f-desc">作品简介</label>
+                <textarea id="f-desc" maxlength="500" placeholder="玩法介绍、操作说明…（选填）"></textarea>
+
+                <!-- Scratch -->
+                <div id="sec-scratch">
+                    <label for="f-sb3">游戏文件（.sb3） *</label>
+                    <input type="file" id="f-sb3" accept=".sb3">
+                    <p class="form-hint" id="file-info"></p>
+                    <label class="check-row"><input type="checkbox" id="f-compress" checked> 压缩音频以加快上传（推荐，大文件效果明显）</label>
+                    <p class="form-hint">没有 .sb3？<a href="community-code.html">去在线编程做一个</a></p>
+                </div>
+
+                <!-- Python / C++ -->
+                <div id="sec-code" style="display:none">
+                    <label for="f-code">源代码 * <span class="form-hint">（只支持控制台程序：print/input、cout/cin，图形库暂不支持）</span></label>
+                    <textarea id="f-code" class="code-input" spellcheck="false" placeholder="# 在这里粘贴代码，或用下面的按钮导入文件"></textarea>
+                    <div class="row-btns">
+                        <label class="btn btn-ghost file-btn">📁 导入 <span id="code-ext">.py</span> 文件<input type="file" id="f-codefile" hidden></label>
+                        <button type="button" class="btn btn-ghost" id="code-sample">填入示例代码</button>
+                    </div>
+                    <p class="form-hint" id="code-info"></p>
+                </div>
+
+                <!-- APK -->
+                <div id="sec-apk" style="display:none">
+                    <label for="f-apk">APK 文件 * <span class="form-hint">（小于 100MB）</span></label>
+                    <input type="file" id="f-apk" accept=".apk">
+                    <p class="form-hint" id="apk-info"></p>
+                    <label for="f-shots">应用截图（选填，最多 3 张）</label>
+                    <input type="file" id="f-shots" accept="image/*" multiple>
+                    <p class="form-hint">APK 无法在网页直接运行，发布后大家下载到安卓手机安装。</p>
+                </div>
+
+                <label for="f-cover">封面图（选填）</label>
+                <input type="file" id="f-cover" accept="image/*">
+                <div class="progress" id="progress" style="display:none">
+                    <div class="progress-bar" id="progress-bar"></div>
+                </div>
+                <p class="form-note" id="pub-note"></p>
+                <button type="submit" id="pub-btn">发布</button>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="portfolio.html">作品集</a>
+            <a href="blog.html">博客</a>
+            <a href="downloads.html">下载中心</a>
+            <a href="community.html">社区</a>
+            <a href="forum.html">论坛</a>
+            <a href="contact.html">联系方式</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
+        <p class="foot-stats"><span id="busuanzi_container_site_pv">本站总访问量 <span id="busuanzi_value_site_pv">统计中…</span> 次</span><span> · </span><span id="busuanzi_container_page_pv">本页访问 <span id="busuanzi_value_page_pv">统计中…</span> 次</span></p>
+    </footer>
+
+    <script src="js/scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/community.js"></script>
+    <script>
+    function fmtMB(n) { return (n / 1048576).toFixed(1) + 'MB'; }
+
+    var CODE_SAMPLES = {
+        python: '# Python 示例：猜数字\nimport random\nsecret = random.randint(1, 100)\nprint("我想了一个 1~100 的数字，猜猜看！")\nfor i in range(7):\n    g = int(input("第" + str(i + 1) + "次："))\n    if g == secret:\n        print("猜对了！🎉")\n        break\n    print("太大了" if g > secret else "太小了")\nelse:\n    print("答案是", secret)',
+        cpp: '#include <iostream>\nusing namespace std;\n// C++ 示例：九九乘法表\nint main() {\n    for (int i = 1; i <= 9; i++) {\n        for (int j = 1; j <= i; j++)\n            cout << j << "x" << i << "=" << i * j << "\\t";\n        cout << endl;\n    }\n    return 0;\n}'
+    };
+
+    /* 把 sb3 里大于 512KB 的 wav 音频转成 mp3，显著减小体积 */
+    async function compressSb3(file, onStep) {
+        var result = { blob: file, compressed: false, info: '' };
+        try {
+            if (!window.JSZip || !window.lamejs || !window.SparkMD5) return result;
+            var zip = await JSZip.loadAsync(file);
+            var pjFile = zip.file('project.json');
+            if (!pjFile) return result;
+            var pj = JSON.parse(await pjFile.async('string'));
+            var sounds = [];
+            (pj.targets || []).forEach(function (t) { (t.sounds || []).forEach(function (s) { sounds.push(s); }); });
+            var wavSounds = [];
+            for (var i = 0; i < sounds.length; i++) {
+                var s = sounds[i];
+                if ((s.dataFormat || '').toLowerCase() !== 'wav') continue;
+                var zf = zip.file(s.md5ext);
+                if (!zf) continue;
+                var buf = await zf.async('arraybuffer');
+                if (buf.byteLength < 512 * 1024) continue;
+                wavSounds.push({ sound: s, buf: buf });
+            }
+            if (!wavSounds.length) return result;
+            var AC = window.AudioContext || window.webkitAudioContext;
+            if (!AC) return result;
+            var ac = new AC();
+            var totalBefore = 0, totalAfter = 0;
+            for (var k = 0; k < wavSounds.length; k++) {
+                var item = wavSounds[k];
+                onStep && onStep('正在压缩音频 (' + (k + 1) + '/' + wavSounds.length + ')…');
+                var audioBuf;
+                try { audioBuf = await ac.decodeAudioData(item.buf.slice(0)); }
+                catch (e) { continue; }
+                var mp3Blob = encodeMp3(audioBuf);
+                var mp3Buf = await mp3Blob.arrayBuffer();
+                var md5 = SparkMD5.ArrayBuffer.hash(mp3Buf);
+                var md5ext = md5 + '.mp3';
+                zip.remove(item.sound.md5ext);
+                zip.file(md5ext, mp3Buf);
+                item.sound.assetId = md5;
+                item.sound.md5ext = md5ext;
+                item.sound.dataFormat = 'mp3';
+                item.sound.format = 'mp3';
+                item.sound.rate = audioBuf.sampleRate;
+                totalBefore += item.buf.byteLength;
+                totalAfter += mp3Buf.byteLength;
+            }
+            if (ac.close) { try { await ac.close(); } catch (e) {} }
+            if (totalAfter >= totalBefore || totalBefore === 0) return result;
+            zip.file('project.json', JSON.stringify(pj));
+            var outBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+            result.blob = outBlob;
+            result.compressed = true;
+            result.info = '音频已压缩：' + fmtMB(totalBefore) + ' → ' + fmtMB(totalAfter);
+            return result;
+        } catch (e) {
+            return result; /* 任何失败都回退到原文件 */
+        }
+    }
+
+    function encodeMp3(audioBuffer) {
+        var channels = audioBuffer.numberOfChannels;
+        var sampleRate = audioBuffer.sampleRate;
+        var encoder = new lamejs.Mp3Encoder(channels, sampleRate, 128);
+        var left = audioBuffer.getChannelData(0);
+        var right = channels > 1 ? audioBuffer.getChannelData(1) : left;
+        var blockSize = 1152, mp3Data = [];
+        for (var i = 0; i < left.length; i += blockSize) {
+            var l = left.subarray(i, i + blockSize), r = right.subarray(i, i + blockSize);
+            var l16 = new Int16Array(l.length), r16 = new Int16Array(r.length);
+            for (var j = 0; j < l.length; j++) {
+                l16[j] = Math.max(-32768, Math.min(32767, Math.round(l[j] * 32768)));
+                r16[j] = Math.max(-32768, Math.min(32767, Math.round(r[j] * 32768)));
+            }
+            var data = encoder.encodeBuffer(l16, r16);
+            if (data.length) mp3Data.push(new Uint8Array(data));
+        }
+        var end = encoder.flush();
+        if (end.length) mp3Data.push(new Uint8Array(end));
+        return new Blob(mp3Data, { type: 'audio/mp3' });
+    }
+
+    (async function () {
+        await renderSubHeader();
+        var me = await currentUser();
+        if (!me) { authRequiredRedirect(); return; }
+
+        var curType = 'scratch';
+        var cards = document.getElementById('type-cards');
+        function setType(t) {
+            curType = t;
+            document.getElementById('sec-scratch').style.display = t === 'scratch' ? '' : 'none';
+            document.getElementById('sec-code').style.display = (t === 'python' || t === 'cpp') ? '' : 'none';
+            document.getElementById('sec-apk').style.display = t === 'apk' ? '' : 'none';
+            document.getElementById('code-ext').textContent = t === 'cpp' ? '.cpp' : '.py';
+            document.getElementById('f-codefile').accept = t === 'cpp' ? '.cpp,.cc,.cxx' : '.py';
+            cards.querySelectorAll('input[name="wtype"]').forEach(function (r) { r.checked = r.value === t; });
+        }
+        cards.addEventListener('change', function (e) {
+            if (e.target.name === 'wtype') setType(e.target.value);
+        });
+
+        /* 编辑模式：?edit=作品ID（类型不可改） */
+        var editId = new URLSearchParams(location.search).get('edit');
+        var editWork = null;
+        if (editId) {
+            var er = await sb.from('works').select('*').eq('id', editId).single();
+            if (er.error || !er.data || er.data.author_id !== me.id) {
+                location.href = 'community.html';
+                return;
+            }
+            editWork = er.data;
+            var et = workTypeOf(editWork);
+            document.querySelector('.section-title').textContent = '编辑作品';
+            document.getElementById('f-title').value = editWork.title || '';
+            document.getElementById('f-desc').value = editWork.description || '';
+            document.getElementById('f-cat').value = editWork.category || '游戏';
+            document.getElementById('pub-btn').textContent = '保存修改';
+            document.getElementById('type-locked').style.display = '';
+            cards.querySelectorAll('input[name="wtype"]').forEach(function (r) { r.disabled = r.value !== et; });
+            setType(et);
+            if (et === 'python' || et === 'cpp') {
+                document.getElementById('f-code').value = editWork.code || '';
+            }
+            if (et === 'scratch') {
+                document.querySelector('label[for="f-sb3"]').textContent = '游戏文件（.sb3，不换请留空）';
+            }
+            if (et === 'apk') {
+                document.querySelector('label[for="f-apk"]').innerHTML = 'APK 文件 <span class="form-hint">（不换请留空）</span>';
+            }
+        } else {
+            setType('scratch');
+        }
+
+        var form = document.getElementById('pub-form');
+        var note = document.getElementById('pub-note');
+        var btn = document.getElementById('pub-btn');
+        var bar = document.getElementById('progress');
+        var barIn = document.getElementById('progress-bar');
+
+        function setNote(msg, cls) { note.textContent = msg; note.className = 'form-note ' + (cls || ''); }
+        function setProgress(p) {
+            if (p < 0) { bar.style.display = 'none'; return; }
+            bar.style.display = 'block';
+            barIn.style.width = Math.round(p * 100) + '%';
+            barIn.textContent = Math.round(p * 100) + '%';
+        }
+
+        document.getElementById('f-sb3').addEventListener('change', function (e) {
+            var f = e.target.files[0];
+            document.getElementById('file-info').textContent = f ? ('已选择：' + f.name + '（' + fmtMB(f.size) + '）') : '';
+        });
+        document.getElementById('f-apk').addEventListener('change', function (e) {
+            var f = e.target.files[0];
+            document.getElementById('apk-info').textContent = f ? ('已选择：' + f.name + '（' + fmtMB(f.size) + '）') : '';
+        });
+        document.getElementById('f-codefile').addEventListener('change', function (e) {
+            var f = e.target.files[0];
+            if (!f) return;
+            var rd = new FileReader();
+            rd.onload = function () {
+                document.getElementById('f-code').value = String(rd.result || '');
+                document.getElementById('code-info').textContent = '已导入：' + f.name;
+            };
+            rd.readAsText(f);
+        });
+        document.getElementById('code-sample').addEventListener('click', function () {
+            document.getElementById('f-code').value = CODE_SAMPLES[curType] || CODE_SAMPLES.python;
+        });
+
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            var title = document.getElementById('f-title').value.trim();
+            var cat = document.getElementById('f-cat').value;
+            var desc = document.getElementById('f-desc').value.trim();
+            if (!title) { setNote('请填写作品名称', 'err'); return; }
+
+            btn.disabled = true;
+            setProgress(0);
+            try {
+                var coverFile = document.getElementById('f-cover').files[0];
+                var coverUrl = editWork ? editWork.cover_url : null;
+                if (coverFile) {
+                    setNote('正在上传封面…', 'sending');
+                    setProgress(-1);
+                    var ext = (coverFile.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+                    coverUrl = await uploadWithProgress('covers', me.id + '/' + Date.now() + '.' + ext, coverFile, coverFile.type || 'image/jpeg', null);
+                }
+
+                var payload = { title: title, description: desc, category: cat, cover_url: coverUrl };
+
+                if (curType === 'scratch') {
+                    var sb3File = document.getElementById('f-sb3').files[0];
+                    var wantCompress = document.getElementById('f-compress').checked;
+                    if (!sb3File && !editWork) { setNote('请选择 .sb3 文件', 'err'); btn.disabled = false; return; }
+                    if (sb3File && !/\.sb3$/i.test(sb3File.name)) { setNote('游戏文件必须是 .sb3 格式', 'err'); btn.disabled = false; return; }
+                    if (sb3File && sb3File.size > 50 * 1024 * 1024) { setNote('文件太大，请小于 50MB', 'err'); btn.disabled = false; return; }
+                    var sb3Url = editWork ? editWork.sb3_url : null;
+                    if (sb3File) {
+                        var uploadBlob = sb3File;
+                        if (wantCompress) {
+                            setNote('正在分析文件…', 'sending');
+                            var cr = await compressSb3(sb3File, function (s) { setNote(s, 'sending'); });
+                            if (cr.compressed) { uploadBlob = cr.blob; setNote(cr.info + '，开始上传…', 'sending'); }
+                        }
+                        setNote('正在上传游戏文件…', 'sending');
+                        sb3Url = await uploadWithProgress('sb3', me.id + '/' + Date.now() + '.sb3', uploadBlob, 'application/octet-stream', function (p) {
+                            if (p >= 0) { setProgress(p); setNote('正在上传游戏文件… ' + Math.round(p * 100) + '%', 'sending'); }
+                            else setProgress(-1);
+                        });
+                    }
+                    payload.sb3_url = sb3Url;
+                    payload.work_type = 'scratch';
+                } else if (curType === 'python' || curType === 'cpp') {
+                    var code = document.getElementById('f-code').value;
+                    if (!code.trim() && !editWork) { setNote('请填写或导入源代码', 'err'); btn.disabled = false; return; }
+                    if (code.length > 200 * 1024) { setNote('代码太长，请小于 200KB', 'err'); btn.disabled = false; return; }
+                    payload.work_type = curType;
+                    payload.code = code;
+                    if (editWork && !code.trim()) payload.code = editWork.code;
+                } else if (curType === 'apk') {
+                    var apkFile = document.getElementById('f-apk').files[0];
+                    if (!apkFile && !editWork) { setNote('请选择 .apk 文件', 'err'); btn.disabled = false; return; }
+                    if (apkFile && !/\.apk$/i.test(apkFile.name)) { setNote('必须是 .apk 文件', 'err'); btn.disabled = false; return; }
+                    if (apkFile && apkFile.size > 100 * 1024 * 1024) { setNote('文件太大，请小于 100MB', 'err'); btn.disabled = false; return; }
+                    var apkUrl = editWork ? editWork.apk_url : null;
+                    if (apkFile) {
+                        setNote('正在上传 APK…', 'sending');
+                        apkUrl = await uploadWithProgress('apks', me.id + '/' + Date.now() + '.apk', apkFile, 'application/vnd.android.package-archive', function (p) {
+                            if (p >= 0) { setProgress(p); setNote('正在上传 APK… ' + Math.round(p * 100) + '%', 'sending'); }
+                            else setProgress(-1);
+                        });
+                    }
+                    var shots = editWork ? (editWork.screenshots || []) : [];
+                    var shotFiles = Array.prototype.slice.call(document.getElementById('f-shots').files || []).slice(0, 3);
+                    if (shotFiles.length) {
+                        setNote('正在上传截图…', 'sending');
+                        setProgress(-1);
+                        shots = [];
+                        for (var si = 0; si < shotFiles.length; si++) {
+                            var sf = shotFiles[si];
+                            var sext = (sf.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+                            var surl = await uploadWithProgress('covers', 'shots/' + me.id + '_' + Date.now() + '_' + si + '.' + sext, sf, sf.type || 'image/jpeg', null);
+                            shots.push(surl);
+                        }
+                    }
+                    payload.work_type = 'apk';
+                    payload.apk_url = apkUrl;
+                    payload.screenshots = shots;
+                }
+
+                if (editWork) {
+                    setNote('正在保存…', 'sending');
+                    var ur = await sb.from('works').update(payload).eq('id', editWork.id);
+                    if (ur.error) throw ur.error;
+                    setNote('保存成功，正在跳转…', 'ok');
+                    location.href = 'community-play.html?id=' + editWork.id;
+                } else {
+                    setNote('正在发布…', 'sending');
+                    payload.author_id = me.id;
+                    var ins = await sb.from('works').insert(payload).select('id').single();
+                    if (ins.error) throw ins.error;
+                    setNote('发布成功，正在跳转…', 'ok');
+                    location.href = 'community-play.html?id=' + ins.data.id;
+                }
+            } catch (err) {
+                setNote('发布失败：' + err.message, 'err');
+                btn.disabled = false;
+                setProgress(-1);
+            }
+        });
+    })();
+    </script>
+    <script defer src="https://vercount.one/js"></script>
+</body>
+</html>

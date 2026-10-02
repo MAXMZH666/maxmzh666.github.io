@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAXMZH 游戏社区：分享你的 Scratch 作品，在线试玩、评论、点赞。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="MAXMZH - 游戏社区">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>MAXMZH - 游戏社区</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/styles.css">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">主页</a></li>
+                <li><a href="about.html">个人简介</a></li>
+                <li><a href="portfolio.html">作品集</a></li>
+                <li><a href="blog.html">博客</a></li>
+                <li><a href="downloads.html">下载中心</a></li>
+                <li><a href="community.html" class="active">社区</a></li>
+                <li><a href="forum.html">论坛</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="sub-header">
+        <div class="sub-header-inner">
+            <a class="sub-brand" href="community.html">🎮 <span>游戏社区</span></a>
+            <nav class="sub-links" aria-label="社区导航">
+                <a href="community.html" data-sub="home">首页</a>
+                <a href="community-publish.html" data-sub="publish">发布作品</a>
+                <a href="community-code.html" data-sub="code">💻 在线编程</a>
+                <a href="community-rank.html" data-sub="rank">🏆 排行榜</a>
+                <a href="community-notify.html" data-sub="notify" id="sub-bell" style="display:none">🔔 通知</a>
+                <span id="sub-auth"><a href="community-auth.html">登录</a></span>
+            </nav>
+        </div>
+    </div>
+
+    <main>
+        <section class="portfolio">
+            <div class="community-head reveal">
+                <div>
+                    <h1 class="section-title" style="margin:0">游戏社区</h1>
+                    <p class="section-sub" style="margin:8px 0 0">分享 Scratch、Python、C++、APK 作品，在线试玩运行、评论、点赞。</p>
+                </div>
+                <a class="btn btn-blue" href="community-publish.html">＋ 发布作品</a>
+            </div>
+
+            <div class="search-row reveal">
+                <input type="text" id="q" placeholder="搜索作品名称…">
+                <button class="btn btn-blue" id="q-btn">搜索</button>
+            </div>
+            <div class="filter-chips reveal" id="cat-chips"></div>
+            <div class="filter-chips reveal" id="type-chips"></div>
+            <div class="sort-tabs reveal" id="sort-tabs">
+                <button data-sort="new" class="active">最新发布</button>
+                <button data-sort="hot">最多点赞</button>
+                <button data-sort="views">最多浏览</button>
+            </div>
+
+            <div id="feat-wrap" style="display:none">
+                <h2 class="feat-title">🔥 热门推荐</h2>
+                <div class="card-grid" id="feat-grid"></div>
+            </div>
+
+            <h2 class="feat-title" id="list-title">全部作品</h2>
+            <p id="works-note" class="works-note">加载中…</p>
+            <div class="card-grid" id="works-grid"></div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="portfolio.html">作品集</a>
+            <a href="blog.html">博客</a>
+            <a href="downloads.html">下载中心</a>
+            <a href="community.html">社区</a>
+            <a href="forum.html">论坛</a>
+            <a href="contact.html">联系方式</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
+        <p class="foot-stats"><span id="busuanzi_container_site_pv">本站总访问量 <span id="busuanzi_value_site_pv">统计中…</span> 次</span><span> · </span><span id="busuanzi_container_page_pv">本页访问 <span id="busuanzi_value_page_pv">统计中…</span> 次</span></p>
+    </footer>
+
+    <script src="js/scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/community.js"></script>
+    <script>
+    var state = { q: '', cat: '全部', type: 'all', sort: 'new' };
+    var nameMap = {};
+    var TYPE_FILTERS = [
+        { v: 'all', label: '全部类型' },
+        { v: 'scratch', label: '🎮 Scratch' },
+        { v: 'python', label: '🐍 Python' },
+        { v: 'cpp', label: '⚙️ C++' },
+        { v: 'apk', label: '📱 APK' }
+    ];
+
+    function workCard(w, counts) {
+        var cover = w.cover_url
+            ? '<img src="' + esc(w.cover_url) + '" alt="' + esc(w.title) + '" loading="lazy">'
+            : '<span class="monogram">' + esc((w.title || '游').charAt(0)) + '</span>';
+        return '<a class="card" href="community-play.html?id=' + w.id + '">' +
+            '<div class="card-cover">' + cover + '</div>' +
+            '<div class="card-body"><h3>' + esc(w.title) + '</h3>' +
+            '<p>' + esc(nameMap[w.author_id] || '未知') + ' · ' + fmtDate(w.created_at) + '</p>' +
+            '<div class="card-tags"><span class="tag">❤ ' + (counts[w.id] || 0) + '</span>' +
+            '<span class="tag">👁 ' + (w.views || 0) + '</span>' + typeBadge(workTypeOf(w)) +
+            (w.category ? '<span class="tag blue">' + esc(w.category) + '</span>' : '') + '</div>' +
+            '</div></a>';
+    }
+
+    async function fillNames(authorIds) {
+        try {
+            var ids = Array.from(new Set(authorIds));
+            if (!ids.length) return;
+            var pr = await sb.from('profiles').select('id,username').in('id', ids);
+            (pr.data || []).forEach(function (p) { nameMap[p.id] = p.username; });
+        } catch (e) {}
+    }
+
+    async function countLikes(ids) {
+        var counts = {};
+        try {
+            var lr = await sb.from('likes').select('work_id').in('work_id', ids);
+            (lr.data || []).forEach(function (l) { counts[l.work_id] = (counts[l.work_id] || 0) + 1; });
+        } catch (e) {}
+        return counts;
+    }
+
+    function escLike(s) { return s.replace(/[%_\\]/g, function (c) { return '\\' + c; }); }
+
+    async function loadWorks() {
+        var grid = document.getElementById('works-grid');
+        var note = document.getElementById('works-note');
+        grid.innerHTML = skeletonHtml(6);
+        note.style.display = 'none';
+        try {
+            var query = sb.from('works').select('id,title,cover_url,created_at,author_id,category,views,work_type');
+            if (state.cat !== '全部') query = query.eq('category', state.cat);
+            if (state.type !== 'all') query = query.eq('work_type', state.type);
+            if (state.q) query = query.ilike('title', '%' + escLike(state.q) + '%');
+            query = state.sort === 'views'
+                ? query.order('views', { ascending: false })
+                : query.order('created_at', { ascending: false });
+            var res = await query;
+            if (res.error) throw res.error;
+            var works = res.data || [];
+            var ids = works.map(function (w) { return w.id; });
+            var authorIds = works.map(function (w) { return w.author_id; });
+            var results = await Promise.all([countLikes(ids), fillNames(authorIds)]);
+            var counts = results[0];
+            if (state.sort === 'hot') {
+                works.sort(function (a, b) { return (counts[b.id] || 0) - (counts[a.id] || 0); });
+            }
+            if (!works.length) {
+                grid.innerHTML = '';
+                note.textContent = '没有找到作品，换个条件试试。';
+                note.style.display = 'block';
+                return;
+            }
+            grid.innerHTML = works.map(function (w) { return workCard(w, counts); }).join('');
+            document.getElementById('list-title').textContent =
+                state.q ? '搜索：' + state.q : (state.cat === '全部' ? '全部作品' : state.cat);
+        } catch (e) {
+            grid.innerHTML = '';
+            note.textContent = '加载失败：' + e.message;
+            note.style.display = 'block';
+        }
+    }
+
+    function skeletonHtml(n) {
+        var s = '';
+        for (var i = 0; i < n; i++) {
+            s += '<div class="skeleton-card"><div class="skeleton skeleton-cover"></div>' +
+                '<div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div>';
+        }
+        return s;
+    }
+
+    async function loadFeatured() {
+        var wrap = document.getElementById('feat-wrap');
+        try {
+            var res = await sb.from('works').select('id,title,cover_url,created_at,author_id,category,views,work_type')
+                .order('created_at', { ascending: false }).limit(50);
+            var works = res.data || [];
+            if (!works.length) return;
+            var counts = await countLikes(works.map(function (w) { return w.id; }));
+            var top = works.filter(function (w) { return (counts[w.id] || 0) > 0; })
+                .sort(function (a, b) { return (counts[b.id] || 0) - (counts[a.id] || 0); })
+                .slice(0, 3);
+            if (!top.length) return;
+            await fillNames(top.map(function (w) { return w.author_id; }));
+            document.getElementById('feat-grid').innerHTML = top.map(function (w) { return workCard(w, counts); }).join('');
+            wrap.style.display = 'block';
+        } catch (e) {}
+    }
+
+    (async function () {
+        await renderSubHeader();
+        var chips = document.getElementById('cat-chips');
+        chips.innerHTML = ['全部'].concat(WORK_CATEGORIES).map(function (c) {
+            return '<button class="filter-chip' + (c === '全部' ? ' active' : '') + '" data-cat="' + c + '">' + c + '</button>';
+        }).join('');
+        chips.addEventListener('click', function (e) {
+            var b = e.target.closest('button[data-cat]');
+            if (!b) return;
+            state.cat = b.getAttribute('data-cat');
+            chips.querySelectorAll('button').forEach(function (x) { x.classList.toggle('active', x === b); });
+            loadWorks();
+        });
+        var tChips = document.getElementById('type-chips');
+        tChips.innerHTML = TYPE_FILTERS.map(function (t) {
+            return '<button class="filter-chip' + (t.v === 'all' ? ' active' : '') + '" data-type="' + t.v + '">' + t.label + '</button>';
+        }).join('');
+        tChips.addEventListener('click', function (e) {
+            var b = e.target.closest('button[data-type]');
+            if (!b) return;
+            state.type = b.getAttribute('data-type');
+            tChips.querySelectorAll('button').forEach(function (x) { x.classList.toggle('active', x === b); });
+            loadWorks();
+        });
+        document.getElementById('sort-tabs').addEventListener('click', function (e) {
+            var b = e.target.closest('button[data-sort]');
+            if (!b) return;
+            state.sort = b.getAttribute('data-sort');
+            this.querySelectorAll('button').forEach(function (x) { x.classList.toggle('active', x === b); });
+            loadWorks();
+        });
+        function doSearch() {
+            state.q = document.getElementById('q').value.trim();
+            loadWorks();
+        }
+        var searchTimer = null;
+        document.getElementById('q-btn').addEventListener('click', doSearch);
+        document.getElementById('q').addEventListener('keydown', function (e) { if (e.key === 'Enter') doSearch(); });
+        document.getElementById('q').addEventListener('input', function () {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(doSearch, 400);
+        });
+        await Promise.all([loadFeatured(), loadWorks()]);
+    })();
+    </script>
+    <script defer src="https://vercount.one/js"></script>
+</body>
+</html>
