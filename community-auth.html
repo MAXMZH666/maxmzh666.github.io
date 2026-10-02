@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="登录或注册 MAXMZH 游戏社区。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="MAXMZH - 社区登录">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>登录 / 注册 - MAXMZH 社区</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/styles.css">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">主页</a></li>
+                <li><a href="about.html">个人简介</a></li>
+                <li><a href="portfolio.html">作品集</a></li>
+                <li><a href="blog.html">博客</a></li>
+                <li><a href="downloads.html">下载中心</a></li>
+                <li><a href="community.html" class="active">社区</a></li>
+                <li><a href="forum.html">论坛</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+                <li id="nav-auth"><a href="community-auth.html">登录</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="portfolio">
+            <p class="article-back"><a href="community.html">← 返回社区</a></p>
+            <h1 class="section-title">登录 / 注册</h1>
+            <p class="section-sub">登录后可以发布作品、点赞和评论。</p>
+            <div id="already" style="display:none;text-align:center">
+                <p class="works-note" id="already-text"></p>
+                <p><a class="btn btn-blue" href="community.html">去社区逛逛</a>
+                <a href="#" id="logout-btn" style="margin-left:16px">退出登录</a></p>
+            </div>
+            <div id="auth-box">
+                <div class="auth-tabs">
+                    <button id="tab-login" class="active">登录</button>
+                    <button id="tab-signup">注册</button>
+                </div>
+                <form id="auth-form" class="contact-form">
+                    <div id="row-username" style="display:none">
+                        <label for="a-username">用户名</label>
+                        <input type="text" id="a-username" maxlength="20" placeholder="显示在社区里的名字">
+                    </div>
+                    <label for="a-email">邮箱</label>
+                    <input type="email" id="a-email" required placeholder="you@example.com">
+                    <label for="a-password">密码</label>
+                    <input type="password" id="a-password" required minlength="6" placeholder="至少 6 位">
+                    <p class="form-note" id="auth-note"></p>
+                    <button type="submit" id="auth-btn">登录</button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="portfolio.html">作品集</a>
+            <a href="blog.html">博客</a>
+            <a href="downloads.html">下载中心</a>
+            <a href="community.html">社区</a>
+            <a href="forum.html">论坛</a>
+            <a href="contact.html">联系方式</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
+        <p class="foot-stats"><span id="busuanzi_container_site_pv">本站总访问量 <span id="busuanzi_value_site_pv">统计中…</span> 次</span><span> · </span><span id="busuanzi_container_page_pv">本页访问 <span id="busuanzi_value_page_pv">统计中…</span> 次</span></p>
+    </footer>
+
+    <script src="js/scripts.js"></script>
+    <script src="js/community.js"></script>
+    <script>
+    (async function () {
+        await renderNavAuth();
+        var me = await currentUser();
+        var params = new URLSearchParams(location.search);
+        var next = params.get('next') || 'community.html';
+
+        if (me) {
+            var p = await currentProfile();
+            document.getElementById('auth-box').style.display = 'none';
+            document.getElementById('already').style.display = 'block';
+            document.getElementById('already-text').textContent = '你已登录：' + (p ? p.username : me.email);
+            document.getElementById('logout-btn').addEventListener('click', async function (e) {
+                e.preventDefault();
+                await sb.auth.signOut();
+                location.reload();
+            });
+            return;
+        }
+
+        var mode = 'login';
+        var tabLogin = document.getElementById('tab-login');
+        var tabSignup = document.getElementById('tab-signup');
+        var rowUser = document.getElementById('row-username');
+        var btn = document.getElementById('auth-btn');
+        var note = document.getElementById('auth-note');
+
+        function setMode(m) {
+            mode = m;
+            tabLogin.classList.toggle('active', m === 'login');
+            tabSignup.classList.toggle('active', m === 'signup');
+            rowUser.style.display = m === 'signup' ? 'block' : 'none';
+            btn.textContent = m === 'signup' ? '注册' : '登录';
+            note.textContent = '';
+            note.className = 'form-note';
+        }
+        tabLogin.addEventListener('click', function () { setMode('login'); });
+        tabSignup.addEventListener('click', function () { setMode('signup'); });
+
+        document.getElementById('auth-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            var email = document.getElementById('a-email').value.trim();
+            var password = document.getElementById('a-password').value;
+            var username = document.getElementById('a-username').value.trim();
+            if (!email || !password) { note.textContent = '请填写邮箱和密码'; note.className = 'form-note err'; return; }
+            if (mode === 'signup' && !username) { note.textContent = '请填写用户名'; note.className = 'form-note err'; return; }
+            btn.disabled = true;
+            note.textContent = mode === 'signup' ? '注册中…' : '登录中…';
+            note.className = 'form-note sending';
+            try {
+                if (mode === 'signup') {
+                    var r = await sb.auth.signUp({
+                        email: email, password: password,
+                        options: { data: { username: username } }
+                    });
+                    if (r.error) throw r.error;
+                    if (r.data.session) {
+                        location.href = next;
+                    } else {
+                        note.textContent = '注册成功！请去邮箱点击确认链接，然后再登录。';
+                        note.className = 'form-note ok';
+                        setMode('login');
+                    }
+                } else {
+                    var r2 = await sb.auth.signInWithPassword({ email: email, password: password });
+                    if (r2.error) throw r2.error;
+                    location.href = next;
+                }
+            } catch (err) {
+                var msg = err.message || '操作失败';
+                if (/already registered|already exists/i.test(msg)) msg = '这个邮箱已经注册过，直接登录即可';
+                if (/invalid login credentials/i.test(msg)) msg = '邮箱或密码不对（新注册的请先去邮箱点确认链接）';
+                if (/duplicate key|username/i.test(msg)) msg = '这个用户名已被占用，换一个试试';
+                note.textContent = msg;
+                note.className = 'form-note err';
+                btn.disabled = false;
+            }
+        });
+    })();
+    </script>
+    <script defer src="https://vercount.one/js"></script>
+</body>
+</html>

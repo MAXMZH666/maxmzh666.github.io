@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAXMZH 游戏社区：分享你的 Scratch 作品，在线试玩、评论、点赞。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="MAXMZH - 游戏社区">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>MAXMZH - 游戏社区</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/styles.css">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">主页</a></li>
+                <li><a href="about.html">个人简介</a></li>
+                <li><a href="portfolio.html">作品集</a></li>
+                <li><a href="blog.html">博客</a></li>
+                <li><a href="downloads.html">下载中心</a></li>
+                <li><a href="community.html" class="active">社区</a></li>
+                <li><a href="forum.html">论坛</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+                <li id="nav-auth"><a href="community-auth.html">登录</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="portfolio">
+            <div class="community-head reveal">
+                <div>
+                    <h1 class="section-title" style="margin:0">游戏社区</h1>
+                    <p class="section-sub" style="margin:8px 0 0">分享你的 Scratch 作品，在线试玩、评论、点赞。</p>
+                </div>
+                <a class="btn btn-blue" href="community-publish.html">＋ 发布作品</a>
+            </div>
+            <p id="works-note" class="works-note">加载中…</p>
+            <div class="card-grid" id="works-grid"></div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="portfolio.html">作品集</a>
+            <a href="blog.html">博客</a>
+            <a href="downloads.html">下载中心</a>
+            <a href="community.html">社区</a>
+            <a href="forum.html">论坛</a>
+            <a href="contact.html">联系方式</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
+        <p class="foot-stats"><span id="busuanzi_container_site_pv">本站总访问量 <span id="busuanzi_value_site_pv">统计中…</span> 次</span><span> · </span><span id="busuanzi_container_page_pv">本页访问 <span id="busuanzi_value_page_pv">统计中…</span> 次</span></p>
+    </footer>
+
+    <script src="js/scripts.js"></script>
+    <script src="js/community.js"></script>
+    <script>
+    (async function () {
+        await renderNavAuth();
+        var grid = document.getElementById('works-grid');
+        var note = document.getElementById('works-note');
+        try {
+            var res = await sb.from('works')
+                .select('id,title,cover_url,created_at,profiles(username)')
+                .order('created_at', { ascending: false });
+            if (res.error) throw res.error;
+            var works = res.data || [];
+            if (!works.length) { note.textContent = '还没有作品，来发布第一个吧！'; return; }
+            note.style.display = 'none';
+            var ids = works.map(function (w) { return w.id; });
+            var counts = {};
+            try {
+                var lr = await sb.from('likes').select('work_id').in('work_id', ids);
+                (lr.data || []).forEach(function (l) { counts[l.work_id] = (counts[l.work_id] || 0) + 1; });
+            } catch (e) {}
+            grid.innerHTML = works.map(function (w) {
+                var cover = w.cover_url
+                    ? '<img src="' + esc(w.cover_url) + '" alt="' + esc(w.title) + '" loading="lazy">'
+                    : '<span class="monogram">' + esc((w.title || '游').charAt(0)) + '</span>';
+                return '<a class="card" href="community-play.html?id=' + w.id + '">' +
+                    '<div class="card-cover">' + cover + '</div>' +
+                    '<div class="card-body"><h3>' + esc(w.title) + '</h3>' +
+                    '<p>作者：' + esc(w.profiles ? w.profiles.username : '未知') + ' · ' + fmtDate(w.created_at) + '</p>' +
+                    '<div class="card-tags"><span class="tag">❤ ' + (counts[w.id] || 0) + '</span><span class="tag blue">试玩</span></div>' +
+                    '</div></a>';
+            }).join('');
+        } catch (e) {
+            note.textContent = '加载失败：' + e.message;
+        }
+    })();
+    </script>
+    <script defer src="https://vercount.one/js"></script>
+</body>
+</html>

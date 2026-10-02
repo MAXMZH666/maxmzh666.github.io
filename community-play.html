@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAXMZH 游戏社区作品试玩。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="MAXMZH - 社区作品">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>社区作品 - MAXMZH</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/styles.css">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">主页</a></li>
+                <li><a href="about.html">个人简介</a></li>
+                <li><a href="portfolio.html">作品集</a></li>
+                <li><a href="blog.html">博客</a></li>
+                <li><a href="downloads.html">下载中心</a></li>
+                <li><a href="community.html" class="active">社区</a></li>
+                <li><a href="forum.html">论坛</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+                <li id="nav-auth"><a href="community-auth.html">登录</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="portfolio" id="play-wrap">
+            <p class="works-note">加载中…</p>
+        </section>
+    </main>
+
+    <footer>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="portfolio.html">作品集</a>
+            <a href="blog.html">博客</a>
+            <a href="downloads.html">下载中心</a>
+            <a href="community.html">社区</a>
+            <a href="forum.html">论坛</a>
+            <a href="contact.html">联系方式</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
+        <p class="foot-stats"><span id="busuanzi_container_site_pv">本站总访问量 <span id="busuanzi_value_site_pv">统计中…</span> 次</span><span> · </span><span id="busuanzi_container_page_pv">本页访问 <span id="busuanzi_value_page_pv">统计中…</span> 次</span></p>
+    </footer>
+
+    <script src="js/scripts.js"></script>
+    <script src="js/community.js"></script>
+    <script>
+    (async function () {
+        await renderNavAuth();
+        var wrap = document.getElementById('play-wrap');
+        var id = new URLSearchParams(location.search).get('id');
+        if (!id) { wrap.innerHTML = '<p class="works-note">缺少作品 ID。<a href="community.html">返回社区</a></p>'; return; }
+
+        var res = await sb.from('works').select('*,profiles(username)').eq('id', id).single();
+        if (res.error || !res.data) {
+            wrap.innerHTML = '<p class="works-note">作品不存在或已被删除。<a href="community.html">返回社区</a></p>';
+            return;
+        }
+        var w = res.data;
+        document.title = w.title + ' - MAXMZH 社区';
+        var embedUrl = 'https://turbowarp.org/embed?project_url=' + encodeURIComponent(w.sb3_url) +
+            '&project_title=' + encodeURIComponent(w.title) + '&autoplay';
+        var me = await currentUser();
+        var isAuthor = me && me.id === w.author_id;
+
+        wrap.innerHTML =
+            '<p class="article-back"><a href="community.html">← 返回社区</a></p>' +
+            '<h1 class="section-title" style="margin-top:6px">' + esc(w.title) + '</h1>' +
+            '<p class="work-meta">作者：' + esc(w.profiles ? w.profiles.username : '未知') + ' · ' + fmtDate(w.created_at) + '</p>' +
+            '<div class="player-wrap"><iframe src="' + esc(embedUrl) + '" allowtransparency="true" scrolling="no" allowfullscreen title="' + esc(w.title) + '"></iframe></div>' +
+            (w.description ? '<p style="margin-top:18px;line-height:1.8">' + esc(w.description) + '</p>' : '') +
+            '<div class="work-actions">' +
+                '<button class="like-btn" id="like-btn">❤ <span id="like-count">…</span></button>' +
+                (isAuthor ? '<a href="#" class="link-danger" id="del-work">删除作品</a>' : '') +
+            '</div>' +
+            '<div class="comments"><h2>评论</h2><div id="comment-list"><p class="works-note">加载中…</p></div>' +
+            '<form id="comment-form" class="comment-form contact-form" style="max-width:none">' +
+                '<label for="c-text">写评论</label>' +
+                '<textarea id="c-text" maxlength="500" placeholder="' + (me ? '友善评论，理性交流' : '登录后发表评论') + '"></textarea>' +
+                '<p class="form-note" id="c-note"></p>' +
+                '<button type="submit">' + (me ? '发表评论' : '登录后评论') + '</button>' +
+            '</form></div>';
+
+        /* 点赞 */
+        var likeBtn = document.getElementById('like-btn');
+        var likeCount = document.getElementById('like-count');
+        var liked = false;
+        async function refreshLikes() {
+            var r = await sb.from('likes').select('work_id').eq('work_id', id);
+            var n = (r.data || []).length;
+            likeCount.textContent = n;
+            likeBtn.classList.toggle('liked', liked);
+        }
+        if (me) {
+            var lr = await sb.from('likes').select('work_id').eq('work_id', id).eq('user_id', me.id).maybeSingle();
+            liked = !!lr.data;
+        }
+        await refreshLikes();
+        likeBtn.addEventListener('click', async function () {
+            if (!me) { authRequiredRedirect(); return; }
+            likeBtn.disabled = true;
+            try {
+                if (liked) {
+                    await sb.from('likes').delete().eq('work_id', id).eq('user_id', me.id);
+                    liked = false;
+                } else {
+                    var ir = await sb.from('likes').insert({ work_id: id, user_id: me.id });
+                    if (ir.error) throw ir.error;
+                    liked = true;
+                }
+            } catch (e) { alert('操作失败：' + e.message); }
+            likeBtn.disabled = false;
+            await refreshLikes();
+        });
+
+        /* 删除作品（作者） */
+        if (isAuthor) {
+            document.getElementById('del-work').addEventListener('click', async function (e) {
+                e.preventDefault();
+                if (!confirm('确定删除这个作品吗？评论和点赞也会一起删除。')) return;
+                var dr = await sb.from('works').delete().eq('id', id);
+                if (dr.error) { alert('删除失败：' + dr.error.message); return; }
+                location.href = 'community.html';
+            });
+        }
+
+        /* 评论列表 */
+        async function loadComments() {
+            var list = document.getElementById('comment-list');
+            var r = await sb.from('comments').select('content,created_at,profiles(username)')
+                .eq('work_id', id).order('created_at', { ascending: true }).limit(100);
+            if (r.error) { list.innerHTML = '<p class="works-note">评论加载失败</p>'; return; }
+            var cs = r.data || [];
+            list.innerHTML = cs.length ? cs.map(function (c) {
+                return '<div class="comment"><div class="comment-meta">' +
+                    esc(c.profiles ? c.profiles.username : '未知') + ' · ' + fmtDate(c.created_at) +
+                    '</div><p>' + esc(c.content) + '</p></div>';
+            }).join('') : '<p class="works-note">还没有评论，来抢沙发！</p>';
+        }
+        await loadComments();
+
+        /* 发表评论 */
+        document.getElementById('comment-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            if (!me) { authRequiredRedirect(); return; }
+            var ta = document.getElementById('c-text');
+            var note = document.getElementById('c-note');
+            var text = ta.value.trim();
+            if (!text) { note.textContent = '评论内容不能为空'; note.className = 'form-note err'; return; }
+            note.textContent = '发表中…'; note.className = 'form-note sending';
+            var r = await sb.from('comments').insert({ work_id: id, author_id: me.id, content: text });
+            if (r.error) { note.textContent = '发表失败：' + r.error.message; note.className = 'form-note err'; return; }
+            ta.value = '';
+            note.textContent = '发表成功'; note.className = 'form-note ok';
+            await loadComments();
+        });
+    })();
+    </script>
+    <script defer src="https://vercount.one/js"></script>
+</body>
+</html>

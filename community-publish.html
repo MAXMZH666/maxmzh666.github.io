@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="在 MAXMZH 游戏社区发布你的 Scratch 作品。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="MAXMZH - 发布作品">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>发布作品 - MAXMZH 社区</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/styles.css">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">主页</a></li>
+                <li><a href="about.html">个人简介</a></li>
+                <li><a href="portfolio.html">作品集</a></li>
+                <li><a href="blog.html">博客</a></li>
+                <li><a href="downloads.html">下载中心</a></li>
+                <li><a href="community.html" class="active">社区</a></li>
+                <li><a href="forum.html">论坛</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+                <li id="nav-auth"><a href="community-auth.html">登录</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="portfolio">
+            <p class="article-back"><a href="community.html">← 返回社区</a></p>
+            <h1 class="section-title">发布作品</h1>
+            <p class="section-sub">上传你的 .sb3 文件，大家就能在线试玩了。文件请小于 50MB。</p>
+            <form id="pub-form" class="contact-form">
+                <label for="f-title">作品名称 *</label>
+                <input type="text" id="f-title" maxlength="60" required placeholder="给作品起个名字">
+                <label for="f-desc">作品简介</label>
+                <textarea id="f-desc" maxlength="500" placeholder="玩法介绍、操作说明…（选填）"></textarea>
+                <label for="f-sb3">游戏文件（.sb3） *</label>
+                <input type="file" id="f-sb3" accept=".sb3" required>
+                <label for="f-cover">封面图（选填）</label>
+                <input type="file" id="f-cover" accept="image/*">
+                <p class="form-note" id="pub-note"></p>
+                <button type="submit" id="pub-btn">发布</button>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="portfolio.html">作品集</a>
+            <a href="blog.html">博客</a>
+            <a href="downloads.html">下载中心</a>
+            <a href="community.html">社区</a>
+            <a href="forum.html">论坛</a>
+            <a href="contact.html">联系方式</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
+        <p class="foot-stats"><span id="busuanzi_container_site_pv">本站总访问量 <span id="busuanzi_value_site_pv">统计中…</span> 次</span><span> · </span><span id="busuanzi_container_page_pv">本页访问 <span id="busuanzi_value_page_pv">统计中…</span> 次</span></p>
+    </footer>
+
+    <script src="js/scripts.js"></script>
+    <script src="js/community.js"></script>
+    <script>
+    (async function () {
+        await renderNavAuth();
+        var me = await currentUser();
+        if (!me) { authRequiredRedirect(); return; }
+
+        var form = document.getElementById('pub-form');
+        var note = document.getElementById('pub-note');
+        var btn = document.getElementById('pub-btn');
+
+        function setNote(msg, cls) { note.textContent = msg; note.className = 'form-note ' + (cls || ''); }
+
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            var title = document.getElementById('f-title').value.trim();
+            var desc = document.getElementById('f-desc').value.trim();
+            var sb3File = document.getElementById('f-sb3').files[0];
+            var coverFile = document.getElementById('f-cover').files[0];
+
+            if (!title) { setNote('请填写作品名称', 'err'); return; }
+            if (!sb3File) { setNote('请选择 .sb3 文件', 'err'); return; }
+            if (!/\.sb3$/i.test(sb3File.name)) { setNote('游戏文件必须是 .sb3 格式', 'err'); return; }
+            if (sb3File.size > 50 * 1024 * 1024) { setNote('文件太大，请小于 50MB', 'err'); return; }
+
+            btn.disabled = true;
+            try {
+                setNote('正在上传游戏文件…', 'sending');
+                var sb3Path = me.id + '/' + Date.now() + '.sb3';
+                var up1 = await sb.storage.from('sb3').upload(sb3Path, sb3File, { contentType: 'application/octet-stream' });
+                if (up1.error) throw up1.error;
+                var sb3Url = sb.storage.from('sb3').getPublicUrl(sb3Path).data.publicUrl;
+
+                var coverUrl = null;
+                if (coverFile) {
+                    setNote('正在上传封面…', 'sending');
+                    var ext = (coverFile.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
+                    var coverPath = me.id + '/' + Date.now() + '.' + ext;
+                    var up2 = await sb.storage.from('covers').upload(coverPath, coverFile);
+                    if (up2.error) throw up2.error;
+                    coverUrl = sb.storage.from('covers').getPublicUrl(coverPath).data.publicUrl;
+                }
+
+                setNote('正在发布…', 'sending');
+                var ins = await sb.from('works').insert({
+                    title: title, description: desc,
+                    sb3_url: sb3Url, cover_url: coverUrl, author_id: me.id
+                }).select('id').single();
+                if (ins.error) throw ins.error;
+
+                setNote('发布成功，正在跳转…', 'ok');
+                location.href = 'community-play.html?id=' + ins.data.id;
+            } catch (err) {
+                setNote('发布失败：' + err.message, 'err');
+                btn.disabled = false;
+            }
+        });
+    })();
+    </script>
+    <script defer src="https://vercount.one/js"></script>
+</body>
+</html>
