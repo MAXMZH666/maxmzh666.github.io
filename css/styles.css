@@ -1293,3 +1293,16 @@ form input[type="file"]:focus {
 .version-preview { margin: 0 0 12px 8px; }
 .more-works { margin: 34px 0 8px; }
 .more-works .rank-row { margin-bottom: 8px; }
+
+/* ---------- 在线编程：嵌入式编辑器 ---------- */
+.editor-page { max-width: 1400px; }
+.editor-wrap {
+    position: relative; border: 1px solid var(--border); border-radius: 14px;
+    overflow: hidden; background: #111; margin: 18px 0;
+}
+.editor-wrap iframe { display: block; width: 100%; height: calc(100vh - 240px); min-height: 560px; border: 0; }
+.editor-loading {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: var(--muted); font-size: 1rem; pointer-events: none;
+}
+.editor-bar { display: flex; gap: 12px; flex-wrap: wrap; margin: 6px 0 18px; }
