@@ -1017,3 +1017,58 @@ form input[type="file"]:focus {
 .filter-chips { margin: 10px 0 4px; }
 .feat-title { font-size: 1.15rem; margin: 26px 0 4px; }
 .stat-line { color: var(--muted); font-size: .9rem; margin: 6px 0 0; }
+
+/* ---------- 社区 v3 ---------- */
+#nav-bell a { position: relative; font-size: 1.1rem; }
+.bell-badge {
+    position: absolute;
+    top: 2px; right: 4px;
+    background: #f87171;
+    color: #fff;
+    font-size: .68rem;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    line-height: 18px;
+    text-align: center;
+    border-radius: 999px;
+    padding: 0 4px;
+}
+.follow-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 20px;
+    border-radius: 999px;
+    border: 1px solid var(--gold);
+    background: transparent;
+    color: var(--gold);
+    font-size: .92rem;
+    cursor: pointer;
+    transition: all .18s;
+}
+.follow-btn.following {
+    background: var(--surface-2);
+    border-color: var(--border);
+    color: var(--muted);
+}
+.notify-item {
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    color: var(--text);
+}
+.notify-item.unread { border-color: var(--gold); }
+.notify-item:hover { text-decoration: none; border-color: var(--gold); }
+.notify-time { color: var(--muted); font-size: .8rem; margin-top: 4px; }
+.mini-user-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 4px; }
+.mini-user-list a {
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: .88rem;
+    color: var(--text);
+}
+.mini-user-list a:hover { border-color: var(--gold); text-decoration: none; }
