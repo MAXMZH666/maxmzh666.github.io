@@ -37,24 +37,53 @@ async function currentProfile() {
     return { id: u.id, email: u.email, username: username };
 }
 
-/* 导航栏登录状态（仅社区页面有 #nav-auth） */
-async function renderNavAuth() {
-    var el = document.getElementById('nav-auth');
-    if (!el) return;
+/* ===== 社区 v4：独立子页眉 ===== */
+async function renderSubHeader() {
+    var authEl = document.getElementById('sub-auth');
+    var bellEl = document.getElementById('sub-bell');
+    var page = location.pathname.split('/').pop();
+    var map = {
+        'community.html': 'home',
+        'community-publish.html': 'publish',
+        'community-notify.html': 'notify',
+        'community-user.html': 'mine',
+        'community-auth.html': 'auth'
+    };
+    document.querySelectorAll('.sub-links a[data-sub]').forEach(function (a) {
+        a.classList.toggle('active', a.getAttribute('data-sub') === map[page]);
+    });
     var p = await currentProfile();
-    if (p) {
-        el.innerHTML = '<span class="nav-user">' + esc(p.username) + '</span>' +
-            '<a href="#" id="nav-logout">退出</a>';
-        document.getElementById('nav-logout').addEventListener('click', async function (e) {
-            e.preventDefault();
-            await window.sb.auth.signOut();
-            location.reload();
-        });
-    } else {
-        var next = encodeURIComponent(location.pathname.split('/').pop() + location.search);
-        el.innerHTML = '<a href="community-auth.html?next=' + next + '">登录</a>';
+    if (authEl) {
+        if (p) {
+            authEl.innerHTML = '<a href="community-user.html?id=' + p.id + '">' + esc(p.username) + '</a>' +
+                '<a href="#" id="sub-logout">退出</a>';
+            document.getElementById('sub-logout').addEventListener('click', async function (e) {
+                e.preventDefault();
+                await window.sb.auth.signOut();
+                location.reload();
+            });
+        } else {
+            var next = encodeURIComponent(page + location.search);
+            authEl.innerHTML = '<a href="community-auth.html?next=' + next + '">登录</a>';
+        }
+    }
+    if (bellEl) {
+        if (!p) { bellEl.style.display = 'none'; }
+        else {
+            try {
+                var r = await window.sb.from('notifications')
+                    .select('id', { count: 'exact', head: true })
+                    .eq('user_id', p.id).eq('is_read', false);
+                var n = r.count || 0;
+                bellEl.innerHTML = '🔔 通知' + (n > 0 ? '<span class="bell-badge">' + (n > 99 ? '99+' : n) + '</span>' : '');
+                bellEl.style.display = '';
+            } catch (e) { bellEl.innerHTML = '🔔 通知'; bellEl.style.display = ''; }
+        }
     }
 }
+/* 兼容旧调用 */
+async function renderNavAuth() { return renderSubHeader(); }
+async function renderNavBell() {}
 
 function authRequiredRedirect() {
     var next = encodeURIComponent(location.pathname.split('/').pop() + location.search);
@@ -112,18 +141,4 @@ async function uploadWithProgress(bucket, path, file, contentType, onProgress) {
     return pub();
 }
 
-/* ===== 社区 v3：通知小红点 ===== */
-async function renderNavBell() {
-    var el = document.getElementById('nav-bell');
-    if (!el) return;
-    var me = await currentUser();
-    if (!me) { el.style.display = 'none'; return; }
-    try {
-        var r = await window.sb.from('notifications')
-            .select('id', { count: 'exact', head: true })
-            .eq('user_id', me.id).eq('is_read', false);
-        var n = r.count || 0;
-        el.innerHTML = '<a href="community-notify.html" aria-label="通知">🔔' +
-            (n > 0 ? '<span class="bell-badge">' + (n > 99 ? '99+' : n) + '</span>' : '') + '</a>';
-    } catch (e) { el.innerHTML = '<a href="community-notify.html">🔔</a>'; }
-}
+/* ===== 社区 v3：通知小红点（已并入 renderSubHeader，保留空函数兼容） */
