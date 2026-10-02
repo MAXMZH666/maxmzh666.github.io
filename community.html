@@ -33,6 +33,7 @@
                 <li><a href="community.html" class="active">社区</a></li>
                 <li><a href="forum.html">论坛</a></li>
                 <li><a href="contact.html">联系方式</a></li>
+                <li id="nav-bell"></li>
                 <li id="nav-auth"><a href="community-auth.html">登录</a></li>
             </ul>
         </nav>
@@ -178,6 +179,7 @@
 
     (async function () {
         await renderNavAuth();
+        await renderNavBell();
         var chips = document.getElementById('cat-chips');
         chips.innerHTML = ['全部'].concat(WORK_CATEGORIES).map(function (c) {
             return '<button class="filter-chip' + (c === '全部' ? ' active' : '') + '" data-cat="' + c + '">' + c + '</button>';

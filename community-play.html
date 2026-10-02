@@ -185,19 +185,42 @@
             });
         }
 
-        /* 举报作品 */
+        /* 举报作品（自定义弹窗，不用原生 prompt） */
         var reportBtn = document.getElementById('report-work');
         if (reportBtn) {
-            reportBtn.addEventListener('click', async function (e) {
+            var modalHtml =
+                '<div class="modal-backdrop" id="report-modal" style="display:none">' +
+                '<div class="modal"><h3>举报作品</h3>' +
+                '<p class="form-hint">请填写举报原因，站长会尽快处理。</p>' +
+                '<textarea id="report-reason" maxlength="200" placeholder="如：抄袭、色情、广告等"></textarea>' +
+                '<p class="form-note" id="report-note"></p>' +
+                '<div class="modal-actions"><button class="btn" id="report-cancel" type="button">取消</button>' +
+                '<button class="btn btn-blue" id="report-submit" type="button">提交举报</button></div></div></div>';
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            var modal = document.getElementById('report-modal');
+            reportBtn.addEventListener('click', function (e) {
                 e.preventDefault();
                 if (!me) { authRequiredRedirect(); return; }
-                var reason = prompt('请填写举报原因（如：抄袭、色情、广告等）：');
-                if (!reason || !reason.trim()) return;
+                document.getElementById('report-reason').value = '';
+                document.getElementById('report-note').textContent = '';
+                modal.style.display = 'flex';
+            });
+            document.getElementById('report-cancel').addEventListener('click', function () {
+                modal.style.display = 'none';
+            });
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) modal.style.display = 'none';
+            });
+            document.getElementById('report-submit').addEventListener('click', async function () {
+                var reason = document.getElementById('report-reason').value.trim();
+                var rnote = document.getElementById('report-note');
+                if (!reason) { rnote.textContent = '请填写举报原因'; rnote.className = 'form-note err'; return; }
                 var r = await sb.from('reports').insert({
-                    reporter_id: me.id, target_type: 'work', target_id: id, reason: reason.trim()
+                    reporter_id: me.id, target_type: 'work', target_id: id, reason: reason
                 });
-                if (r.error) alert('举报失败：' + r.error.message);
-                else alert('已收到举报，站长会尽快处理，感谢监督！');
+                if (r.error) { rnote.textContent = '举报失败：' + r.error.message; rnote.className = 'form-note err'; return; }
+                modal.style.display = 'none';
+                alert('已收到举报，站长会尽快处理，感谢监督！');
             });
         }
 
