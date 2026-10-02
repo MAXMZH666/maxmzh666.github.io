@@ -146,4 +146,48 @@
           splash.hidden = true;
           window.onerror = null;
         };
-      })();</script><div id="app"></div><script src="js/pentapod/vendors~addon-settings~credits~editor~embed~fullscreen~player.a9c21474df6530cc7bcb.js"></script><script src="js/pentapod/vendors~editor~embed~fullscreen~player.ca27ef043ac01d536645.js"></script><script src="js/pentapod/addon-settings~addons~editor~fullscreen~player.d368c040af8d26993a1d.js"></script><script src="js/pentapod/addon-settings~editor~embed~fullscreen~player.ae55ed6b87fd5b016b19.js"></script><script src="js/pentapod/editor.c7aca82a8bf323a87f74.js"></script></body></html>
+      })();</script><div id="app"></div><script src="js/pentapod/vendors~addon-settings~credits~editor~embed~fullscreen~player.a9c21474df6530cc7bcb.js"></script><script src="js/pentapod/vendors~editor~embed~fullscreen~player.ca27ef043ac01d536645.js"></script><script src="js/pentapod/addon-settings~addons~editor~fullscreen~player.d368c040af8d26993a1d.js"></script><script src="js/pentapod/addon-settings~editor~embed~fullscreen~player.ae55ed6b87fd5b016b19.js"></script><script src="js/pentapod/editor.c7aca82a8bf323a87f74.js"></script><script>
+/* MAXMZH 社区工具栏：保存草稿 / 发布到社区（注入，无需重新构建） */
+(function () {
+    var EMBEDDED = window.parent !== window;
+    function toast(msg) {
+        var t = document.createElement('div');
+        t.textContent = msg;
+        t.style.cssText = 'position:fixed;left:50%;bottom:90px;transform:translateX(-50%);' +
+            'background:#222;color:#fff;padding:10px 18px;border-radius:8px;z-index:99999;font-size:14px;' +
+            'box-shadow:0 4px 16px rgba(0,0,0,.4);max-width:80vw;text-align:center;';
+        document.body.appendChild(t);
+        setTimeout(function () { t.remove(); }, 2600);
+    }
+    function send(type) {
+        if (EMBEDDED) {
+            try { window.parent.postMessage({ type: type }, '*'); } catch (e) {}
+        } else {
+            toast('请在社区「在线编程」页内打开编辑器，才能使用保存/发布');
+        }
+    }
+    function build() {
+        if (document.getElementById('mmc-toolbar')) return;
+        var bar = document.createElement('div');
+        bar.id = 'mmc-toolbar';
+        bar.style.cssText = 'position:fixed;right:12px;bottom:12px;z-index:99999;display:flex;gap:8px;';
+        function btn(label, title, type) {
+            var b = document.createElement('button');
+            b.textContent = label;
+            b.title = title;
+            b.style.cssText = 'border:0;border-radius:20px;padding:10px 16px;font-size:14px;cursor:pointer;' +
+                'background:#ffcc00;color:#222;font-weight:bold;box-shadow:0 4px 12px rgba(0,0,0,.35);';
+            b.addEventListener('click', function () { send(type); });
+            return b;
+        }
+        bar.appendChild(btn('💾 保存草稿', '保存到社区草稿箱（不发布）', 'MMC_TOOLBAR_SAVE'));
+        bar.appendChild(btn('📤 发布到社区', '获取作品并跳转到发布页', 'MMC_TOOLBAR_PUBLISH'));
+        document.body.appendChild(bar);
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', build);
+    } else { build(); }
+    setTimeout(build, 3000); /* 兜底：编辑器 DOM 晚加载时再试一次 */
+})();
+</script>
+</body></html>

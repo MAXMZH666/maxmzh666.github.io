@@ -12,6 +12,8 @@
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="stylesheet" href="css/styles.css">
     <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
 </head>
@@ -26,7 +28,6 @@
             <ul class="nav-links">
                 <li><a href="index.html">主页</a></li>
                 <li><a href="about.html">个人简介</a></li>
-                <li><a href="portfolio.html">作品集</a></li>
                 <li><a href="blog.html">博客</a></li>
                 <li><a href="community.html" class="active">社区</a></li>
                 <li><a href="forum.html">论坛</a></li>
@@ -58,7 +59,6 @@
         <div class="foot-links">
             <a href="index.html">主页</a>
             <a href="about.html">个人简介</a>
-            <a href="portfolio.html">作品集</a>
             <a href="blog.html">博客</a>
             <a href="community.html">社区</a>
             <a href="forum.html">论坛</a>
@@ -160,7 +160,11 @@
         if (wtype === 'scratch') {
             var embedUrl = 'https://turbowarp.org/embed?project_url=' + encodeURIComponent(w.sb3_url) +
                 '&project_title=' + encodeURIComponent(w.title) + '&autoplay';
-            previewHtml = '<div class="player-wrap"><iframe src="' + esc(embedUrl) + '" allowtransparency="true" scrolling="no" allowfullscreen title="' + esc(w.title) + '"></iframe></div>' +
+            /* 点击加载：先显示封面，点"试玩"才加载播放器，页面打开更快 */
+            var coverImg = w.cover_url ? '<img src="' + esc(w.cover_url) + '" alt="' + esc(w.title) + '" loading="lazy">' : '<span class="monogram">🎮</span>';
+            previewHtml = '<div class="player-wrap player-lazy" data-embed="' + esc(embedUrl) + '">' +
+                '<div class="player-cover">' + coverImg +
+                '<button class="btn btn-blue btn-lg" id="player-start">▶ 点击试玩</button></div></div>' +
                 (isAuthor && wtype === 'scratch' ? '<p class="form-hint" style="margin-top:10px">💻 <a href="community-code.html?edit=' + id + '">在在线编程里继续编辑这个作品</a></p>' : '');
         } else if (wtype === 'python' || wtype === 'cpp') {
             previewHtml = '<pre class="code-view"><code id="code-block" class="' + (wtype === 'python' ? 'language-python' : 'language-cpp') + '">' +
@@ -218,6 +222,7 @@
             '<div class="work-actions">' +
                 '<button class="like-btn" id="like-btn">❤ <span id="like-count">…</span></button>' +
                 '<button class="fav-btn" id="fav-btn">⭐ <span id="fav-text">收藏</span> <span id="fav-count"></span></button>' +
+                '<button class="share-btn" id="share-btn">🔗 分享</button>' +
                 (!isAuthor ? '<button class="follow-btn" id="follow-btn">＋ 关注作者</button>' : '') +
                 (isAuthor
                     ? '<a href="community-publish.html?edit=' + id + '">编辑作品</a><a href="#" class="link-danger" id="del-work">删除作品</a>'
@@ -278,6 +283,40 @@
         });
 
         /* 收藏 */
+        /* 分享：移动端调系统分享面板，桌面端复制链接 */
+        document.getElementById('share-btn').addEventListener('click', async function () {
+            var shareData = {
+                title: w.title + ' - MAXMZH 游戏社区',
+                text: '我在 MAXMZH 游戏社区发现了《' + w.title + '》，来玩玩看！',
+                url: location.href
+            };
+            if (navigator.share) {
+                try { await navigator.share(shareData); } catch (e) {}
+            } else {
+                try {
+                    await navigator.clipboard.writeText(location.href);
+                    this.textContent = '✅ 链接已复制';
+                    var b = this;
+                    setTimeout(function () { b.textContent = '🔗 分享'; }, 2000);
+                } catch (e) {
+                    prompt('复制下面的链接分享给朋友：', location.href);
+                }
+            }
+        });
+        /* 播放器点击加载 */
+        (function () {
+            var lazy = document.querySelector('.player-lazy');
+            if (!lazy) return;
+            function loadPlayer(src) {
+                lazy.innerHTML = '<iframe src="' + src + '" allowtransparency="true" scrolling="no" allowfullscreen title="' + esc(w.title) + '"></iframe>';
+                lazy.classList.remove('player-lazy');
+            }
+            document.getElementById('player-start').addEventListener('click', function () {
+                loadPlayer(lazy.getAttribute('data-embed'));
+            });
+            /* 历史版本试玩：若还没点"试玩"，先加载再换版本 */
+            lazy._loadVersion = function (src) { loadPlayer(src); };
+        })();
         var favBtn = document.getElementById('fav-btn');
         var favText = document.getElementById('fav-text');
         var favCountEl = document.getElementById('fav-count');
@@ -471,12 +510,13 @@
             if (vplay) {
                 var vv = versionData[vplay.getAttribute('data-vplay')];
                 if (vv && vv.sb3_url) {
+                    var newSrc = 'https://turbowarp.org/embed?project_url=' + encodeURIComponent(vv.sb3_url) +
+                        '&project_title=' + encodeURIComponent(vv.title || w.title);
                     var frame = document.querySelector('.player-wrap iframe');
-                    if (frame) {
-                        frame.src = 'https://turbowarp.org/embed?project_url=' + encodeURIComponent(vv.sb3_url) +
-                            '&project_title=' + encodeURIComponent(vv.title || w.title);
-                        alert('已载入 v' + vv.version_no + ' 试玩，刷新页面回到最新版。');
-                    }
+                    var lazy = document.querySelector('.player-lazy');
+                    if (frame) { frame.src = newSrc; }
+                    else if (lazy && lazy._loadVersion) { lazy._loadVersion(esc(newSrc)); }
+                    alert('已载入 v' + vv.version_no + ' 试玩，刷新页面回到最新版。');
                 }
                 return;
             }

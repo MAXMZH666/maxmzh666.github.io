@@ -197,7 +197,7 @@ async function uploadWithProgress(bucket, path, file, contentType, onProgress) {
 /* ===== VirusTotal 云查杀 =====
    去 https://www.virustotal.com 申请免费 API Key（2 分钟），填到下面即可启用。
    启用后：发布安装包时先查文件 SHA256 是否为已知病毒；命中则拦截发布。 */
-var VIRUSTOTAL_API_KEY = '';
+var VIRUSTOTAL_API_KEY = '914117b68a34bade04a91ee6e710baf17805a5e604546047b2c08c135309e3c2';
 async function vtCheck(file) {
     if (!VIRUSTOTAL_API_KEY) return { status: 'skipped' };
     try {
