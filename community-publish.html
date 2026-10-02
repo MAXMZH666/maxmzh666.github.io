@@ -400,6 +400,18 @@
 
                 if (editWork) {
                     setNote('正在保存…', 'sending');
+                    /* 先快照当前版本，再更新（失败不阻断保存） */
+                    try {
+                        var mxR = await sb.from('work_versions').select('version_no')
+                            .eq('work_id', editWork.id).order('version_no', { ascending: false }).limit(1);
+                        var nextNo = (mxR.data && mxR.data[0] ? mxR.data[0].version_no : 0) + 1;
+                        await sb.from('work_versions').insert({
+                            work_id: editWork.id, author_id: me.id, version_no: nextNo,
+                            title: editWork.title, description: editWork.description, category: editWork.category,
+                            work_type: workTypeOf(editWork), code: editWork.code, sb3_url: editWork.sb3_url,
+                            apk_url: editWork.apk_url, screenshots: editWork.screenshots || [], cover_url: editWork.cover_url
+                        });
+                    } catch (se) { console.warn('版本快照失败', se); }
                     var ur = await sb.from('works').update(payload).eq('id', editWork.id);
                     if (ur.error) throw ur.error;
                     setNote('保存成功，正在跳转…', 'ok');

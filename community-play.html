@@ -250,6 +250,7 @@
             (w.description ? '<p style="margin-top:18px;line-height:1.8">' + esc(w.description) + '</p>' : '') +
             '<div class="work-actions">' +
                 '<button class="like-btn" id="like-btn">❤ <span id="like-count">…</span></button>' +
+                '<button class="fav-btn" id="fav-btn">⭐ <span id="fav-text">收藏</span></button>' +
                 (!isAuthor ? '<button class="follow-btn" id="follow-btn">＋ 关注作者</button>' : '') +
                 (isAuthor
                     ? '<a href="community-publish.html?edit=' + id + '">编辑作品</a><a href="#" class="link-danger" id="del-work">删除作品</a>'
@@ -261,7 +262,11 @@
                 '<textarea id="c-text" maxlength="500" placeholder="' + (me ? '友善评论，理性交流' : '登录后发表评论') + '"></textarea>' +
                 '<p class="form-note" id="c-note"></p>' +
                 '<button type="submit">' + (me ? '发表评论' : '登录后评论') + '</button>' +
-            '</form></div>';
+            '</form></div>' +
+            '<div class="versions" id="versions-wrap" style="display:none"><h2>版本历史</h2>' +
+            '<div id="version-list"></div>' +
+            '<p class="form-hint">每次编辑都会自动保存一个历史版本；回溯前也会先保存当前版本，不会丢数据。</p></div>' +
+            '<div class="more-works"><h2>更多作品</h2><div id="more-list"><p class="works-note">加载中…</p></div></div>';
 
         /* 代码高亮（python/cpp） */
         if ((wtype === 'python' || wtype === 'cpp') && w.code) {
@@ -303,6 +308,37 @@
             } catch (e) { alert('操作失败：' + e.message); }
             likeBtn.disabled = false;
             await refreshLikes();
+        });
+
+        /* 收藏 */
+        var favBtn = document.getElementById('fav-btn');
+        var favText = document.getElementById('fav-text');
+        var faved = false;
+        async function refreshFav() {
+            favText.textContent = faved ? '已收藏' : '收藏';
+            favBtn.classList.toggle('faved', faved);
+        }
+        if (me) {
+            var fr0 = await sb.from('favorites').select('work_id')
+                .eq('work_id', id).eq('user_id', me.id).maybeSingle();
+            faved = !!fr0.data;
+        }
+        await refreshFav();
+        favBtn.addEventListener('click', async function () {
+            if (!me) { authRequiredRedirect(); return; }
+            favBtn.disabled = true;
+            try {
+                if (faved) {
+                    await sb.from('favorites').delete().eq('work_id', id).eq('user_id', me.id);
+                    faved = false;
+                } else {
+                    var fir = await sb.from('favorites').insert({ work_id: id, user_id: me.id });
+                    if (fir.error) throw fir.error;
+                    faved = true;
+                }
+            } catch (e) { alert('操作失败：' + e.message); }
+            favBtn.disabled = false;
+            await refreshFav();
         });
 
         /* 关注作者 */
@@ -407,6 +443,122 @@
             }).join('') : '<p class="works-note">还没有评论，来抢沙发！</p>';
         }
         await loadComments();
+
+        /* 版本历史（作者可回溯） */
+        var versionData = {};
+        async function loadVersions() {
+            var wrapV = document.getElementById('versions-wrap');
+            var list = document.getElementById('version-list');
+            try {
+                var r = await sb.from('work_versions').select('*')
+                    .eq('work_id', id).order('version_no', { ascending: false }).limit(20);
+                var vs = r.data || [];
+                if (!vs.length) return;
+                vs.forEach(function (v) { versionData[v.id] = v; });
+                wrapV.style.display = 'block';
+                list.innerHTML = vs.map(function (v) {
+                    var t = WORK_TYPES[v.work_type] || WORK_TYPES.scratch;
+                    return '<div class="version-row">' +
+                        '<span class="version-no">v' + v.version_no + '</span>' +
+                        '<span class="version-meta">' + t.icon + ' ' + esc(v.title || '') +
+                        ' · ' + fmtDate(v.created_at) + '</span>' +
+                        '<span class="version-btns">' +
+                        '<button class="btn btn-ghost btn-sm" data-vp="' + v.id + '">预览</button>' +
+                        (isAuthor ? '<button class="btn btn-ghost btn-sm" data-vr="' + v.id + '">回溯</button>' : '') +
+                        '</span></div>' +
+                        '<div class="version-preview" id="vp-' + v.id + '" style="display:none"></div>';
+                }).join('');
+            } catch (e) {}
+        }
+        document.getElementById('version-list').addEventListener('click', async function (e) {
+            var pv = e.target.closest('button[data-vp]');
+            var rb = e.target.closest('button[data-vr]');
+            if (pv) {
+                var v = versionData[pv.getAttribute('data-vp')];
+                if (!v) return;
+                var box = document.getElementById('vp-' + v.id);
+                if (box.style.display !== 'none') { box.style.display = 'none'; return; }
+                var t = workTypeOf(v), ph = '';
+                if (t === 'python' || t === 'cpp') {
+                    ph = '<pre class="code-view"><code>' + esc(v.code || '') + '</code></pre>';
+                } else if (t === 'scratch' && v.sb3_url) {
+                    ph = '<button class="btn btn-blue btn-sm" data-vplay="' + v.id + '">在播放器中试玩此版本</button> ';
+                } else if (t === 'apk' && v.apk_url) {
+                    ph = '<a class="btn btn-blue btn-sm" href="' + esc(v.apk_url) + '" download>下载此版本 APK</a> ';
+                }
+                if (!ph) ph = '<p class="form-hint">该版本无可预览内容</p>';
+                box.innerHTML = ph;
+                box.style.display = 'block';
+                return;
+            }
+            var vplay = e.target.closest('button[data-vplay]');
+            if (vplay) {
+                var vv = versionData[vplay.getAttribute('data-vplay')];
+                if (vv && vv.sb3_url) {
+                    var frame = document.querySelector('.player-wrap iframe');
+                    if (frame) {
+                        frame.src = 'https://turbowarp.org/embed?project_url=' + encodeURIComponent(vv.sb3_url) +
+                            '&project_title=' + encodeURIComponent(vv.title || w.title);
+                        alert('已载入 v' + vv.version_no + ' 试玩，刷新页面回到最新版。');
+                    }
+                }
+                return;
+            }
+            if (rb) {
+                var rv = versionData[rb.getAttribute('data-vr')];
+                if (!rv || !me) return;
+                if (!confirm('回溯到 v' + rv.version_no + '（' + (rv.title || '') + '）？\n当前版本会自动存为新的历史版本，不会丢失。')) return;
+                rb.disabled = true;
+                try {
+                    var curR = await sb.from('works').select('*').eq('id', id).single();
+                    if (curR.error || !curR.data) throw new Error('读取当前版本失败');
+                    var cur = curR.data;
+                    var mxR = await sb.from('work_versions').select('version_no')
+                        .eq('work_id', id).order('version_no', { ascending: false }).limit(1);
+                    var nextNo = (mxR.data && mxR.data[0] ? mxR.data[0].version_no : 0) + 1;
+                    var snap = await sb.from('work_versions').insert({
+                        work_id: id, author_id: me.id, version_no: nextNo,
+                        title: cur.title, description: cur.description, category: cur.category,
+                        work_type: workTypeOf(cur), code: cur.code, sb3_url: cur.sb3_url,
+                        apk_url: cur.apk_url, screenshots: cur.screenshots || [], cover_url: cur.cover_url
+                    });
+                    if (snap.error) throw snap.error;
+                    var up = await sb.from('works').update({
+                        title: rv.title, description: rv.description, category: rv.category,
+                        work_type: rv.work_type, code: rv.code, sb3_url: rv.sb3_url,
+                        apk_url: rv.apk_url, screenshots: rv.screenshots || [], cover_url: rv.cover_url
+                    }).eq('id', id);
+                    if (up.error) throw up.error;
+                    alert('已回溯到 v' + rv.version_no + '，页面将刷新。');
+                    location.reload();
+                } catch (err) { alert('回溯失败：' + err.message); rb.disabled = false; }
+            }
+        });
+        await loadVersions();
+
+        /* 更多作品 */
+        (async function loadMore() {
+            var box = document.getElementById('more-list');
+            try {
+                var r = await sb.from('works').select('id,title,cover_url,work_type,author_id')
+                    .neq('id', id).order('created_at', { ascending: false }).limit(10);
+                var all = r.data || [];
+                all.sort(function (a, b) {
+                    return ((b.author_id === w.author_id) - (a.author_id === w.author_id));
+                });
+                var show = all.slice(0, 6);
+                if (!show.length) { box.innerHTML = '<p class="works-note">还没有其他作品。</p>'; return; }
+                box.innerHTML = show.map(function (m) {
+                    var cover = m.cover_url
+                        ? '<img src="' + esc(m.cover_url) + '" alt="" loading="lazy">'
+                        : '<span class="monogram">' + esc((m.title || '游').charAt(0)) + '</span>';
+                    return '<a class="rank-row" href="community-play.html?id=' + m.id + '">' +
+                        '<span class="rank-thumb">' + cover + '</span>' +
+                        '<span class="rank-info"><b>' + esc(m.title) + '</b>' +
+                        '<span>' + typeBadge(workTypeOf(m)) + '</span></span></a>';
+                }).join('');
+            } catch (e) { box.innerHTML = '<p class="works-note">加载失败</p>'; }
+        })();
 
         /* 发表评论 */
         document.getElementById('comment-form').addEventListener('submit', async function (e) {
