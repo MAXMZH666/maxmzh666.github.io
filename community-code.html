@@ -13,6 +13,8 @@
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
     <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
 </head>
 <body>
@@ -28,7 +30,6 @@
                 <li><a href="about.html">个人简介</a></li>
                 <li><a href="portfolio.html">作品集</a></li>
                 <li><a href="blog.html">博客</a></li>
-                <li><a href="downloads.html">下载中心</a></li>
                 <li><a href="community.html" class="active">社区</a></li>
                 <li><a href="forum.html">论坛</a></li>
                 <li><a href="contact.html">联系方式</a></li>
@@ -52,23 +53,74 @@
     <main>
         <section class="portfolio editor-page">
             <p class="article-back"><a href="community.html">← 返回社区</a></p>
-            <h1 class="section-title">Scratch 在线编程</h1>
-            <p class="section-sub" id="code-sub">在社区里直接编程（TurboWarp 编辑器），做完导出 <b>.sb3</b> 去发布页上传，作品就能上线了。</p>
-            <div class="tip-box">
-                <b>三步发布：</b>① 在下面编辑器里编程 → ② 编辑器左上角 <b>文件 → 保存到电脑</b>，得到 .sb3 文件 →
-                ③ <a href="community-publish.html">去发布作品</a>上传。
+            <h1 class="section-title">在线编程</h1>
+            <div class="filter-row" id="code-tabs">
+                <button class="filter-chip active" data-ctab="scratch">🎮 Scratch</button>
+                <button class="filter-chip" data-ctab="python">🐍 Python</button>
+                <button class="filter-chip" data-ctab="cpp">⚙️ C++</button>
             </div>
-            <div class="editor-wrap">
-                <div class="editor-loading" id="editor-loading">编辑器加载中…（首次约十几秒）</div>
-                <iframe id="tw-editor" title="Scratch 在线编辑器" src="tw-editor/editor.html"
-                    allow="autoplay; fullscreen; clipboard-read; clipboard-write"></iframe>
+
+            <!-- Scratch -->
+            <div id="ctab-scratch">
+                <p class="section-sub" id="code-sub">在社区里直接编程（TurboWarp 编辑器），做完导出 <b>.sb3</b> 去发布页上传，作品就能上线了。</p>
+                <div class="tip-box">
+                    <b>三步发布：</b>① 在下面编辑器里编程 → ② 点"直接发布到社区"（或编辑器左上角 <b>文件 → 保存到电脑</b> 再手动上传） →
+                    ③ 在发布页确认信息并发布。
+                </div>
+                <div class="editor-wrap">
+                    <div class="editor-loading" id="editor-loading">编辑器加载中…（首次约十几秒）</div>
+                    <iframe id="tw-editor" title="Scratch 在线编辑器" src="tw-editor/editor.html"
+                        allow="autoplay; fullscreen; clipboard-read; clipboard-write"></iframe>
+                </div>
+                <div class="editor-bar">
+                    <button class="btn btn-blue" id="direct-publish">📤 直接发布到社区</button>
+                    <button class="btn btn-ghost" id="scratch-save">💾 保存草稿</button>
+                    <a class="btn btn-ghost" id="open-editor-tab" href="tw-editor/editor.html" target="_blank" rel="noopener">↗ 新标签页打开编辑器</a>
+                    <a class="btn btn-ghost" href="community-publish.html">去发布页手动上传</a>
+                </div>
+                <p class="form-hint" id="dp-note" style="display:none">正在从编辑器获取作品…</p>
+                <p class="form-hint">💾 草稿每 90 秒自动保存一次，也可以点"保存草稿"手动保存；草稿不会发布，在个人主页"📝 未发布的作品"里查看、继续编辑或发布。</p>
             </div>
-            <div class="editor-bar">
-                <button class="btn btn-blue" id="direct-publish">📤 直接发布到社区</button>
-                <a class="btn btn-ghost" id="open-editor-tab" href="tw-editor/editor.html" target="_blank" rel="noopener">↗ 新标签页打开编辑器</a>
-                <a class="btn btn-ghost" href="community-publish.html">去发布页手动上传</a>
+
+            <!-- Python -->
+            <div id="ctab-python" style="display:none">
+                <p class="section-sub">在网页里写 Python 并直接运行（Pyodide 真实环境）。只支持控制台程序（print/input）。</p>
+                <label for="py-title">作品标题</label>
+                <input type="text" id="py-title" maxlength="60" placeholder="给作品起个名字（保存草稿/发布时用）">
+                <label>代码</label>
+                <textarea id="py-code"></textarea>
+                <div class="editor-bar">
+                    <button class="btn btn-blue" id="py-run">▶ 运行</button>
+                    <button class="btn btn-ghost" id="py-save">💾 保存草稿</button>
+                    <button class="btn btn-ghost" id="py-publish">📤 发布到社区</button>
+                    <span class="run-status" id="py-status"></span>
+                </div>
+                <p class="form-hint" id="py-note"></p>
+                <label for="py-input">程序输入 <span class="form-hint">（代码里有 input() 时，在这里按行填写）</span></label>
+                <textarea id="py-input" class="code-input" rows="3" spellcheck="false"></textarea>
+                <label>输出</label>
+                <pre id="py-output" class="console">点击"运行"开始…</pre>
             </div>
-            <p class="form-hint" id="dp-note" style="display:none">正在从编辑器获取作品…</p>
+
+            <!-- C++ -->
+            <div id="ctab-cpp" style="display:none">
+                <p class="section-sub">在网页里写 C++ 并直接运行（JSCPP 解释器）。只支持控制台程序（cout/cin）。</p>
+                <label for="cpp-title">作品标题</label>
+                <input type="text" id="cpp-title" maxlength="60" placeholder="给作品起个名字（保存草稿/发布时用）">
+                <label>代码</label>
+                <textarea id="cpp-code"></textarea>
+                <div class="editor-bar">
+                    <button class="btn btn-blue" id="cpp-run">▶ 运行</button>
+                    <button class="btn btn-ghost" id="cpp-save">💾 保存草稿</button>
+                    <button class="btn btn-ghost" id="cpp-publish">📤 发布到社区</button>
+                    <span class="run-status" id="cpp-status"></span>
+                </div>
+                <p class="form-hint" id="cpp-note"></p>
+                <label for="cpp-input">程序输入 <span class="form-hint">（代码里有 cin 时，在这里按行填写）</span></label>
+                <textarea id="cpp-input" class="code-input" rows="3" spellcheck="false"></textarea>
+                <label>输出</label>
+                <pre id="cpp-output" class="console">点击"运行"开始…</pre>
+            </div>
         </section>
     </main>
 
@@ -78,7 +130,6 @@
             <a href="about.html">个人简介</a>
             <a href="portfolio.html">作品集</a>
             <a href="blog.html">博客</a>
-            <a href="downloads.html">下载中心</a>
             <a href="community.html">社区</a>
             <a href="forum.html">论坛</a>
             <a href="contact.html">联系方式</a>
@@ -91,56 +142,86 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
     <script src="js/community.js"></script>
     <script>
     (async function () {
         await renderSubHeader();
+        var qs = new URLSearchParams(location.search);
+
+        /* ===== 标签页切换 ===== */
+        var tabs = document.querySelectorAll('#code-tabs [data-ctab]');
+        function showTab(t) {
+            tabs.forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-ctab') === t); });
+            ['scratch', 'python', 'cpp'].forEach(function (k) {
+                document.getElementById('ctab-' + k).style.display = k === t ? '' : 'none';
+            });
+            if (window._cms) { setTimeout(function () { window._cms[t] && window._cms[t].refresh(); }, 30); }
+        }
+        tabs.forEach(function (b) {
+            b.addEventListener('click', function () { showTab(b.getAttribute('data-ctab')); });
+        });
+
+        /* ===== 草稿（未发布的作品） ===== */
+        var draftIds = {
+            scratch: localStorage.getItem('draft_scratch') || null,
+            python: localStorage.getItem('draft_python') || null,
+            cpp: localStorage.getItem('draft_cpp') || null
+        };
+        async function upsertDraft(kind, fields, noteEl, manual) {
+            var me = await currentUser();
+            if (!me) { if (manual) authRequiredRedirect(); return null; }
+            var row = {
+                user_id: me.id, work_type: kind,
+                title: fields.title || '未命名草稿',
+                code: fields.code || null,
+                sb3_url: fields.sb3_url || null,
+                updated_at: new Date().toISOString()
+            };
+            try {
+                if (draftIds[kind]) {
+                    var ur = await sb.from('drafts').update(row).eq('id', draftIds[kind]).eq('user_id', me.id);
+                    if (ur.error) throw ur.error;
+                } else {
+                    var ir = await sb.from('drafts').insert(row).select('id').single();
+                    if (ir.error) throw ir.error;
+                    draftIds[kind] = ir.data.id;
+                    localStorage.setItem('draft_' + kind, draftIds[kind]);
+                }
+                if (noteEl) noteEl.textContent = (manual ? '草稿已保存 ' : '已自动保存 ') + new Date().toLocaleTimeString();
+                return draftIds[kind];
+            } catch (e) {
+                if (noteEl && manual) noteEl.textContent = '保存失败：' + e.message;
+                return null;
+            }
+        }
+        async function loadDraft(id) {
+            var me = await currentUser();
+            if (!me) { authRequiredRedirect(); return; }
+            var r = await sb.from('drafts').select('*').eq('id', id).eq('user_id', me.id).single();
+            if (!r.data) { alert('草稿不存在'); return; }
+            var d = r.data, k = d.work_type;
+            draftIds[k] = d.id;
+            localStorage.setItem('draft_' + k, d.id);
+            showTab(k);
+            if (k === 'scratch' && d.sb3_url) {
+                var src = 'tw-editor/editor.html?project_url=' + encodeURIComponent(d.sb3_url);
+                document.getElementById('tw-editor').src = src;
+                document.getElementById('open-editor-tab').href = src;
+                document.getElementById('code-sub').innerHTML = '已载入草稿《' + esc(d.title || '') + '》继续编辑。';
+            } else if ((k === 'python' || k === 'cpp') && window._cms) {
+                document.getElementById(k === 'python' ? 'py-title' : 'cpp-title').value = d.title || '';
+                window._cms[k].setValue(d.code || '');
+            }
+        }
+
+        /* ===== Scratch 标签 ===== */
         var frame = document.getElementById('tw-editor');
         var loading = document.getElementById('editor-loading');
         frame.addEventListener('load', function () { loading.style.display = 'none'; });
-
-        /* 编辑器直接发布：向 iframe 要 sb3，上传后跳到发布页 */
-        var dpBtn = document.getElementById('direct-publish');
-        var dpNote = document.getElementById('dp-note');
-        dpBtn.addEventListener('click', async function () {
-            var me = await currentUser();
-            if (!me) { authRequiredRedirect(); return; }
-            dpBtn.disabled = true;
-            dpNote.style.display = 'block';
-            dpNote.textContent = '正在从编辑器获取作品…';
-            var done = false;
-            var finish = function (msg) {
-                done = true;
-                window.removeEventListener('message', onMsg);
-                dpBtn.disabled = false;
-                dpNote.style.display = 'none';
-                if (msg) alert(msg);
-            };
-            var onMsg = async function (e) {
-                var d = e.data;
-                if (!d || (d.type !== 'MMC_SB3_DATA' && d.type !== 'MMC_SB3_ERROR')) return;
-                if (d.type === 'MMC_SB3_ERROR' || !d.buffer) {
-                    finish('获取失败：' + (d.message || '未知错误') + '，请用编辑器"文件 → 保存到电脑"后手动上传。');
-                    return;
-                }
-                try {
-                    dpNote.textContent = '正在上传…';
-                    var blob = new Blob([d.buffer], { type: 'application/octet-stream' });
-                    var url = await uploadWithProgress('sb3', me.id + '/' + Date.now() + '.sb3', blob, 'application/octet-stream', null);
-                    window.removeEventListener('message', onMsg);
-                    location.href = 'community-publish.html?sb3=' + encodeURIComponent(url) + '&title=' + encodeURIComponent(d.title || '未命名作品');
-                } catch (err) {
-                    finish('上传失败：' + err.message);
-                }
-            };
-            window.addEventListener('message', onMsg);
-            try { frame.contentWindow.postMessage({ type: 'MMC_REQUEST_SB3' }, '*'); } catch (e) {}
-            setTimeout(function () {
-                if (!done) finish('编辑器没有响应，请用编辑器"文件 → 保存到电脑"后手动上传。');
-            }, 15000);
-        });
-        /* ?edit=作品ID：编辑器自动载入已发布的 Scratch 作品继续改 */
-        var editId = new URLSearchParams(location.search).get('edit');
+        var editId = qs.get('edit');
         if (editId) {
             try {
                 var r = await sb.from('works').select('sb3_url,work_type,title').eq('id', editId).single();
@@ -149,10 +230,132 @@
                     frame.src = src;
                     document.getElementById('open-editor-tab').href = src;
                     document.getElementById('code-sub').innerHTML =
-                        '已载入《' + esc(r.data.title || '') + '》继续编辑，改完后 <b>文件 → 保存到电脑</b>，再去发布页更新。';
+                        '已载入《' + esc(r.data.title || '') + '》继续编辑，改完后可直接发布或保存草稿。';
                 }
             } catch (e) {}
         }
+        function requestSb3() {
+            return new Promise(function (resolve, reject) {
+                var done = false;
+                var onMsg = function (e) {
+                    var d = e.data;
+                    if (!d || (d.type !== 'MMC_SB3_DATA' && d.type !== 'MMC_SB3_ERROR')) return;
+                    done = true;
+                    window.removeEventListener('message', onMsg);
+                    if (d.type === 'MMC_SB3_ERROR' || !d.buffer) reject(new Error(d.message || '获取失败'));
+                    else resolve({ buffer: d.buffer, title: d.title || '未命名作品' });
+                };
+                window.addEventListener('message', onMsg);
+                try { frame.contentWindow.postMessage({ type: 'MMC_REQUEST_SB3' }, '*'); } catch (e) {}
+                setTimeout(function () {
+                    if (!done) { window.removeEventListener('message', onMsg); reject(new Error('编辑器没有响应')); }
+                }, 15000);
+            });
+        }
+        var dpBtn = document.getElementById('direct-publish');
+        var dpNote = document.getElementById('dp-note');
+        dpBtn.addEventListener('click', async function () {
+            var me = await currentUser();
+            if (!me) { authRequiredRedirect(); return; }
+            dpBtn.disabled = true;
+            dpNote.style.display = 'block';
+            dpNote.textContent = '正在从编辑器获取作品…';
+            try {
+                var got = await requestSb3();
+                dpNote.textContent = '正在上传…';
+                var blob = new Blob([got.buffer], { type: 'application/octet-stream' });
+                var url = await uploadWithProgress('sb3', me.id + '/' + Date.now() + '.sb3', blob, 'application/octet-stream', null);
+                location.href = 'community-publish.html?sb3=' + encodeURIComponent(url) + '&title=' + encodeURIComponent(got.title);
+            } catch (err) {
+                dpNote.textContent = '';
+                dpNote.style.display = 'none';
+                dpBtn.disabled = false;
+                alert('失败：' + err.message + '，请用编辑器"文件 → 保存到电脑"后手动上传。');
+            }
+        });
+        /* Scratch 草稿：手动 + 每 90 秒自动 */
+        async function saveScratchDraft(manual) {
+            var me = await currentUser();
+            if (!me) { if (manual) authRequiredRedirect(); return; }
+            try {
+                if (manual) { dpNote.style.display = 'block'; dpNote.textContent = '正在保存草稿…'; }
+                var got = await requestSb3();
+                var blob = new Blob([got.buffer], { type: 'application/octet-stream' });
+                var url = await uploadWithProgress('sb3', 'drafts/' + me.id + '/' + Date.now() + '.sb3', blob, 'application/octet-stream', null);
+                await upsertDraft('scratch', { title: got.title, sb3_url: url }, dpNote, manual);
+                if (manual) { dpNote.textContent = '草稿已保存'; setTimeout(function () { dpNote.style.display = 'none'; }, 2000); }
+            } catch (err) {
+                if (manual) { dpNote.textContent = '保存失败：' + err.message; }
+            }
+        }
+        document.getElementById('scratch-save').addEventListener('click', function () { saveScratchDraft(true); });
+        setInterval(function () { saveScratchDraft(false); }, 90000);
+
+        /* ===== Python / C++ 标签 ===== */
+        var cms = {};
+        function initCM(id, mode, sample) {
+            var ta = document.getElementById(id);
+            var cm = CodeMirror.fromTextArea(ta, {
+                mode: mode, theme: 'dracula', lineNumbers: true, indentUnit: 4, tabSize: 4
+            });
+            cm.setValue(sample);
+            return cm;
+        }
+        if (window.CodeMirror) {
+            cms.python = initCM('py-code', 'python', '# 在这里写 Python（控制台程序）\nprint("你好，社区！")\n');
+            cms.cpp = initCM('cpp-code', 'text/x-c++src', '#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    cout << "你好，社区！" << endl;\n    return 0;\n}\n');
+            window._cms = cms;
+        }
+        function bindCodeTab(kind, cm, titleId, inputId, outputId, statusId, noteId, saveBtnId, pubBtnId, runBtnId) {
+            var out = document.getElementById(outputId);
+            var status = document.getElementById(statusId);
+            var note = document.getElementById(noteId);
+            var titleEl = document.getElementById(titleId);
+            function say(t) { status.textContent = t; }
+            function append(s) { out.textContent += s; out.scrollTop = out.scrollHeight; }
+            document.getElementById(runBtnId).addEventListener('click', async function () {
+                out.textContent = '';
+                var input = document.getElementById(inputId).value;
+                try {
+                    if (kind === 'python') await runPython(cm.getValue(), input, say, append);
+                    else await runCpp(cm.getValue(), input, say, append);
+                } catch (e) { append('\n[错误] ' + (e && e.message ? e.message : e)); say('运行出错'); }
+            });
+            var timer = null;
+            cm.on('change', function () {
+                clearTimeout(timer);
+                timer = setTimeout(function () {
+                    upsertDraft(kind, { title: titleEl.value.trim(), code: cm.getValue() }, note, false);
+                }, 3000);
+            });
+            titleEl.addEventListener('change', function () {
+                upsertDraft(kind, { title: titleEl.value.trim(), code: cm.getValue() }, note, false);
+            });
+            document.getElementById(saveBtnId).addEventListener('click', async function () {
+                await upsertDraft(kind, { title: titleEl.value.trim(), code: cm.getValue() }, note, true);
+            });
+            document.getElementById(pubBtnId).addEventListener('click', async function () {
+                var me = await currentUser();
+                if (!me) { authRequiredRedirect(); return; }
+                var code = cm.getValue();
+                if (!code.trim()) { alert('请先写点代码'); return; }
+                var did = await upsertDraft(kind, { title: titleEl.value.trim(), code: code }, note, true);
+                location.href = 'community-publish.html?type=' + kind +
+                    '&code=' + encodeURIComponent(code) +
+                    '&title=' + encodeURIComponent(titleEl.value.trim() || '未命名作品') +
+                    (did ? '&draft=' + did : '');
+            });
+        }
+        if (window.CodeMirror) {
+            bindCodeTab('python', cms.python, 'py-title', 'py-input', 'py-output', 'py-status', 'py-note', 'py-save', 'py-publish', 'py-run');
+            bindCodeTab('cpp', cms.cpp, 'cpp-title', 'cpp-input', 'cpp-output', 'cpp-status', 'cpp-note', 'cpp-save', 'cpp-publish', 'cpp-run');
+        }
+
+        /* ?draft= 载入草稿 */
+        var draftParam = qs.get('draft');
+        if (draftParam) { await loadDraft(draftParam); }
+        var tabParam = qs.get('tab');
+        if (tabParam && (tabParam === 'python' || tabParam === 'cpp')) showTab(tabParam);
     })();
     </script>
     <script defer src="https://vercount.one/js"></script>

@@ -31,10 +31,16 @@ async function currentProfile() {
     if (!u) return null;
     var username = (u.user_metadata && u.user_metadata.username) || u.email.split('@')[0];
     try {
-        var r = await window.sb.from('profiles').select('username').eq('id', u.id).single();
+        var r = await window.sb.from('profiles').select('username,is_admin').eq('id', u.id).single();
         if (r.data && r.data.username) username = r.data.username;
+        if (r.data) isAdminFlag = !!r.data.is_admin;
     } catch (e) {}
-    return { id: u.id, email: u.email, username: username };
+    return { id: u.id, email: u.email, username: username, is_admin: isAdminFlag };
+}
+var isAdminFlag = false;
+async function isAdmin() {
+    await currentProfile();
+    return isAdminFlag;
 }
 
 /* ===== 社区 v4：独立子页眉 ===== */
@@ -54,6 +60,19 @@ async function renderSubHeader() {
     document.querySelectorAll('.sub-links a[data-sub]').forEach(function (a) {
         a.classList.toggle('active', a.getAttribute('data-sub') === map[page]);
     });
+    try {
+        if (p && p.is_admin) {
+            var nav = document.querySelector('.sub-links');
+            if (nav && !nav.querySelector('[data-sub="admin"]')) {
+                var aa = document.createElement('a');
+                aa.href = 'community-admin.html';
+                aa.setAttribute('data-sub', 'admin');
+                aa.textContent = '🛡 管理';
+                if (map[page] === undefined && page === 'community-admin.html') aa.classList.add('active');
+                nav.appendChild(aa);
+            }
+        }
+    } catch (e) {}
     var p = await currentProfile();
     if (authEl) {
         if (p) {
@@ -122,7 +141,8 @@ var WORK_TYPES = {
     cpp:     { name: 'C++',     icon: '⚙️' },
     apk:     { name: 'APK',     icon: '📱' },
     windows: { name: 'Windows', icon: '🪟' },
-    linux:   { name: 'Linux',   icon: '🐧' }
+    linux:   { name: 'Linux',   icon: '🐧' },
+    website: { name: '网站',    icon: '🌐' }
 };
 function workTypeOf(w) {
     var t = w && w.work_type;
@@ -173,3 +193,89 @@ async function uploadWithProgress(bucket, path, file, contentType, onProgress) {
 }
 
 /* ===== 社区 v3：通知小红点（已并入 renderSubHeader，保留空函数兼容） */
+
+/* ===== VirusTotal 云查杀 =====
+   去 https://www.virustotal.com 申请免费 API Key（2 分钟），填到下面即可启用。
+   启用后：发布安装包时先查文件 SHA256 是否为已知病毒；命中则拦截发布。 */
+var VIRUSTOTAL_API_KEY = '';
+async function vtCheck(file) {
+    if (!VIRUSTOTAL_API_KEY) return { status: 'skipped' };
+    try {
+        var buf = await file.arrayBuffer();
+        var digest = await crypto.subtle.digest('SHA-256', buf);
+        var hash = Array.from(new Uint8Array(digest)).map(function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+        var r = await fetch('https://www.virustotal.com/api/v3/files/' + hash, {
+            headers: { 'x-apikey': VIRUSTOTAL_API_KEY }
+        });
+        if (r.status === 404) return { status: 'unknown' };
+        if (!r.ok) return { status: 'skipped' };
+        var j = await r.json();
+        var stats = (((j || {}).data || {}).attributes || {}).last_analysis_stats || {};
+        var mal = stats.malicious || 0, sus = stats.suspicious || 0;
+        if (mal > 0 || sus > 0) return { status: 'malicious', detail: mal + ' 家检出病毒 / ' + sus + ' 家可疑' };
+        return { status: 'clean' };
+    } catch (e) { return { status: 'skipped' }; }
+}
+
+/* ===== 网页运行器（试玩页 + 在线编程共用） ===== */
+var pyodide = null;
+
+function injectHljsTheme() {
+    if (document.querySelector('link[data-hljs]')) return;
+    var l = document.createElement('link');
+    l.rel = 'stylesheet';
+    l.setAttribute('data-hljs', '1');
+    l.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css';
+    document.head.appendChild(l);
+}
+
+/* Python 网页运行（Pyodide） */
+async function runPython(code, inputText, say, append) {
+    say('正在加载 Python 环境（首次约 10MB，请稍候）…');
+    await loadScriptOnce('https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js');
+    if (!pyodide) pyodide = await loadPyodide();
+    var pos = 0;
+    try {
+        pyodide.setStdin({ stdin: function () {
+            return pos >= inputText.length ? null : inputText.charCodeAt(pos++);
+        } });
+    } catch (e) {}
+    pyodide.setStdout({ batched: function (s) { append(s); } });
+    pyodide.setStderr({ batched: function (s) { append(s); } });
+    say('运行中…');
+    try {
+        await pyodide.runPythonAsync(code);
+        say('运行结束');
+    } catch (e) {
+        append('\n[错误] ' + (e && e.message ? e.message : e));
+        say('运行出错');
+    }
+}
+
+/* C++ 网页运行（JSCPP 解释器） */
+async function runCpp(code, inputText, say, append) {
+    say('正在加载 C++ 运行环境…');
+    await loadScriptOnce('https://cdn.jsdelivr.net/gh/felixhao28/JSCPP@gh-pages/dist/JSCPP.es5.min.js');
+    if (!window.JSCPP || !JSCPP.run) throw new Error('C++ 环境加载失败');
+    say('运行中…');
+    var total = 0;
+    await new Promise(function (resolve) {
+        setTimeout(function () {
+            try {
+                JSCPP.run(code, inputText, {
+                    stdio: { write: function (s) {
+                        total += s.length;
+                        if (total < 30000) append(s);
+                    } }
+                });
+                if (total >= 30000) append('\n[输出过长，已截断]');
+                say('运行结束');
+            } catch (e) {
+                append('\n[错误] ' + (e && e.message ? e.message : e));
+                say('运行出错');
+            }
+            resolve();
+        }, 30);
+    });
+}
+
