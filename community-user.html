@@ -84,7 +84,7 @@
         try {
             var pr = await sb.from('profiles').select('username,created_at').eq('id', uid).single();
             if (pr.error || !pr.data) throw new Error('用户不存在');
-            var works = (await sb.from('works').select('id,title,cover_url,created_at,category,views')
+            var works = (await sb.from('works').select('id,title,cover_url,created_at,category,views,work_type')
                 .eq('author_id', uid).order('created_at', { ascending: false })).data || [];
             var ids = works.map(function (w) { return w.id; });
             var likes = 0, views = 0;
@@ -119,6 +119,38 @@
                     }).join('') + '</div>'
                     : '<p class="stat-line">暂无</p>';
             };
+            /* 我的收藏（仅自己可见） */
+            var favHtml = '';
+            if (isSelf) {
+                try {
+                    var favR = await sb.from('favorites').select('work_id')
+                        .eq('user_id', uid).order('created_at', { ascending: false });
+                    var fids = (favR.data || []).map(function (x) { return x.work_id; });
+                    var fworks = [];
+                    if (fids.length) {
+                        var fwR = await sb.from('works').select('id,title,cover_url,created_at,category,views,work_type')
+                            .in('id', fids);
+                        var fwMap = {};
+                        (fwR.data || []).forEach(function (x) { fwMap[x.id] = x; });
+                        fids.forEach(function (fid) { if (fwMap[fid]) fworks.push(fwMap[fid]); });
+                    }
+                    favHtml = '<h2 class="feat-title">\u2b50 我的收藏</h2>' +
+                        (fworks.length
+                            ? '<div class="card-grid">' + fworks.map(function (w) {
+                                var fcover = w.cover_url
+                                    ? '<img src="' + esc(w.cover_url) + '" alt="' + esc(w.title) + '" loading="lazy">'
+                                    : '<span class="monogram">' + esc((w.title || '游').charAt(0)) + '</span>';
+                                return '<a class="card" href="community-play.html?id=' + w.id + '">' +
+                                    '<div class="card-cover">' + fcover + '</div>' +
+                                    '<div class="card-body"><h3>' + esc(w.title) + '</h3>' +
+                                    '<p>' + fmtDate(w.created_at) + ' · 👁 ' + (w.views || 0) + '</p>' +
+                                    '<div class="card-tags">' + typeBadge(workTypeOf(w)) +
+                                    (w.category ? '<span class="tag blue">' + esc(w.category) + '</span>' : '') + '</div>' +
+                                    '</div></a>';
+                            }).join('') + '</div>'
+                            : '<p class="works-note">还没有收藏，去社区逛逛吧。</p>');
+                } catch (e) {}
+            }
             wrap.innerHTML =
                 '<p class="article-back"><a href="community.html">← 返回社区</a></p>' +
                 '<h1 class="section-title">' + esc(pr.data.username) + '</h1>' +
@@ -141,10 +173,12 @@
                             '<div class="card-cover">' + cover + '</div>' +
                             '<div class="card-body"><h3>' + esc(w.title) + '</h3>' +
                             '<p>' + fmtDate(w.created_at) + ' · 👁 ' + (w.views || 0) + '</p>' +
-                            (w.category ? '<div class="card-tags"><span class="tag blue">' + esc(w.category) + '</span></div>' : '') +
+                            '<div class="card-tags">' + typeBadge(workTypeOf(w)) +
+                            (w.category ? '<span class="tag blue">' + esc(w.category) + '</span>' : '') + '</div>' +
                             '</div></a>';
                     }).join('') + '</div>'
-                    : '<p class="works-note">TA 还没有发布作品。</p>');
+                    : '<p class="works-note">TA 还没有发布作品。</p>') +
+                favHtml;
         } catch (e) {
             wrap.innerHTML = '<p class="works-note">' + esc(e.message) + '。<a href="community.html">返回社区</a></p>';
             return;
