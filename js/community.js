@@ -120,7 +120,9 @@ var WORK_TYPES = {
     scratch: { name: 'Scratch', icon: '🎮' },
     python:  { name: 'Python',  icon: '🐍' },
     cpp:     { name: 'C++',     icon: '⚙️' },
-    apk:     { name: 'APK',     icon: '📱' }
+    apk:     { name: 'APK',     icon: '📱' },
+    windows: { name: 'Windows', icon: '🪟' },
+    linux:   { name: 'Linux',   icon: '🐧' }
 };
 function workTypeOf(w) {
     var t = w && w.work_type;

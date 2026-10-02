@@ -110,10 +110,12 @@
         { v: 'scratch', label: '🎮 Scratch' },
         { v: 'python', label: '🐍 Python' },
         { v: 'cpp', label: '⚙️ C++' },
-        { v: 'apk', label: '📱 APK' }
+        { v: 'apk', label: '📱 APK' },
+        { v: 'windows', label: '🪟 Windows' },
+        { v: 'linux', label: '🐧 Linux' }
     ];
 
-    function workCard(w, counts) {
+    function workCard(w, counts, favCounts) {
         var cover = w.cover_url
             ? '<img src="' + esc(w.cover_url) + '" alt="' + esc(w.title) + '" loading="lazy">'
             : '<span class="monogram">' + esc((w.title || '游').charAt(0)) + '</span>';
@@ -122,6 +124,7 @@
             '<div class="card-body"><h3>' + esc(w.title) + '</h3>' +
             '<p>' + esc(nameMap[w.author_id] || '未知') + ' · ' + fmtDate(w.created_at) + '</p>' +
             '<div class="card-tags"><span class="tag">❤ ' + (counts[w.id] || 0) + '</span>' +
+            '<span class="tag">⭐ ' + ((favCounts && favCounts[w.id]) || 0) + '</span>' +
             '<span class="tag">👁 ' + (w.views || 0) + '</span>' + typeBadge(workTypeOf(w)) +
             (w.category ? '<span class="tag blue">' + esc(w.category) + '</span>' : '') + '</div>' +
             '</div></a>';
@@ -141,6 +144,15 @@
         try {
             var lr = await sb.from('likes').select('work_id').in('work_id', ids);
             (lr.data || []).forEach(function (l) { counts[l.work_id] = (counts[l.work_id] || 0) + 1; });
+        } catch (e) {}
+        return counts;
+    }
+
+    async function countFavs(ids) {
+        var counts = {};
+        try {
+            var fr = await sb.from('favorites').select('work_id').in('work_id', ids);
+            (fr.data || []).forEach(function (x) { counts[x.work_id] = (counts[x.work_id] || 0) + 1; });
         } catch (e) {}
         return counts;
     }
@@ -165,8 +177,9 @@
             var works = res.data || [];
             var ids = works.map(function (w) { return w.id; });
             var authorIds = works.map(function (w) { return w.author_id; });
-            var results = await Promise.all([countLikes(ids), fillNames(authorIds)]);
+            var results = await Promise.all([countLikes(ids), countFavs(ids), fillNames(authorIds)]);
             var counts = results[0];
+            var favCounts = results[1];
             if (state.sort === 'hot') {
                 works.sort(function (a, b) { return (counts[b.id] || 0) - (counts[a.id] || 0); });
             }
@@ -176,7 +189,7 @@
                 note.style.display = 'block';
                 return;
             }
-            grid.innerHTML = works.map(function (w) { return workCard(w, counts); }).join('');
+            grid.innerHTML = works.map(function (w) { return workCard(w, counts, favCounts); }).join('');
             document.getElementById('list-title').textContent =
                 state.q ? '搜索：' + state.q : (state.cat === '全部' ? '全部作品' : state.cat);
         } catch (e) {
@@ -203,12 +216,13 @@
             var works = res.data || [];
             if (!works.length) return;
             var counts = await countLikes(works.map(function (w) { return w.id; }));
+            var favCounts = await countFavs(works.map(function (w) { return w.id; }));
             var top = works.filter(function (w) { return (counts[w.id] || 0) > 0; })
                 .sort(function (a, b) { return (counts[b.id] || 0) - (counts[a.id] || 0); })
                 .slice(0, 3);
             if (!top.length) return;
             await fillNames(top.map(function (w) { return w.author_id; }));
-            document.getElementById('feat-grid').innerHTML = top.map(function (w) { return workCard(w, counts); }).join('');
+            document.getElementById('feat-grid').innerHTML = top.map(function (w) { return workCard(w, counts, favCounts); }).join('');
             wrap.style.display = 'block';
         } catch (e) {}
     }

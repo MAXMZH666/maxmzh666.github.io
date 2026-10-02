@@ -176,3 +176,30 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 })();
+
+/* 页面跳转加载过渡 */
+(function () {
+    var overlay = document.createElement('div');
+    overlay.id = 'page-loader';
+    overlay.innerHTML = '<div class="loader-spinner"></div><p>加载中…</p>';
+    overlay.style.display = 'none';
+    document.body.appendChild(overlay);
+    var show = function () { overlay.style.display = 'flex'; };
+    var hide = function () { overlay.style.display = 'none'; };
+    document.addEventListener('click', function (e) {
+        var a = e.target.closest ? e.target.closest('a[href]') : null;
+        if (!a) return;
+        var href = a.getAttribute('href');
+        if (!href || href.charAt(0) === '#' || a.target === '_blank' ||
+            a.hasAttribute('download') || a.dataset.noTransition !== undefined) return;
+        var url;
+        try { url = new URL(href, location.href); } catch (err) { return; }
+        if (url.origin !== location.origin) return;
+        if (url.pathname === location.pathname && url.search === location.search) return;
+        show();
+        /* 兜底：8 秒后自动隐藏（防止 bfcache 等异常） */
+        setTimeout(hide, 8000);
+    });
+    window.addEventListener('pageshow', hide);
+    if (document.readyState === 'complete') hide(); else window.addEventListener('load', hide);
+})();
