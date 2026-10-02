@@ -36,6 +36,7 @@
                 <li><a href="community.html" class="active">社区</a></li>
                 <li><a href="forum.html">论坛</a></li>
                 <li><a href="contact.html">联系方式</a></li>
+                <li id="nav-bell"></li>
                 <li id="nav-auth"><a href="community-auth.html">登录</a></li>
             </ul>
         </nav>
@@ -175,8 +176,28 @@
 
     (async function () {
         await renderNavAuth();
+        await renderNavBell();
         var me = await currentUser();
         if (!me) { authRequiredRedirect(); return; }
+
+        /* 编辑模式：?edit=作品ID */
+        var editId = new URLSearchParams(location.search).get('edit');
+        var editWork = null;
+        if (editId) {
+            var er = await sb.from('works').select('*').eq('id', editId).single();
+            if (er.error || !er.data || er.data.author_id !== me.id) {
+                location.href = 'community.html';
+                return;
+            }
+            editWork = er.data;
+            document.querySelector('.section-title').textContent = '编辑作品';
+            document.getElementById('f-title').value = editWork.title || '';
+            document.getElementById('f-desc').value = editWork.description || '';
+            document.getElementById('f-cat').value = editWork.category || '游戏';
+            document.getElementById('f-sb3').removeAttribute('required');
+            document.querySelector('label[for="f-sb3"]').textContent = '游戏文件（.sb3，不换请留空）';
+            document.getElementById('pub-btn').textContent = '保存修改';
+        }
 
         var form = document.getElementById('pub-form');
         var note = document.getElementById('pub-note');
@@ -208,35 +229,37 @@
             var wantCompress = document.getElementById('f-compress').checked;
 
             if (!title) { setNote('请填写作品名称', 'err'); return; }
-            if (!sb3File) { setNote('请选择 .sb3 文件', 'err'); return; }
-            if (!/\.sb3$/i.test(sb3File.name)) { setNote('游戏文件必须是 .sb3 格式', 'err'); return; }
-            if (sb3File.size > 50 * 1024 * 1024) { setNote('文件太大，请小于 50MB', 'err'); return; }
+            if (!sb3File && !editWork) { setNote('请选择 .sb3 文件', 'err'); return; }
+            if (sb3File && !/\.sb3$/i.test(sb3File.name)) { setNote('游戏文件必须是 .sb3 格式', 'err'); return; }
+            if (sb3File && sb3File.size > 50 * 1024 * 1024) { setNote('文件太大，请小于 50MB', 'err'); return; }
 
             btn.disabled = true;
             setProgress(0);
             try {
-                var uploadBlob = sb3File, uploadName = sb3File.name;
-                if (wantCompress) {
-                    setNote('正在分析文件…', 'sending');
-                    var cr = await compressSb3(sb3File, function (s) { setNote(s, 'sending'); });
-                    if (cr.compressed) {
-                        uploadBlob = cr.blob;
-                        uploadName = sb3File.name.replace(/\.sb3$/i, '') + '-opt.sb3';
-                        setNote(cr.info + '，开始上传…', 'sending');
+                var sb3Url = editWork ? editWork.sb3_url : null;
+                if (sb3File) {
+                    var uploadBlob = sb3File;
+                    if (wantCompress) {
+                        setNote('正在分析文件…', 'sending');
+                        var cr = await compressSb3(sb3File, function (s) { setNote(s, 'sending'); });
+                        if (cr.compressed) {
+                            uploadBlob = cr.blob;
+                            setNote(cr.info + '，开始上传…', 'sending');
+                        }
                     }
+                    setNote('正在上传游戏文件…', 'sending');
+                    var sb3Path = me.id + '/' + Date.now() + '.sb3';
+                    sb3Url = await uploadWithProgress('sb3', sb3Path, uploadBlob, 'application/octet-stream', function (p) {
+                        if (p >= 0) {
+                            setProgress(p);
+                            setNote('正在上传游戏文件… ' + Math.round(p * 100) + '%', 'sending');
+                        } else {
+                            setProgress(-1);
+                        }
+                    });
                 }
-                setNote('正在上传游戏文件…', 'sending');
-                var sb3Path = me.id + '/' + Date.now() + '.sb3';
-                var sb3Url = await uploadWithProgress('sb3', sb3Path, uploadBlob, 'application/octet-stream', function (p) {
-                    if (p >= 0) {
-                        setProgress(p);
-                        setNote('正在上传游戏文件… ' + Math.round(p * 100) + '%', 'sending');
-                    } else {
-                        setProgress(-1);
-                    }
-                });
 
-                var coverUrl = null;
+                var coverUrl = editWork ? editWork.cover_url : null;
                 if (coverFile) {
                     setNote('正在上传封面…', 'sending');
                     setProgress(-1);
@@ -245,15 +268,25 @@
                     coverUrl = await uploadWithProgress('covers', coverPath, coverFile, coverFile.type || 'image/jpeg', null);
                 }
 
-                setNote('正在发布…', 'sending');
-                var ins = await sb.from('works').insert({
-                    title: title, description: desc, category: cat,
-                    sb3_url: sb3Url, cover_url: coverUrl, author_id: me.id
-                }).select('id').single();
-                if (ins.error) throw ins.error;
-
-                setNote('发布成功，正在跳转…', 'ok');
-                location.href = 'community-play.html?id=' + ins.data.id;
+                if (editWork) {
+                    setNote('正在保存…', 'sending');
+                    var ur = await sb.from('works').update({
+                        title: title, description: desc, category: cat,
+                        sb3_url: sb3Url, cover_url: coverUrl
+                    }).eq('id', editWork.id);
+                    if (ur.error) throw ur.error;
+                    setNote('保存成功，正在跳转…', 'ok');
+                    location.href = 'community-play.html?id=' + editWork.id;
+                } else {
+                    setNote('正在发布…', 'sending');
+                    var ins = await sb.from('works').insert({
+                        title: title, description: desc, category: cat,
+                        sb3_url: sb3Url, cover_url: coverUrl, author_id: me.id
+                    }).select('id').single();
+                    if (ins.error) throw ins.error;
+                    setNote('发布成功，正在跳转…', 'ok');
+                    location.href = 'community-play.html?id=' + ins.data.id;
+                }
             } catch (err) {
                 setNote('发布失败：' + err.message, 'err');
                 btn.disabled = false;

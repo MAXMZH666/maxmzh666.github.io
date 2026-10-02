@@ -33,6 +33,7 @@
                 <li><a href="community.html" class="active">社区</a></li>
                 <li><a href="forum.html">论坛</a></li>
                 <li><a href="contact.html">联系方式</a></li>
+                <li id="nav-bell"></li>
                 <li id="nav-auth"><a href="community-auth.html">登录</a></li>
             </ul>
         </nav>
@@ -66,6 +67,7 @@
     <script>
     (async function () {
         await renderNavAuth();
+        await renderNavBell();
         var wrap = document.getElementById('user-wrap');
         var uid = new URLSearchParams(location.search).get('id');
         if (!uid) { wrap.innerHTML = '<p class="works-note">缺少用户 ID。<a href="community.html">返回社区</a></p>'; return; }
@@ -81,12 +83,44 @@
                 var lr = await sb.from('likes').select('work_id').in('work_id', ids);
                 likes = (lr.data || []).length;
             }
+            var followingCount = 0, followerCount = 0, followingList = [], followerList = [];
+            try {
+                var f1 = await sb.from('follows').select('following_id').eq('follower_id', uid);
+                followingCount = (f1.data || []).length;
+                var f2 = await sb.from('follows').select('follower_id').eq('following_id', uid);
+                followerCount = (f2.data || []).length;
+                var fids = (f1.data || []).map(function (x) { return x.following_id; })
+                    .concat((f2.data || []).map(function (x) { return x.follower_id; }));
+                if (fids.length) {
+                    var pu = await sb.from('profiles').select('id,username').in('id', Array.from(new Set(fids)));
+                    var pmap = {};
+                    (pu.data || []).forEach(function (p) { pmap[p.id] = p.username; });
+                    followingList = (f1.data || []).map(function (x) { return { id: x.following_id, name: pmap[x.following_id] || '未知' }; });
+                    followerList = (f2.data || []).map(function (x) { return { id: x.follower_id, name: pmap[x.follower_id] || '未知' }; });
+                }
+            } catch (e) {}
+            var me = await currentUser();
+            var isSelf = me && me.id === uid;
             document.title = pr.data.username + ' - MAXMZH 社区';
+            var userListHtml = function (arr) {
+                return arr.length
+                    ? '<div class="mini-user-list">' + arr.map(function (u) {
+                        return '<a href="community-user.html?id=' + u.id + '">' + esc(u.name) + '</a>';
+                    }).join('') + '</div>'
+                    : '<p class="stat-line">暂无</p>';
+            };
             wrap.innerHTML =
                 '<p class="article-back"><a href="community.html">← 返回社区</a></p>' +
                 '<h1 class="section-title">' + esc(pr.data.username) + '</h1>' +
                 '<p class="stat-line">加入于 ' + fmtDate(pr.data.created_at) +
-                ' · 作品 ' + works.length + ' · 获赞 ' + likes + ' · 总浏览 ' + views + '</p>' +
+                ' · 作品 ' + works.length + ' · 获赞 ' + likes + ' · 总浏览 ' + views +
+                ' · 关注 ' + followingCount + ' · 粉丝 ' + followerCount + '</p>' +
+                '<div class="work-actions">' +
+                (!isSelf && me ? '<button class="follow-btn" id="u-follow-btn">＋ 关注</button>' : '') +
+                (!isSelf && !me ? '<a class="btn btn-blue" href="community-auth.html">登录后关注</a>' : '') +
+                '</div>' +
+                '<h2 class="feat-title">关注的人</h2>' + userListHtml(followingList) +
+                '<h2 class="feat-title">粉丝</h2>' + userListHtml(followerList) +
                 '<h2 class="feat-title">TA 的作品</h2>' +
                 (works.length
                     ? '<div class="card-grid">' + works.map(function (w) {
@@ -103,6 +137,34 @@
                     : '<p class="works-note">TA 还没有发布作品。</p>');
         } catch (e) {
             wrap.innerHTML = '<p class="works-note">' + esc(e.message) + '。<a href="community.html">返回社区</a></p>';
+            return;
+        }
+
+        /* 关注 / 取关 */
+        var uFollowBtn = document.getElementById('u-follow-btn');
+        if (uFollowBtn && me && !isSelf) {
+            var uFollowing = false;
+            var uf = await sb.from('follows').select('follower_id')
+                .eq('follower_id', me.id).eq('following_id', uid).maybeSingle();
+            uFollowing = !!uf.data;
+            var paintU = function () {
+                uFollowBtn.textContent = uFollowing ? '已关注' : '＋ 关注';
+                uFollowBtn.classList.toggle('following', uFollowing);
+            };
+            paintU();
+            uFollowBtn.addEventListener('click', async function () {
+                try {
+                    if (uFollowing) {
+                        await sb.from('follows').delete().eq('follower_id', me.id).eq('following_id', uid);
+                        uFollowing = false;
+                    } else {
+                        var ir = await sb.from('follows').insert({ follower_id: me.id, following_id: uid });
+                        if (ir.error) throw ir.error;
+                        uFollowing = true;
+                    }
+                } catch (e) { alert('操作失败：' + e.message); }
+                paintU();
+            });
         }
     })();
     </script>

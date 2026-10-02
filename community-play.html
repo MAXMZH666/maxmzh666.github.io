@@ -33,6 +33,7 @@
                 <li><a href="community.html" class="active">社区</a></li>
                 <li><a href="forum.html">论坛</a></li>
                 <li><a href="contact.html">联系方式</a></li>
+                <li id="nav-bell"></li>
                 <li id="nav-auth"><a href="community-auth.html">登录</a></li>
             </ul>
         </nav>
@@ -66,6 +67,7 @@
     <script>
     (async function () {
         await renderNavAuth();
+        await renderNavBell();
         var wrap = document.getElementById('play-wrap');
         var id = new URLSearchParams(location.search).get('id');
         if (!id) { wrap.innerHTML = '<p class="works-note">缺少作品 ID。<a href="community.html">返回社区</a></p>'; return; }
@@ -108,7 +110,10 @@
             (w.description ? '<p style="margin-top:18px;line-height:1.8">' + esc(w.description) + '</p>' : '') +
             '<div class="work-actions">' +
                 '<button class="like-btn" id="like-btn">❤ <span id="like-count">…</span></button>' +
-                (isAuthor ? '<a href="#" class="link-danger" id="del-work">删除作品</a>' : '') +
+                (!isAuthor ? '<button class="follow-btn" id="follow-btn">＋ 关注作者</button>' : '') +
+                (isAuthor
+                    ? '<a href="community-publish.html?edit=' + id + '">编辑作品</a><a href="#" class="link-danger" id="del-work">删除作品</a>'
+                    : '<a href="#" class="link-danger" id="report-work">举报</a>') +
             '</div>' +
             '<div class="comments"><h2>评论</h2><div id="comment-list"><p class="works-note">加载中…</p></div>' +
             '<form id="comment-form" class="comment-form contact-form" style="max-width:none">' +
@@ -149,6 +154,52 @@
             likeBtn.disabled = false;
             await refreshLikes();
         });
+
+        /* 关注作者 */
+        var followBtn = document.getElementById('follow-btn');
+        if (followBtn) {
+            var following = false;
+            if (me) {
+                var fr = await sb.from('follows').select('follower_id')
+                    .eq('follower_id', me.id).eq('following_id', w.author_id).maybeSingle();
+                following = !!fr.data;
+            }
+            var paintFollow = function () {
+                followBtn.textContent = following ? '已关注' : '＋ 关注作者';
+                followBtn.classList.toggle('following', following);
+            };
+            paintFollow();
+            followBtn.addEventListener('click', async function () {
+                if (!me) { authRequiredRedirect(); return; }
+                try {
+                    if (following) {
+                        await sb.from('follows').delete().eq('follower_id', me.id).eq('following_id', w.author_id);
+                        following = false;
+                    } else {
+                        var ir = await sb.from('follows').insert({ follower_id: me.id, following_id: w.author_id });
+                        if (ir.error) throw ir.error;
+                        following = true;
+                    }
+                } catch (e) { alert('操作失败：' + e.message); }
+                paintFollow();
+            });
+        }
+
+        /* 举报作品 */
+        var reportBtn = document.getElementById('report-work');
+        if (reportBtn) {
+            reportBtn.addEventListener('click', async function (e) {
+                e.preventDefault();
+                if (!me) { authRequiredRedirect(); return; }
+                var reason = prompt('请填写举报原因（如：抄袭、色情、广告等）：');
+                if (!reason || !reason.trim()) return;
+                var r = await sb.from('reports').insert({
+                    reporter_id: me.id, target_type: 'work', target_id: id, reason: reason.trim()
+                });
+                if (r.error) alert('举报失败：' + r.error.message);
+                else alert('已收到举报，站长会尽快处理，感谢监督！');
+            });
+        }
 
         /* 删除作品（作者） */
         if (isAuthor) {

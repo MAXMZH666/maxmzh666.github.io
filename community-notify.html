@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAXMZH 游戏社区通知中心。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="MAXMZH - 通知">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>通知 - MAXMZH 社区</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/styles.css">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">主页</a></li>
+                <li><a href="about.html">个人简介</a></li>
+                <li><a href="portfolio.html">作品集</a></li>
+                <li><a href="blog.html">博客</a></li>
+                <li><a href="downloads.html">下载中心</a></li>
+                <li><a href="community.html" class="active">社区</a></li>
+                <li><a href="forum.html">论坛</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+                <li id="nav-bell"></li>
+                <li id="nav-auth"><a href="community-auth.html">登录</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="portfolio">
+            <p class="article-back"><a href="community.html">← 返回社区</a></p>
+            <h1 class="section-title">通知</h1>
+            <p class="section-sub">谁点赞、评论了你的作品，谁关注了你，都在这里。</p>
+            <div id="notify-wrap"><p class="works-note">加载中…</p></div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="portfolio.html">作品集</a>
+            <a href="blog.html">博客</a>
+            <a href="downloads.html">下载中心</a>
+            <a href="community.html">社区</a>
+            <a href="forum.html">论坛</a>
+            <a href="contact.html">联系方式</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
+        <p class="foot-stats"><span id="busuanzi_container_site_pv">本站总访问量 <span id="busuanzi_value_site_pv">统计中…</span> 次</span><span> · </span><span id="busuanzi_container_page_pv">本页访问 <span id="busuanzi_value_page_pv">统计中…</span> 次</span></p>
+    </footer>
+
+    <script src="js/scripts.js"></script>
+    <script src="js/community.js"></script>
+    <script>
+    (async function () {
+        await renderNavAuth();
+        await renderNavBell();
+        var wrap = document.getElementById('notify-wrap');
+        var me = await currentUser();
+        if (!me) { authRequiredRedirect(); return; }
+        try {
+            var r = await sb.from('notifications').select('*')
+                .eq('user_id', me.id).order('created_at', { ascending: false }).limit(50);
+            if (r.error) throw r.error;
+            var ns = r.data || [];
+            if (!ns.length) { wrap.innerHTML = '<p class="works-note">还没有通知。</p>'; return; }
+            var uids = Array.from(new Set(ns.map(function (n) { return n.from_user_id; })));
+            var wids = Array.from(new Set(ns.map(function (n) { return n.work_id; }).filter(Boolean)));
+            var unames = {}, wtitles = {};
+            if (uids.length) {
+                var pu = await sb.from('profiles').select('id,username').in('id', uids);
+                (pu.data || []).forEach(function (p) { unames[p.id] = p.username; });
+            }
+            if (wids.length) {
+                var wq = await sb.from('works').select('id,title').in('id', wids);
+                (wq.data || []).forEach(function (w) { wtitles[w.id] = w.title; });
+            }
+            wrap.innerHTML = ns.map(function (n) {
+                var who = esc(unames[n.from_user_id] || '有人');
+                var wt = n.work_id ? esc(wtitles[n.work_id] || '你的作品') : '';
+                var text, link;
+                if (n.type === 'like') { text = who + ' 点赞了你的作品《' + wt + '》'; link = 'community-play.html?id=' + n.work_id; }
+                else if (n.type === 'comment') { text = who + ' 评论了你的作品《' + wt + '》'; link = 'community-play.html?id=' + n.work_id; }
+                else { text = who + ' 关注了你'; link = 'community-user.html?id=' + n.from_user_id; }
+                return '<a class="notify-item' + (n.is_read ? '' : ' unread') + '" href="' + link + '">' +
+                    '<div>' + text + '</div><div class="notify-time">' + fmtDate(n.created_at) + '</div></a>';
+            }).join('');
+            /* 打开即标为已读 */
+            var unreadIds = ns.filter(function (n) { return !n.is_read; }).map(function (n) { return n.id; });
+            if (unreadIds.length) {
+                await sb.from('notifications').update({ is_read: true }).in('id', unreadIds);
+                await renderNavBell();
+            }
+        } catch (e) {
+            wrap.innerHTML = '<p class="works-note">加载失败：' + esc(e.message) + '</p>';
+        }
+    })();
+    </script>
+    <script defer src="https://vercount.one/js"></script>
+</body>
+</html>
