@@ -78,7 +78,7 @@
         var note = document.getElementById('works-note');
         try {
             var res = await sb.from('works')
-                .select('id,title,cover_url,created_at,profiles(username)')
+                .select('id,title,cover_url,created_at,author_id')
                 .order('created_at', { ascending: false });
             if (res.error) throw res.error;
             var works = res.data || [];
@@ -90,6 +90,12 @@
                 var lr = await sb.from('likes').select('work_id').in('work_id', ids);
                 (lr.data || []).forEach(function (l) { counts[l.work_id] = (counts[l.work_id] || 0) + 1; });
             } catch (e) {}
+            var nameMap = {};
+            try {
+                var authorIds = Array.from(new Set(works.map(function (w) { return w.author_id; })));
+                var pr = await sb.from('profiles').select('id,username').in('id', authorIds);
+                (pr.data || []).forEach(function (p) { nameMap[p.id] = p.username; });
+            } catch (e) {}
             grid.innerHTML = works.map(function (w) {
                 var cover = w.cover_url
                     ? '<img src="' + esc(w.cover_url) + '" alt="' + esc(w.title) + '" loading="lazy">'
@@ -97,7 +103,7 @@
                 return '<a class="card" href="community-play.html?id=' + w.id + '">' +
                     '<div class="card-cover">' + cover + '</div>' +
                     '<div class="card-body"><h3>' + esc(w.title) + '</h3>' +
-                    '<p>作者：' + esc(w.profiles ? w.profiles.username : '未知') + ' · ' + fmtDate(w.created_at) + '</p>' +
+                    '<p>作者：' + esc(nameMap[w.author_id] || '未知') + ' · ' + fmtDate(w.created_at) + '</p>' +
                     '<div class="card-tags"><span class="tag">❤ ' + (counts[w.id] || 0) + '</span><span class="tag blue">试玩</span></div>' +
                     '</div></a>';
             }).join('');
