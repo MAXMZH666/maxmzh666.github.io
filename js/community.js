@@ -80,3 +80,34 @@ if (window.sb) {
         if (event === 'SIGNED_IN' && session) { ensureProfile(); }
     });
 }
+
+/* ===== 社区 v2：分类、上传优化 ===== */
+var WORK_CATEGORIES = ['游戏', '动画', '工具', '音乐', '其他'];
+
+/* 带进度的上传：优先用 signed URL + XHR 显示进度，失败回退普通上传 */
+async function uploadWithProgress(bucket, path, file, contentType, onProgress) {
+    var pub = function () { return window.sb.storage.from(bucket).getPublicUrl(path).data.publicUrl; };
+    try {
+        var s = await window.sb.storage.from(bucket).createSignedUploadUrl(path);
+        if (s.error) throw s.error;
+        await new Promise(function (resolve, reject) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('PUT', s.data.signedUrl);
+            if (contentType) xhr.setRequestHeader('Content-Type', contentType);
+            xhr.upload.onprogress = function (e) {
+                if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total);
+            };
+            xhr.onload = function () {
+                if (xhr.status >= 200 && xhr.status < 300) resolve();
+                else reject(new Error('上传失败(' + xhr.status + ')'));
+            };
+            xhr.onerror = function () { reject(new Error('网络错误，上传中断')); };
+            xhr.send(file);
+        });
+    } catch (e) {
+        if (onProgress) onProgress(-1); /* -1 表示进度未知 */
+        var up = await window.sb.storage.from(bucket).upload(path, file, { contentType: contentType });
+        if (up.error) throw up.error;
+    }
+    return pub();
+}
