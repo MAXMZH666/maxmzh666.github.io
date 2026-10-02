@@ -60,3 +60,23 @@ function authRequiredRedirect() {
     var next = encodeURIComponent(location.pathname.split('/').pop() + location.search);
     location.href = 'community-auth.html?next=' + next;
 }
+
+/* 确保登录用户在 profiles 表里有一行（注册触发器已移除，由前端保证） */
+async function ensureProfile() {
+    var u = await currentUser();
+    if (!u) return null;
+    var base = String((u.user_metadata && u.user_metadata.username) || u.email.split('@')[0] || 'user').slice(0, 20);
+    var candidates = [base, base + '_' + u.id.slice(0, 4)];
+    for (var i = 0; i < candidates.length; i++) {
+        var r = await window.sb.from('profiles').upsert(
+            { id: u.id, username: candidates[i] }, { onConflict: 'id' });
+        if (!r.error) return { id: u.id, username: candidates[i] };
+    }
+    return { id: u.id, username: base };
+}
+
+if (window.sb) {
+    window.sb.auth.onAuthStateChange(function (event, session) {
+        if (event === 'SIGNED_IN' && session) { ensureProfile(); }
+    });
+}
