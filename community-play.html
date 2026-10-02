@@ -113,7 +113,7 @@
     /* C++ 网页运行（JSCPP 解释器） */
     async function runCpp(code, inputText, say, append) {
         say('正在加载 C++ 运行环境…');
-        await loadScriptOnce('https://cdn.jsdelivr.net/npm/JSCPP@2.0.9/lib/commonjs.min.js');
+        await loadScriptOnce('https://cdn.jsdelivr.net/gh/felixhao28/JSCPP@gh-pages/dist/JSCPP.es5.min.js');
         if (!window.JSCPP || !JSCPP.run) throw new Error('C++ 环境加载失败');
         say('运行中…');
         var total = 0;
