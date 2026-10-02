@@ -955,3 +955,65 @@ form input[type="file"]:focus {
     margin-bottom: 8px;
 }
 .nav-links { flex-wrap: wrap; justify-content: flex-end; }
+
+/* ---------- 社区 v2 ---------- */
+.progress {
+    height: 26px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 14px;
+}
+.progress-bar {
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, var(--blue), var(--gold));
+    color: #141414;
+    font-size: .8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: width .2s;
+    white-space: nowrap;
+}
+.check-row {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    font-weight: 400 !important;
+    cursor: pointer;
+}
+.check-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--gold); }
+.search-row {
+    display: flex;
+    gap: 10px;
+    margin: 18px 0 6px;
+}
+.search-row input[type="text"] { flex: 1; }
+.search-row button { white-space: nowrap; }
+.sort-tabs {
+    display: flex;
+    gap: 10px;
+    margin: 14px 0 4px;
+    flex-wrap: wrap;
+}
+.sort-tabs button {
+    padding: 8px 20px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--muted);
+    cursor: pointer;
+    font-size: .92rem;
+}
+.sort-tabs button.active {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #141414;
+    font-weight: 700;
+}
+.filter-chips { margin: 10px 0 4px; }
+.feat-title { font-size: 1.15rem; margin: 26px 0 4px; }
+.stat-line { color: var(--muted); font-size: .9rem; margin: 6px 0 0; }
