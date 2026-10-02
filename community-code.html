@@ -104,7 +104,8 @@
 
             <!-- C++ -->
             <div id="ctab-cpp" style="display:none">
-                <p class="section-sub">在网页里写 C++ 并直接运行（JSCPP 解释器）。只支持控制台程序（cout/cin）。</p>
+                <p class="section-sub">在网页里写 C++ 并直接运行（JSCPP 解释器）。只支持控制台程序（cout/cin）。<br>
+                <span class="form-hint">注意：解释器不支持 <code>&lt;bits/stdc++.h&gt;</code> 万能头，请用 <code>&lt;iostream&gt;</code> 等标准头文件。</span></p>
                 <label for="cpp-title">作品标题</label>
                 <input type="text" id="cpp-title" maxlength="60" placeholder="给作品起个名字（保存草稿/发布时用）">
                 <label>代码</label>
@@ -303,7 +304,7 @@
         }
         if (window.CodeMirror) {
             cms.python = initCM('py-code', 'python', '# 在这里写 Python（控制台程序）\nprint("你好，社区！")\n');
-            cms.cpp = initCM('cpp-code', 'text/x-c++src', '#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    cout << "你好，社区！" << endl;\n    return 0;\n}\n');
+            cms.cpp = initCM('cpp-code', 'text/x-c++src', '#include <iostream>\nusing namespace std;\nint main() {\n    cout << "你好，社区！" << endl;\n    return 0;\n}\n');
             window._cms = cms;
         }
         function bindCodeTab(kind, cm, titleId, inputId, outputId, statusId, noteId, saveBtnId, pubBtnId, runBtnId) {
