@@ -166,6 +166,14 @@ function loadScriptOnce(src) {
 
 /* 带进度的上传：优先用 signed URL + XHR 显示进度，失败回退普通上传 */
 async function uploadWithProgress(bucket, path, file, contentType, onProgress) {
+    /* R2 优先（10GB 免费），失败回退 Supabase，保证发布不中断 */
+    if (R2_WORKER_URL) {
+        try {
+            return await uploadViaR2(bucket + '/' + path, file, contentType, onProgress);
+        } catch (e) {
+            try { console.warn('R2 上传失败，回退 Supabase：' + e.message); } catch (e2) {}
+        }
+    }
     var pub = function () { return window.sb.storage.from(bucket).getPublicUrl(path).data.publicUrl; };
     try {
         var s = await window.sb.storage.from(bucket).createSignedUploadUrl(path);
@@ -197,24 +205,61 @@ async function uploadWithProgress(bucket, path, file, contentType, onProgress) {
 /* ===== VirusTotal 云查杀 =====
    去 https://www.virustotal.com 申请免费 API Key（2 分钟），填到下面即可启用。
    启用后：发布安装包时先查文件 SHA256 是否为已知病毒；命中则拦截发布。 */
-var VIRUSTOTAL_API_KEY = '914117b68a34bade04a91ee6e710baf17805a5e604546047b2c08c135309e3c2';
+var VIRUSTOTAL_API_KEY = ''; /* 已废弃：云查杀改走 Cloudflare Worker，Key 保存在 Worker 机密里 */
 async function vtCheck(file) {
-    if (!VIRUSTOTAL_API_KEY) return { status: 'skipped' };
+    /* 经 Worker 代理（浏览器直调 VT 会被跨域拦截；Key 也藏在 Worker 里） */
+    if (!R2_WORKER_URL) return { status: 'skipped' };
     try {
         var buf = await file.arrayBuffer();
         var digest = await crypto.subtle.digest('SHA-256', buf);
         var hash = Array.from(new Uint8Array(digest)).map(function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
-        var r = await fetch('https://www.virustotal.com/api/v3/files/' + hash, {
-            headers: { 'x-apikey': VIRUSTOTAL_API_KEY }
+        var token = await workerToken();
+        var r = await fetch(R2_WORKER_URL + '/vt/' + hash, {
+            headers: { 'Authorization': 'Bearer ' + token },
         });
-        if (r.status === 404) return { status: 'unknown' };
+        if (r.status === 401) return { status: 'denied' };
         if (!r.ok) return { status: 'skipped' };
-        var j = await r.json();
-        var stats = (((j || {}).data || {}).attributes || {}).last_analysis_stats || {};
-        var mal = stats.malicious || 0, sus = stats.suspicious || 0;
-        if (mal > 0 || sus > 0) return { status: 'malicious', detail: mal + ' 家检出病毒 / ' + sus + ' 家可疑' };
-        return { status: 'clean' };
+        return await r.json();
     } catch (e) { return { status: 'skipped' }; }
+}
+
+/* ===== Cloudflare Worker（R2 存储 + VT 云查杀代理）=====
+   Worker 部署好后把地址填到下面。未填时上传走 Supabase、云查杀跳过（原有行为）。 */
+var R2_WORKER_URL = '';
+
+async function workerToken() {
+    try {
+        var s = await window.sb.auth.getSession();
+        return (s.data.session && s.data.session.access_token) || '';
+    } catch (e) { return ''; }
+}
+
+/* R2 预签名直传（带进度），失败时抛错由调用方回退 */
+async function uploadViaR2(key, file, contentType, onProgress) {
+    var token = await workerToken();
+    var r = await fetch(R2_WORKER_URL + '/r2/put-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ key: key, contentType: contentType || 'application/octet-stream' }),
+    });
+    if (!r.ok) throw new Error('获取 R2 上传地址失败(' + r.status + ')');
+    var u = await r.json();
+    if (!u.url) throw new Error('R2 返回异常');
+    await new Promise(function (resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('PUT', u.url);
+        if (contentType) xhr.setRequestHeader('Content-Type', contentType);
+        xhr.upload.onprogress = function (e) {
+            if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total);
+        };
+        xhr.onload = function () {
+            if (xhr.status >= 200 && xhr.status < 300) resolve();
+            else reject(new Error('R2 上传失败(' + xhr.status + ')'));
+        };
+        xhr.onerror = function () { reject(new Error('网络错误，上传中断')); };
+        xhr.send(file);
+    });
+    return u.publicUrl;
 }
 
 /* ===== 网页运行器（试玩页 + 在线编程共用） ===== */
