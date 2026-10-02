@@ -82,6 +82,18 @@
             if (pr.data && pr.data.username) authorName = pr.data.username;
         } catch (e) {}
         document.title = w.title + ' - MAXMZH 社区';
+        /* 浏览量 +1（每天每作品只计一次） */
+        (function () {
+            var key = 'viewed_' + id, today = new Date().toDateString(), last = null;
+            try { last = localStorage.getItem(key); } catch (e) {}
+            if (last !== today) {
+                sb.rpc('increment_views', { wid: id }).then(function () {
+                    var vc = document.getElementById('view-count');
+                    if (vc) vc.textContent = (parseInt(vc.textContent, 10) || 0) + 1;
+                }).catch(function () {});
+                try { localStorage.setItem(key, today); } catch (e) {}
+            }
+        })();
         var embedUrl = 'https://turbowarp.org/embed?project_url=' + encodeURIComponent(w.sb3_url) +
             '&project_title=' + encodeURIComponent(w.title) + '&autoplay';
         var me = await currentUser();
@@ -90,7 +102,8 @@
         wrap.innerHTML =
             '<p class="article-back"><a href="community.html">← 返回社区</a></p>' +
             '<h1 class="section-title" style="margin-top:6px">' + esc(w.title) + '</h1>' +
-            '<p class="work-meta">作者：' + esc(authorName) + ' · ' + fmtDate(w.created_at) + '</p>' +
+            '<p class="work-meta">作者：<a href="community-user.html?id=' + w.author_id + '">' + esc(authorName) + '</a>' +
+            ' · ' + fmtDate(w.created_at) + ' · 👁 <span id="view-count">' + (w.views || 0) + '</span></p>' +
             '<div class="player-wrap"><iframe src="' + esc(embedUrl) + '" allowtransparency="true" scrolling="no" allowfullscreen title="' + esc(w.title) + '"></iframe></div>' +
             (w.description ? '<p style="margin-top:18px;line-height:1.8">' + esc(w.description) + '</p>' : '') +
             '<div class="work-actions">' +

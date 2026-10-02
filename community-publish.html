@@ -15,6 +15,9 @@
     <link rel="stylesheet" href="css/styles.css">
     <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/spark-md5@3.0.2/spark-md5.min.js"></script>
 </head>
 <body>
     <header class="site-header">
@@ -46,12 +49,21 @@
             <form id="pub-form" class="contact-form">
                 <label for="f-title">作品名称 *</label>
                 <input type="text" id="f-title" maxlength="60" required placeholder="给作品起个名字">
+                <label for="f-cat">分类</label>
+                <select id="f-cat">
+                    <option>游戏</option><option>动画</option><option>工具</option><option>音乐</option><option>其他</option>
+                </select>
                 <label for="f-desc">作品简介</label>
                 <textarea id="f-desc" maxlength="500" placeholder="玩法介绍、操作说明…（选填）"></textarea>
                 <label for="f-sb3">游戏文件（.sb3） *</label>
                 <input type="file" id="f-sb3" accept=".sb3" required>
+                <p class="form-hint" id="file-info"></p>
                 <label for="f-cover">封面图（选填）</label>
                 <input type="file" id="f-cover" accept="image/*">
+                <label class="check-row"><input type="checkbox" id="f-compress" checked> 压缩音频以加快上传（推荐，大文件效果明显）</label>
+                <div class="progress" id="progress" style="display:none">
+                    <div class="progress-bar" id="progress-bar"></div>
+                </div>
                 <p class="form-note" id="pub-note"></p>
                 <button type="submit" id="pub-btn">发布</button>
             </form>
@@ -78,6 +90,89 @@
     <script src="js/scripts.js"></script>
     <script src="js/community.js"></script>
     <script>
+    function fmtMB(n) { return (n / 1048576).toFixed(1) + 'MB'; }
+
+    /* 把 sb3 里大于 512KB 的 wav 音频转成 mp3，显著减小体积 */
+    async function compressSb3(file, onStep) {
+        var result = { blob: file, compressed: false, info: '' };
+        try {
+            if (!window.JSZip || !window.lamejs || !window.SparkMD5) return result;
+            var zip = await JSZip.loadAsync(file);
+            var pjFile = zip.file('project.json');
+            if (!pjFile) return result;
+            var pj = JSON.parse(await pjFile.async('string'));
+            var sounds = [];
+            (pj.targets || []).forEach(function (t) { (t.sounds || []).forEach(function (s) { sounds.push(s); }); });
+            var wavSounds = [];
+            for (var i = 0; i < sounds.length; i++) {
+                var s = sounds[i];
+                if ((s.dataFormat || '').toLowerCase() !== 'wav') continue;
+                var zf = zip.file(s.md5ext);
+                if (!zf) continue;
+                var buf = await zf.async('arraybuffer');
+                if (buf.byteLength < 512 * 1024) continue;
+                wavSounds.push({ sound: s, buf: buf });
+            }
+            if (!wavSounds.length) return result;
+            var AC = window.AudioContext || window.webkitAudioContext;
+            if (!AC) return result;
+            var ac = new AC();
+            var totalBefore = 0, totalAfter = 0;
+            for (var k = 0; k < wavSounds.length; k++) {
+                var item = wavSounds[k];
+                onStep && onStep('正在压缩音频 (' + (k + 1) + '/' + wavSounds.length + ')…');
+                var audioBuf;
+                try { audioBuf = await ac.decodeAudioData(item.buf.slice(0)); }
+                catch (e) { continue; }
+                var mp3Blob = encodeMp3(audioBuf);
+                var mp3Buf = await mp3Blob.arrayBuffer();
+                var md5 = SparkMD5.ArrayBuffer.hash(mp3Buf);
+                var md5ext = md5 + '.mp3';
+                zip.remove(item.sound.md5ext);
+                zip.file(md5ext, mp3Buf);
+                item.sound.assetId = md5;
+                item.sound.md5ext = md5ext;
+                item.sound.dataFormat = 'mp3';
+                item.sound.format = 'mp3';
+                item.sound.rate = audioBuf.sampleRate;
+                totalBefore += item.buf.byteLength;
+                totalAfter += mp3Buf.byteLength;
+            }
+            if (ac.close) { try { await ac.close(); } catch (e) {} }
+            if (totalAfter >= totalBefore || totalBefore === 0) return result;
+            zip.file('project.json', JSON.stringify(pj));
+            var outBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+            result.blob = outBlob;
+            result.compressed = true;
+            result.info = '音频已压缩：' + fmtMB(totalBefore) + ' → ' + fmtMB(totalAfter);
+            return result;
+        } catch (e) {
+            return result; /* 任何失败都回退到原文件 */
+        }
+    }
+
+    function encodeMp3(audioBuffer) {
+        var channels = audioBuffer.numberOfChannels;
+        var sampleRate = audioBuffer.sampleRate;
+        var encoder = new lamejs.Mp3Encoder(channels, sampleRate, 128);
+        var left = audioBuffer.getChannelData(0);
+        var right = channels > 1 ? audioBuffer.getChannelData(1) : left;
+        var blockSize = 1152, mp3Data = [];
+        for (var i = 0; i < left.length; i += blockSize) {
+            var l = left.subarray(i, i + blockSize), r = right.subarray(i, i + blockSize);
+            var l16 = new Int16Array(l.length), r16 = new Int16Array(r.length);
+            for (var j = 0; j < l.length; j++) {
+                l16[j] = Math.max(-32768, Math.min(32767, Math.round(l[j] * 32768)));
+                r16[j] = Math.max(-32768, Math.min(32767, Math.round(r[j] * 32768)));
+            }
+            var data = encoder.encodeBuffer(l16, r16);
+            if (data.length) mp3Data.push(new Uint8Array(data));
+        }
+        var end = encoder.flush();
+        if (end.length) mp3Data.push(new Uint8Array(end));
+        return new Blob(mp3Data, { type: 'audio/mp3' });
+    }
+
     (async function () {
         await renderNavAuth();
         var me = await currentUser();
@@ -86,15 +181,31 @@
         var form = document.getElementById('pub-form');
         var note = document.getElementById('pub-note');
         var btn = document.getElementById('pub-btn');
+        var bar = document.getElementById('progress');
+        var barIn = document.getElementById('progress-bar');
+        var fileInfo = document.getElementById('file-info');
 
         function setNote(msg, cls) { note.textContent = msg; note.className = 'form-note ' + (cls || ''); }
+        function setProgress(p) {
+            if (p < 0) { bar.style.display = 'none'; return; }
+            bar.style.display = 'block';
+            barIn.style.width = Math.round(p * 100) + '%';
+            barIn.textContent = Math.round(p * 100) + '%';
+        }
+
+        document.getElementById('f-sb3').addEventListener('change', function (e) {
+            var f = e.target.files[0];
+            fileInfo.textContent = f ? ('已选择：' + f.name + '（' + fmtMB(f.size) + '）') : '';
+        });
 
         form.addEventListener('submit', async function (e) {
             e.preventDefault();
             var title = document.getElementById('f-title').value.trim();
+            var cat = document.getElementById('f-cat').value;
             var desc = document.getElementById('f-desc').value.trim();
             var sb3File = document.getElementById('f-sb3').files[0];
             var coverFile = document.getElementById('f-cover').files[0];
+            var wantCompress = document.getElementById('f-compress').checked;
 
             if (!title) { setNote('请填写作品名称', 'err'); return; }
             if (!sb3File) { setNote('请选择 .sb3 文件', 'err'); return; }
@@ -102,26 +213,41 @@
             if (sb3File.size > 50 * 1024 * 1024) { setNote('文件太大，请小于 50MB', 'err'); return; }
 
             btn.disabled = true;
+            setProgress(0);
             try {
+                var uploadBlob = sb3File, uploadName = sb3File.name;
+                if (wantCompress) {
+                    setNote('正在分析文件…', 'sending');
+                    var cr = await compressSb3(sb3File, function (s) { setNote(s, 'sending'); });
+                    if (cr.compressed) {
+                        uploadBlob = cr.blob;
+                        uploadName = sb3File.name.replace(/\.sb3$/i, '') + '-opt.sb3';
+                        setNote(cr.info + '，开始上传…', 'sending');
+                    }
+                }
                 setNote('正在上传游戏文件…', 'sending');
                 var sb3Path = me.id + '/' + Date.now() + '.sb3';
-                var up1 = await sb.storage.from('sb3').upload(sb3Path, sb3File, { contentType: 'application/octet-stream' });
-                if (up1.error) throw up1.error;
-                var sb3Url = sb.storage.from('sb3').getPublicUrl(sb3Path).data.publicUrl;
+                var sb3Url = await uploadWithProgress('sb3', sb3Path, uploadBlob, 'application/octet-stream', function (p) {
+                    if (p >= 0) {
+                        setProgress(p);
+                        setNote('正在上传游戏文件… ' + Math.round(p * 100) + '%', 'sending');
+                    } else {
+                        setProgress(-1);
+                    }
+                });
 
                 var coverUrl = null;
                 if (coverFile) {
                     setNote('正在上传封面…', 'sending');
-                    var ext = (coverFile.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
+                    setProgress(-1);
+                    var ext = (coverFile.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
                     var coverPath = me.id + '/' + Date.now() + '.' + ext;
-                    var up2 = await sb.storage.from('covers').upload(coverPath, coverFile);
-                    if (up2.error) throw up2.error;
-                    coverUrl = sb.storage.from('covers').getPublicUrl(coverPath).data.publicUrl;
+                    coverUrl = await uploadWithProgress('covers', coverPath, coverFile, coverFile.type || 'image/jpeg', null);
                 }
 
                 setNote('正在发布…', 'sending');
                 var ins = await sb.from('works').insert({
-                    title: title, description: desc,
+                    title: title, description: desc, category: cat,
                     sb3_url: sb3Url, cover_url: coverUrl, author_id: me.id
                 }).select('id').single();
                 if (ins.error) throw ins.error;
@@ -131,6 +257,7 @@
             } catch (err) {
                 setNote('发布失败：' + err.message, 'err');
                 btn.disabled = false;
+                setProgress(-1);
             }
         });
     })();

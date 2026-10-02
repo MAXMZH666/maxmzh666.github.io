@@ -47,6 +47,24 @@
                 </div>
                 <a class="btn btn-blue" href="community-publish.html">＋ 发布作品</a>
             </div>
+
+            <div class="search-row reveal">
+                <input type="text" id="q" placeholder="搜索作品名称…">
+                <button class="btn btn-blue" id="q-btn">搜索</button>
+            </div>
+            <div class="filter-chips reveal" id="cat-chips"></div>
+            <div class="sort-tabs reveal" id="sort-tabs">
+                <button data-sort="new" class="active">最新发布</button>
+                <button data-sort="hot">最多点赞</button>
+                <button data-sort="views">最多浏览</button>
+            </div>
+
+            <div id="feat-wrap" style="display:none">
+                <h2 class="feat-title">🔥 热门推荐</h2>
+                <div class="card-grid" id="feat-grid"></div>
+            </div>
+
+            <h2 class="feat-title" id="list-title">全部作品</h2>
             <p id="works-note" class="works-note">加载中…</p>
             <div class="card-grid" id="works-grid"></div>
         </section>
@@ -72,44 +90,120 @@
     <script src="js/scripts.js"></script>
     <script src="js/community.js"></script>
     <script>
-    (async function () {
-        await renderNavAuth();
+    var state = { q: '', cat: '全部', sort: 'new' };
+    var nameMap = {};
+
+    function workCard(w, counts) {
+        var cover = w.cover_url
+            ? '<img src="' + esc(w.cover_url) + '" alt="' + esc(w.title) + '" loading="lazy">'
+            : '<span class="monogram">' + esc((w.title || '游').charAt(0)) + '</span>';
+        return '<a class="card" href="community-play.html?id=' + w.id + '">' +
+            '<div class="card-cover">' + cover + '</div>' +
+            '<div class="card-body"><h3>' + esc(w.title) + '</h3>' +
+            '<p>' + esc(nameMap[w.author_id] || '未知') + ' · ' + fmtDate(w.created_at) + '</p>' +
+            '<div class="card-tags"><span class="tag">❤ ' + (counts[w.id] || 0) + '</span>' +
+            '<span class="tag">👁 ' + (w.views || 0) + '</span>' +
+            (w.category ? '<span class="tag blue">' + esc(w.category) + '</span>' : '') + '</div>' +
+            '</div></a>';
+    }
+
+    async function fillNames(authorIds) {
+        try {
+            var ids = Array.from(new Set(authorIds));
+            if (!ids.length) return;
+            var pr = await sb.from('profiles').select('id,username').in('id', ids);
+            (pr.data || []).forEach(function (p) { nameMap[p.id] = p.username; });
+        } catch (e) {}
+    }
+
+    async function countLikes(ids) {
+        var counts = {};
+        try {
+            var lr = await sb.from('likes').select('work_id').in('work_id', ids);
+            (lr.data || []).forEach(function (l) { counts[l.work_id] = (counts[l.work_id] || 0) + 1; });
+        } catch (e) {}
+        return counts;
+    }
+
+    function escLike(s) { return s.replace(/[%_\\]/g, function (c) { return '\\' + c; }); }
+
+    async function loadWorks() {
         var grid = document.getElementById('works-grid');
         var note = document.getElementById('works-note');
+        grid.innerHTML = '';
+        note.style.display = 'block';
+        note.textContent = '加载中…';
         try {
-            var res = await sb.from('works')
-                .select('id,title,cover_url,created_at,author_id')
-                .order('created_at', { ascending: false });
+            var query = sb.from('works').select('id,title,cover_url,created_at,author_id,category,views');
+            if (state.cat !== '全部') query = query.eq('category', state.cat);
+            if (state.q) query = query.ilike('title', '%' + escLike(state.q) + '%');
+            query = state.sort === 'views'
+                ? query.order('views', { ascending: false })
+                : query.order('created_at', { ascending: false });
+            var res = await query;
             if (res.error) throw res.error;
             var works = res.data || [];
-            if (!works.length) { note.textContent = '还没有作品，来发布第一个吧！'; return; }
+            await fillNames(works.map(function (w) { return w.author_id; }));
+            var counts = await countLikes(works.map(function (w) { return w.id; }));
+            if (state.sort === 'hot') {
+                works.sort(function (a, b) { return (counts[b.id] || 0) - (counts[a.id] || 0); });
+            }
+            if (!works.length) { note.textContent = '没有找到作品，换个条件试试。'; return; }
             note.style.display = 'none';
-            var ids = works.map(function (w) { return w.id; });
-            var counts = {};
-            try {
-                var lr = await sb.from('likes').select('work_id').in('work_id', ids);
-                (lr.data || []).forEach(function (l) { counts[l.work_id] = (counts[l.work_id] || 0) + 1; });
-            } catch (e) {}
-            var nameMap = {};
-            try {
-                var authorIds = Array.from(new Set(works.map(function (w) { return w.author_id; })));
-                var pr = await sb.from('profiles').select('id,username').in('id', authorIds);
-                (pr.data || []).forEach(function (p) { nameMap[p.id] = p.username; });
-            } catch (e) {}
-            grid.innerHTML = works.map(function (w) {
-                var cover = w.cover_url
-                    ? '<img src="' + esc(w.cover_url) + '" alt="' + esc(w.title) + '" loading="lazy">'
-                    : '<span class="monogram">' + esc((w.title || '游').charAt(0)) + '</span>';
-                return '<a class="card" href="community-play.html?id=' + w.id + '">' +
-                    '<div class="card-cover">' + cover + '</div>' +
-                    '<div class="card-body"><h3>' + esc(w.title) + '</h3>' +
-                    '<p>作者：' + esc(nameMap[w.author_id] || '未知') + ' · ' + fmtDate(w.created_at) + '</p>' +
-                    '<div class="card-tags"><span class="tag">❤ ' + (counts[w.id] || 0) + '</span><span class="tag blue">试玩</span></div>' +
-                    '</div></a>';
-            }).join('');
+            grid.innerHTML = works.map(function (w) { return workCard(w, counts); }).join('');
+            document.getElementById('list-title').textContent =
+                state.q ? '搜索：' + state.q : (state.cat === '全部' ? '全部作品' : state.cat);
         } catch (e) {
             note.textContent = '加载失败：' + e.message;
         }
+    }
+
+    async function loadFeatured() {
+        var wrap = document.getElementById('feat-wrap');
+        try {
+            var res = await sb.from('works').select('id,title,cover_url,created_at,author_id,category,views')
+                .order('created_at', { ascending: false }).limit(50);
+            var works = res.data || [];
+            if (!works.length) return;
+            var counts = await countLikes(works.map(function (w) { return w.id; }));
+            var top = works.filter(function (w) { return (counts[w.id] || 0) > 0; })
+                .sort(function (a, b) { return (counts[b.id] || 0) - (counts[a.id] || 0); })
+                .slice(0, 3);
+            if (!top.length) return;
+            await fillNames(top.map(function (w) { return w.author_id; }));
+            document.getElementById('feat-grid').innerHTML = top.map(function (w) { return workCard(w, counts); }).join('');
+            wrap.style.display = 'block';
+        } catch (e) {}
+    }
+
+    (async function () {
+        await renderNavAuth();
+        var chips = document.getElementById('cat-chips');
+        chips.innerHTML = ['全部'].concat(WORK_CATEGORIES).map(function (c) {
+            return '<button class="filter-chip' + (c === '全部' ? ' active' : '') + '" data-cat="' + c + '">' + c + '</button>';
+        }).join('');
+        chips.addEventListener('click', function (e) {
+            var b = e.target.closest('button[data-cat]');
+            if (!b) return;
+            state.cat = b.getAttribute('data-cat');
+            chips.querySelectorAll('button').forEach(function (x) { x.classList.toggle('active', x === b); });
+            loadWorks();
+        });
+        document.getElementById('sort-tabs').addEventListener('click', function (e) {
+            var b = e.target.closest('button[data-sort]');
+            if (!b) return;
+            state.sort = b.getAttribute('data-sort');
+            this.querySelectorAll('button').forEach(function (x) { x.classList.toggle('active', x === b); });
+            loadWorks();
+        });
+        function doSearch() {
+            state.q = document.getElementById('q').value.trim();
+            loadWorks();
+        }
+        document.getElementById('q-btn').addEventListener('click', doSearch);
+        document.getElementById('q').addEventListener('keydown', function (e) { if (e.key === 'Enter') doSearch(); });
+        await loadFeatured();
+        await loadWorks();
     })();
     </script>
     <script defer src="https://vercount.one/js"></script>

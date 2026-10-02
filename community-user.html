@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAXMZH 游戏社区用户主页。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="MAXMZH - 社区用户">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>用户主页 - MAXMZH 社区</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/styles.css">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">主页</a></li>
+                <li><a href="about.html">个人简介</a></li>
+                <li><a href="portfolio.html">作品集</a></li>
+                <li><a href="blog.html">博客</a></li>
+                <li><a href="downloads.html">下载中心</a></li>
+                <li><a href="community.html" class="active">社区</a></li>
+                <li><a href="forum.html">论坛</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+                <li id="nav-auth"><a href="community-auth.html">登录</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="portfolio" id="user-wrap">
+            <p class="works-note">加载中…</p>
+        </section>
+    </main>
+
+    <footer>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="portfolio.html">作品集</a>
+            <a href="blog.html">博客</a>
+            <a href="downloads.html">下载中心</a>
+            <a href="community.html">社区</a>
+            <a href="forum.html">论坛</a>
+            <a href="contact.html">联系方式</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
+        <p class="foot-stats"><span id="busuanzi_container_site_pv">本站总访问量 <span id="busuanzi_value_site_pv">统计中…</span> 次</span><span> · </span><span id="busuanzi_container_page_pv">本页访问 <span id="busuanzi_value_page_pv">统计中…</span> 次</span></p>
+    </footer>
+
+    <script src="js/scripts.js"></script>
+    <script src="js/community.js"></script>
+    <script>
+    (async function () {
+        await renderNavAuth();
+        var wrap = document.getElementById('user-wrap');
+        var uid = new URLSearchParams(location.search).get('id');
+        if (!uid) { wrap.innerHTML = '<p class="works-note">缺少用户 ID。<a href="community.html">返回社区</a></p>'; return; }
+        try {
+            var pr = await sb.from('profiles').select('username,created_at').eq('id', uid).single();
+            if (pr.error || !pr.data) throw new Error('用户不存在');
+            var works = (await sb.from('works').select('id,title,cover_url,created_at,category,views')
+                .eq('author_id', uid).order('created_at', { ascending: false })).data || [];
+            var ids = works.map(function (w) { return w.id; });
+            var likes = 0, views = 0;
+            works.forEach(function (w) { views += (w.views || 0); });
+            if (ids.length) {
+                var lr = await sb.from('likes').select('work_id').in('work_id', ids);
+                likes = (lr.data || []).length;
+            }
+            document.title = pr.data.username + ' - MAXMZH 社区';
+            wrap.innerHTML =
+                '<p class="article-back"><a href="community.html">← 返回社区</a></p>' +
+                '<h1 class="section-title">' + esc(pr.data.username) + '</h1>' +
+                '<p class="stat-line">加入于 ' + fmtDate(pr.data.created_at) +
+                ' · 作品 ' + works.length + ' · 获赞 ' + likes + ' · 总浏览 ' + views + '</p>' +
+                '<h2 class="feat-title">TA 的作品</h2>' +
+                (works.length
+                    ? '<div class="card-grid">' + works.map(function (w) {
+                        var cover = w.cover_url
+                            ? '<img src="' + esc(w.cover_url) + '" alt="' + esc(w.title) + '" loading="lazy">'
+                            : '<span class="monogram">' + esc((w.title || '游').charAt(0)) + '</span>';
+                        return '<a class="card" href="community-play.html?id=' + w.id + '">' +
+                            '<div class="card-cover">' + cover + '</div>' +
+                            '<div class="card-body"><h3>' + esc(w.title) + '</h3>' +
+                            '<p>' + fmtDate(w.created_at) + ' · 👁 ' + (w.views || 0) + '</p>' +
+                            (w.category ? '<div class="card-tags"><span class="tag blue">' + esc(w.category) + '</span></div>' : '') +
+                            '</div></a>';
+                    }).join('') + '</div>'
+                    : '<p class="works-note">TA 还没有发布作品。</p>');
+        } catch (e) {
+            wrap.innerHTML = '<p class="works-note">' + esc(e.message) + '。<a href="community.html">返回社区</a></p>';
+        }
+    })();
+    </script>
+    <script defer src="https://vercount.one/js"></script>
+</body>
+</html>
