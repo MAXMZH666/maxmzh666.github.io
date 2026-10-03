@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="MAXMZH 游戏社区动态：只看你关注的人发布了什么。">
+    <meta name="description" content="MAX社区动态：只看你关注的人发布了什么。">
     <meta name="theme-color" content="#0b0b0e">
     <meta property="og:title" content="MAXMZH - 社区动态">
     <meta property="og:type" content="website">
@@ -46,20 +46,16 @@
     </header>
     <div class="sub-header">
         <div class="sub-header-inner">
-            <a class="sub-brand" href="community-home.html">🎮 <span>游戏社区</span></a>
+            <a class="sub-brand" href="community-home.html">🎮 <span>MAX社区</span></a>
             <nav class="sub-links" aria-label="社区导航">
                 <a href="community-home.html" data-sub="home">首页</a>
                 <a href="community.html" data-sub="works">作品</a>
-                <a href="community-discover.html" data-sub="discover">🔍 发现</a>
-                <a href="community-tasks.html" data-sub="tasks">📋 任务</a>
-                <a href="community-shop.html" data-sub="shop">🛍️ 商城</a>
+                <a href="community-shop.html" data-sub="shop">🎁 任务商城</a>
                 <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
                 <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
                 <a href="community-studios.html" data-sub="studios">🏢 工作室</a>
-                <a href="community-publish.html" data-sub="publish">发布作品</a>
-                <a href="community-code.html" data-sub="code">💻 在线编程</a>
-                <a href="community-rank.html" data-sub="rank">🏆 排行榜</a>
-                <a href="community-notify.html" data-sub="notify" id="sub-bell" style="display:none">🔔 通知</a>
+                <a href="community-publish.html" data-sub="publish">🚀 发布</a>
+                <a href="community-feed.html" data-sub="feed" id="sub-bell">💬 动态</a>
                 <span id="sub-auth"><a href="community-auth.html">登录</a></span>
             </nav>
         </div>
@@ -68,11 +64,20 @@
     <main>
         <section class="portfolio" style="max-width:760px">
             <p class="article-back"><a href="community.html">← 返回社区</a></p>
-            <h1 class="section-title">📰 动态</h1>
-            <p class="section-sub">只看你关注的人发布了什么。</p>
+            <h1 class="section-title">💬 动态</h1>
+            <p class="section-sub">关注动态与通知，都在这里。</p>
+            <div class="filter-row" id="feed-tabs">
+                <button class="filter-chip active" data-ftab="feed">📰 关注动态</button>
+                <button class="filter-chip" data-ftab="notify">🔔 通知 <span id="notify-dot" style="display:none;color:#ff6b6b">●</span></button>
+            </div>
+            <div id="ftab-feed">
             <div id="feed-need-login" class="works-note" style="display:none">请先<a href="community-auth.html">登录</a>后查看动态。</div>
             <p id="feed-note" class="works-note" style="display:none">加载中…</p>
             <div id="feed-list"></div>
+            </div>
+            <div id="ftab-notify" style="display:none">
+            <div id="notify-wrap"><p class="works-note">加载中…</p></div>
+            </div>
         </section>
     </main>
 
@@ -91,7 +96,7 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003i"></script>
+    <script src="js/community.js?v=20261003m"></script>
     <script src="js/scripts.js"></script>
     <script>
     (async function () {
@@ -131,6 +136,73 @@
                     '<span>' + fmtDate(x.at) + '</span></div></div></a>';
             }).join('');
         } catch (e) { note.textContent = '加载失败：' + e.message; }
+    })();
+    </script>
+
+    <script>
+    /* ===== 通知标签页（原通知页融合） ===== */
+    async function loadNotify() {
+        var wrap = document.getElementById('notify-wrap');
+        var me = await currentUser();
+        if (!me) { wrap.innerHTML = '<p class="works-note">请先<a href="community-auth.html">登录</a>后查看通知。</p>'; return; }
+        try {
+            var r = await sb.from('notifications').select('*')
+                .eq('user_id', me.id).order('created_at', { ascending: false }).limit(50);
+            if (r.error) throw r.error;
+            var ns = r.data || [];
+            if (!ns.length) { wrap.innerHTML = '<p class="works-note">还没有通知。</p>'; return; }
+            var uids = Array.from(new Set(ns.map(function (n) { return n.from_user_id; })));
+            var wids = Array.from(new Set(ns.map(function (n) { return n.work_id; }).filter(Boolean)));
+            var tids = Array.from(new Set(ns.map(function (n) { return n.thread_id; }).filter(Boolean)));
+            var unames = {}, wtitles = {}, ttitles = {};
+            if (uids.length) {
+                var pu = await sb.from('profiles').select('id,username').in('id', uids);
+                (pu.data || []).forEach(function (p) { unames[p.id] = p.username; });
+            }
+            if (wids.length) {
+                var wq = await sb.from('works').select('id,title').in('id', wids);
+                (wq.data || []).forEach(function (w) { wtitles[w.id] = w.title; });
+            }
+            if (tids.length) {
+                var tq = await sb.from('forum_threads').select('id,title').in('id', tids);
+                (tq.data || []).forEach(function (t) { ttitles[t.id] = t.title; });
+            }
+            wrap.innerHTML = ns.map(function (n) {
+                var who = esc(unames[n.from_user_id] || '有人');
+                var wt = n.work_id ? esc(wtitles[n.work_id] || '你的作品') : '';
+                var tt = n.thread_id ? esc(ttitles[n.thread_id] || '你的帖子') : '';
+                var text, link;
+                if (n.type === 'like') { text = who + ' 点赞了你的作品《' + wt + '》'; link = 'community-play.html?id=' + n.work_id; }
+                else if (n.type === 'comment') { text = who + ' 评论了你的作品《' + wt + '》'; link = 'community-play.html?id=' + n.work_id; }
+                else if (n.type === 'reply') { text = who + ' 回复了你的帖子《' + tt + '》'; link = 'community-thread.html?id=' + n.thread_id; }
+                else { text = who + ' 关注了你'; link = 'community-user.html?id=' + n.from_user_id; }
+                return '<a class="notify-item' + (n.is_read ? '' : ' unread') + '" href="' + link + '">' +
+                    '<div>' + text + '</div><div class="notify-time">' + fmtDate(n.created_at) + '</div></a>';
+            }).join('');
+            var unreadIds = ns.filter(function (n) { return !n.is_read; }).map(function (n) { return n.id; });
+            if (unreadIds.length) {
+                await sb.from('notifications').update({ is_read: true }).in('id', unreadIds);
+                try { await renderNavBell(); } catch (e) {}
+            }
+            document.getElementById('notify-dot').style.display = 'none';
+        } catch (e) {
+            wrap.innerHTML = '<p class="works-note">加载失败：' + esc(e.message) + '</p>';
+        }
+    }
+    (function () {
+        var tabs = document.querySelectorAll('#feed-tabs [data-ftab]');
+        var notifyLoaded = false;
+        function showTab(t) {
+            tabs.forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-ftab') === t); });
+            document.getElementById('ftab-feed').style.display = t === 'feed' ? '' : 'none';
+            document.getElementById('ftab-notify').style.display = t === 'notify' ? '' : 'none';
+            if (t === 'notify' && !notifyLoaded) { notifyLoaded = true; loadNotify(); }
+            try { history.replaceState(null, '', location.pathname + '#' + t); } catch (e) {}
+        }
+        tabs.forEach(function (b) { b.addEventListener('click', function () { showTab(b.getAttribute('data-ftab')); }); });
+        document.addEventListener('DOMContentLoaded', function () {
+            if (location.hash === '#notify') showTab('notify');
+        });
     })();
     </script>
 </body>

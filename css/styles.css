@@ -1383,3 +1383,95 @@ form input[type="file"]:focus {
 .player-cover img { max-width: 100%; max-height: 220px; border-radius: 8px; object-fit: contain; }
 .player-cover .monogram { font-size: 64px; }
 .btn-lg { font-size: 1.1em; padding: 12px 32px; }
+
+/* ---------- MAX社区大改版：背景 / 美化 ---------- */
+/* 商城背景预览 */
+.demo-bg { width: 72px; height: 72px; border-radius: 12px; border: 1px solid var(--border, rgba(255,255,255,.12)); }
+/* 动态背景（CSS 动画，无需图片） */
+@keyframes bg-nebula {
+    0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; }
+}
+@keyframes bg-aurora {
+    0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); }
+}
+@keyframes bg-cyber {
+    0%, 100% { background-position: 0 0; } 50% { background-position: 40px 40px; }
+}
+.animated-bg-nebula {
+    background: linear-gradient(120deg, #1a1a2e, #4d7cfe, #9c4dfe, #1a1a2e) !important;
+    background-size: 300% 300% !important;
+    animation: bg-nebula 12s ease infinite;
+}
+.animated-bg-aurora {
+    background: linear-gradient(120deg, #0b3d2e, #2ee6a8, #4d7cfe, #0b3d2e) !important;
+    background-size: 300% 300% !important;
+    animation: bg-nebula 10s ease infinite, bg-aurora 20s linear infinite;
+}
+.animated-bg-cyber {
+    background:
+        repeating-linear-gradient(45deg, rgba(77,124,254,.15) 0 20px, transparent 20px 40px),
+        linear-gradient(135deg, #0d0d1a, #1a1a3e) !important;
+    animation: bg-cyber 3s linear infinite;
+}
+/* 个人主页背景容器 */
+.profile-bg-wrap { border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+/* 背景选择器 */
+.bg-option { display: inline-block; width: 120px; height: 70px; border-radius: 10px; margin: 6px;
+    border: 2px solid transparent; cursor: pointer; position: relative; overflow: hidden; }
+.bg-option:hover { border-color: #4d7cfe; }
+.bg-option.selected { border-color: #ffd43b; box-shadow: 0 0 0 2px #ffd43b; }
+.bg-option .bg-name { position: absolute; bottom: 0; left: 0; right: 0; font-size: 11px;
+    background: rgba(0,0,0,.6); color: #fff; padding: 2px 6px; text-align: center; }
+
+/* ---------- UI 美化 ---------- */
+:root {
+    --gold: #ffd43b;
+    --blue: #4d7cfe;
+    --radius: 14px;
+    --shadow: 0 4px 20px rgba(0,0,0,.25);
+}
+.card, .shop-item, .studio-card, .contest-card, .case-card {
+    border-radius: var(--radius);
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.card:hover, .shop-item:hover, .studio-card:hover, .contest-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+    border-color: rgba(77,124,254,.5);
+}
+.section-title {
+    background: linear-gradient(90deg, #fff, #9db8ff);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: .5px;
+}
+.btn-blue {
+    background: linear-gradient(135deg, #4d7cfe, #7a5cff);
+    border: none; box-shadow: 0 4px 14px rgba(77,124,254,.35);
+}
+.btn-blue:hover { box-shadow: 0 6px 20px rgba(77,124,254,.5); transform: translateY(-1px); }
+.filter-chip.active, .sort-tabs button.active {
+    background: linear-gradient(135deg, #4d7cfe, #7a5cff);
+    color: #fff; border-color: transparent;
+}
+.hero {
+    background: linear-gradient(135deg, rgba(77,124,254,.12), rgba(156,77,254,.08));
+    border: 1px solid rgba(77,124,254,.2);
+    border-radius: 20px; padding: 32px 24px;
+}
+.points-banner {
+    background: linear-gradient(135deg, rgba(255,212,59,.12), rgba(255,170,0,.06));
+    border: 1px solid rgba(255,212,59,.3);
+    border-radius: var(--radius);
+}
+/* 卡片网格性能：视口外跳过渲染 */
+.card-grid, .shop-grid, .studio-grid, .contest-grid, .entry-grid, .work-grid { content-visibility: auto; }
+/* 图片异步解码提示 */
+img { decoding: async; }
+/* 移动端排版优化 */
+@media (max-width: 640px) {
+    .section-title { font-size: 1.4rem; }
+    .hero { padding: 24px 16px; }
+    .sub-links { gap: 2px; }
+    .sub-links a { padding: 8px 10px; font-size: .82rem; }
+}

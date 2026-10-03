@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="MAXMZH 游戏社区首页：热门作品、最新发布、论坛热帖、社区公告。">
+    <meta name="description" content="MAX社区首页：热门作品、最新发布、论坛热帖、社区公告。">
     <meta name="theme-color" content="#0b0b0e">
-    <meta property="og:title" content="MAXMZH - 游戏社区">
+    <meta property="og:title" content="MAXMZH - MAX社区">
     <meta property="og:type" content="website">
     <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
-    <title>MAXMZH - 游戏社区</title>
+    <title>MAXMZH - MAX社区</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="manifest" href="manifest.json">
@@ -58,20 +58,16 @@
     </header>
     <div class="sub-header">
         <div class="sub-header-inner">
-            <a class="sub-brand" href="community-home.html">🎮 <span>游戏社区</span></a>
+            <a class="sub-brand" href="community-home.html">🎮 <span>MAX社区</span></a>
             <nav class="sub-links" aria-label="社区导航">
                 <a href="community-home.html" data-sub="home">首页</a>
                 <a href="community.html" data-sub="works">作品</a>
-                <a href="community-discover.html" data-sub="discover">🔍 发现</a>
-                <a href="community-tasks.html" data-sub="tasks">📋 任务</a>
-                <a href="community-shop.html" data-sub="shop">🛍️ 商城</a>
+                <a href="community-shop.html" data-sub="shop">🎁 任务商城</a>
                 <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
                 <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
                 <a href="community-studios.html" data-sub="studios">🏢 工作室</a>
-                <a href="community-publish.html" data-sub="publish">发布作品</a>
-                <a href="community-code.html" data-sub="code">💻 在线编程</a>
-                <a href="community-rank.html" data-sub="rank">🏆 排行榜</a>
-                <a href="community-notify.html" data-sub="notify" id="sub-bell" style="display:none">🔔 通知</a>
+                <a href="community-publish.html" data-sub="publish">🚀 发布</a>
+                <a href="community-feed.html" data-sub="feed" id="sub-bell">💬 动态</a>
                 <span id="sub-auth"><a href="community-auth.html">登录</a></span>
             </nav>
         </div>
@@ -80,13 +76,13 @@
     <main>
         <section class="portfolio">
             <div class="hero reveal">
-                <h1>🎮 游戏社区</h1>
+                <h1>🎮 MAX社区</h1>
                 <p>分享 Scratch、Python、C++、APK 作品，在线试玩运行、评论、点赞，结识同好。</p>
                 <div class="hero-btns">
                     <a class="btn btn-blue" href="community-publish.html">＋ 发布作品</a>
                     <a class="btn" href="community.html">逛逛作品</a>
                     <a class="btn" href="community-forum.html">💬 论坛</a>
-                    <a class="btn" href="community-discover.html">🔍 发现</a>
+                    <a class="btn" href="community-studios.html">🏢 工作室</a>
                 </div>
             </div>
 
@@ -114,6 +110,22 @@
                 <div class="home-sec-head"><h2>📰 动态速览</h2><a href="community-feed.html">全部动态 →</a></div>
                 <div id="feed-mini-list"><div class="works-note">加载中…</div></div>
             </div>
+
+            <div class="home-sec" id="rank">
+                <div class="home-sec-head"><h2>🏆 排行榜</h2></div>
+                <div class="filter-row" id="rank-tabs">
+                    <button class="filter-chip active" data-rank="likes">❤ 点赞榜</button>
+                    <button class="filter-chip" data-rank="views">👁 浏览榜</button>
+                    <button class="filter-chip" data-rank="authors">👥 作者榜</button>
+                    <button class="filter-chip" data-rank="studios">🏢 工作室榜</button>
+                </div>
+                <div id="rank-list"><div class="works-note">加载中…</div></div>
+            </div>
+
+            <div class="home-sec">
+                <div class="home-sec-head"><h2>🌟 明星工作室</h2><a href="community-studios.html">全部工作室 →</a></div>
+                <div class="card-grid" id="star-studios"><div class="works-note">加载中…</div></div>
+            </div>
         </section>
     </main>
 
@@ -133,7 +145,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003i"></script>
+    <script src="js/community.js?v=20261003m"></script>
     <script>
     var nameMap = {};
     async function fillNames(ids) {
@@ -272,6 +284,129 @@
             }
         } catch (e) {
             document.getElementById('feed-mini-list').innerHTML = '<div class="works-note">加载失败</div>';
+        }
+    })();
+    </script>
+
+    <script>
+    /* ===== 排行榜（原排行榜页融合）+ 明星工作室 ===== */
+    (async function () {
+        var rankTabs = document.querySelectorAll('#rank-tabs [data-rank]');
+        var rankList = document.getElementById('rank-list');
+        function rankRow(i, link, title, meta) {
+            var medal = i < 3 ? ['🥇', '🥈', '🥉'][i] : '<span class="rank-num">' + (i + 1) + '</span>';
+            return '<a class="rank-row" href="' + link + '"><span class="rank-medal">' + medal + '</span>' +
+                '<span class="rank-info"><b>' + title + '</b><span>' + meta + '</span></span></a>';
+        }
+        async function showRank(kind) {
+            rankList.innerHTML = '<div class="works-note">加载中…</div>';
+            try {
+                if (kind === 'likes' || kind === 'views') {
+                    var wr = await sb.from('works').select('id,title,cover_url,author_id,views,work_type,created_at')
+                        .order('created_at', { ascending: false }).limit(50);
+                    var works = wr.data || [];
+                    var counts = await likeCounts(works.map(function (w) { return w.id; }));
+                    works.sort(function (a, b) {
+                        return kind === 'likes' ? (counts[b.id] || 0) - (counts[a.id] || 0) : (b.views || 0) - (a.views || 0);
+                    });
+                    await fillNames(works.map(function (w) { return w.author_id; }));
+                    rankList.innerHTML = works.slice(0, 10).map(function (w, i) {
+                        var cover = w.cover_url ? '<img src="' + esc(w.cover_url) + '" alt="" loading="lazy">' : '<span class="monogram">🎮</span>';
+                        return '<a class="rank-row" href="community-play.html?id=' + w.id + '">' +
+                            '<span class="rank-medal">' + (i < 3 ? ['🥇', '🥈', '🥉'][i] : '<span class="rank-num">' + (i + 1) + '</span>') + '</span>' +
+                            '<span class="rank-thumb">' + cover + '</span>' +
+                            '<span class="rank-info"><b>' + esc(w.title) + '</b>' +
+                            '<span>' + esc(nameMap[w.author_id] || '未知') + ' · ❤ ' + (counts[w.id] || 0) + ' · 👁 ' + (w.views || 0) + '</span></span></a>';
+                    }).join('') || '<div class="works-note">暂无数据</div>';
+                } else if (kind === 'authors') {
+                    var pr = await sb.from('profiles').select('id,username,avatar_url').limit(100);
+                    var users = pr.data || [];
+                    var wr2 = await sb.from('works').select('id,author_id,views').limit(500);
+                    var stats = {};
+                    (wr2.data || []).forEach(function (w) {
+                        var s = stats[w.author_id] || (stats[w.author_id] = { works: 0, views: 0, likes: 0 });
+                        s.works++; s.views += w.views || 0;
+                    });
+                    var wids = (wr2.data || []).map(function (w) { return w.id; });
+                    if (wids.length) {
+                        var lr = await sb.from('likes').select('work_id').in('work_id', wids);
+                        var w2a = {};
+                        (wr2.data || []).forEach(function (w) { w2a[w.id] = w.author_id; });
+                        (lr.data || []).forEach(function (l) {
+                            var aid = w2a[l.work_id];
+                            if (aid && stats[aid]) stats[aid].likes++;
+                        });
+                    }
+                    users = users.filter(function (u) { return stats[u.id]; });
+                    users.sort(function (a, b) { return (stats[b.id].likes - stats[a.id].likes) || (stats[b.id].views - stats[a.id].views); });
+                    rankList.innerHTML = users.slice(0, 10).map(function (u, i) {
+                        var s = stats[u.id];
+                        var av = u.avatar_url ? '<img src="' + esc(u.avatar_url) + '" alt="" loading="lazy">' : '<span class="monogram">' + esc((u.username || '?').charAt(0)) + '</span>';
+                        return '<a class="rank-row" href="community-user.html?id=' + u.id + '">' +
+                            '<span class="rank-medal">' + (i < 3 ? ['🥇', '🥈', '🥉'][i] : '<span class="rank-num">' + (i + 1) + '</span>') + '</span>' +
+                            '<span class="rank-thumb round">' + av + '</span>' +
+                            '<span class="rank-info"><b>' + esc(u.username) + '</b>' +
+                            '<span>作品 ' + s.works + ' · ❤ ' + s.likes + ' · 👁 ' + s.views + '</span></span></a>';
+                    }).join('') || '<div class="works-note">暂无数据</div>';
+                } else if (kind === 'studios') {
+                    rankList.innerHTML = await studioRankHtml(10);
+                }
+            } catch (e) { rankList.innerHTML = '<div class="works-note">加载失败</div>'; }
+        }
+        async function studioRankHtml(limit) {
+            try {
+                var sr = await sb.from('studios').select('id,name,avatar_url,cover_url').limit(100);
+                var studios = sr.data || [];
+                if (!studios.length) return '<div class="works-note">还没有工作室</div>';
+                var ids = studios.map(function (s) { return s.id; });
+                var mr = await sb.from('studio_members').select('studio_id').in('studio_id', ids);
+                var wr = await sb.from('studio_works').select('studio_id').in('studio_id', ids);
+                var mc = {}, wc = {};
+                (mr.data || []).forEach(function (m) { mc[m.studio_id] = (mc[m.studio_id] || 0) + 1; });
+                (wr.data || []).forEach(function (w) { wc[w.studio_id] = (wc[w.studio_id] || 0) + 1; });
+                studios.forEach(function (s) { s._score = (wc[s.id] || 0) * 10 + (mc[s.id] || 0); });
+                studios.sort(function (a, b) { return b._score - a._score; });
+                return studios.slice(0, limit).map(function (s, i) {
+                    var av = s.avatar_url ? '<img src="' + esc(s.avatar_url) + '" alt="" loading="lazy">' : '🏢';
+                    return '<a class="rank-row" href="community-studio.html?id=' + s.id + '">' +
+                        '<span class="rank-medal">' + (i < 3 ? ['🥇', '🥈', '🥉'][i] : '<span class="rank-num">' + (i + 1) + '</span>') + '</span>' +
+                        '<span class="rank-thumb">' + av + '</span>' +
+                        '<span class="rank-info"><b>' + esc(s.name) + '</b>' +
+                        '<span>🎮 ' + (wc[s.id] || 0) + ' 作品 · 👥 ' + (mc[s.id] || 0) + ' 成员</span></span></a>';
+                }).join('');
+            } catch (e) { return '<div class="works-note">加载失败</div>'; }
+        }
+        rankTabs.forEach(function (b) {
+            b.addEventListener('click', function () {
+                rankTabs.forEach(function (x) { x.classList.toggle('active', x === b); });
+                showRank(b.getAttribute('data-rank'));
+            });
+        });
+        showRank('likes');
+        /* 明星工作室：取前3 */
+        try {
+            var sr2 = await sb.from('studios').select('id,name,description,avatar_url').limit(100);
+            var sts = sr2.data || [];
+            if (sts.length) {
+                var ids2 = sts.map(function (s) { return s.id; });
+                var wr3 = await sb.from('studio_works').select('studio_id').in('studio_id', ids2);
+                var wc2 = {};
+                (wr3.data || []).forEach(function (w) { wc2[w.studio_id] = (wc2[w.studio_id] || 0) + 1; });
+                sts.sort(function (a, b) { return (wc2[b.id] || 0) - (wc2[a.id] || 0); });
+                document.getElementById('star-studios').innerHTML = sts.slice(0, 3).map(function (s) {
+                    var av = s.avatar_url ? '<img src="' + esc(s.avatar_url) + '" alt="" loading="lazy">' : '<span class="monogram">🏢</span>';
+                    return '<a class="card" href="community-studio.html?id=' + s.id + '">' +
+                        '<div class="card-cover">' + av + '</div>' +
+                        '<div class="card-body"><h3>🌟 ' + esc(s.name) + '</h3>' +
+                        '<p>' + esc((s.description || '').slice(0, 40)) + '</p>' +
+                        '<div class="card-tags"><span class="tag">🎮 ' + (wc2[s.id] || 0) + ' 作品</span></div>' +
+                        '</div></a>';
+                }).join('');
+            } else {
+                document.getElementById('star-studios').innerHTML = '<div class="works-note">还没有工作室，<a href="community-studio-new.html">创建第一个</a>吧！</div>';
+            }
+        } catch (e) {
+            document.getElementById('star-studios').innerHTML = '<div class="works-note">加载失败</div>';
         }
     })();
     </script>

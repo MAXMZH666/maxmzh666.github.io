@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="在 MAXMZH 游戏社区发布作品：Scratch、Python、C++、APK 都可以。">
+    <meta name="description" content="MAX社区创作发布：在线编程、发布作品一站搞定。">
     <meta name="theme-color" content="#0b0b0e">
-    <meta property="og:title" content="MAXMZH - 发布作品">
+    <meta property="og:title" content="MAX社区 - 创作发布">
     <meta property="og:type" content="website">
     <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
     <title>发布作品 - MAXMZH 社区</title>
@@ -15,6 +15,8 @@
     <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
     <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js"></script>
@@ -40,20 +42,16 @@
     </header>
     <div class="sub-header">
         <div class="sub-header-inner">
-            <a class="sub-brand" href="community-home.html">🎮 <span>游戏社区</span></a>
+            <a class="sub-brand" href="community-home.html">🎮 <span>MAX社区</span></a>
             <nav class="sub-links" aria-label="社区导航">
                 <a href="community-home.html" data-sub="home">首页</a>
                 <a href="community.html" data-sub="works">作品</a>
-                <a href="community-discover.html" data-sub="discover">🔍 发现</a>
-                <a href="community-tasks.html" data-sub="tasks">📋 任务</a>
-                <a href="community-shop.html" data-sub="shop">🛍️ 商城</a>
+                <a href="community-shop.html" data-sub="shop">🎁 任务商城</a>
                 <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
                 <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
                 <a href="community-studios.html" data-sub="studios">🏢 工作室</a>
-                <a href="community-publish.html" data-sub="publish">发布作品</a>
-                <a href="community-code.html" data-sub="code">💻 在线编程</a>
-                <a href="community-rank.html" data-sub="rank">🏆 排行榜</a>
-                <a href="community-notify.html" data-sub="notify" id="sub-bell" style="display:none">🔔 通知</a>
+                <a href="community-publish.html" data-sub="publish">🚀 发布</a>
+                <a href="community-feed.html" data-sub="feed" id="sub-bell">💬 动态</a>
                 <span id="sub-auth"><a href="community-auth.html">登录</a></span>
             </nav>
         </div>
@@ -62,8 +60,15 @@
     <main>
         <section class="portfolio">
             <p class="article-back"><a href="community.html">← 返回社区</a></p>
-            <h1 class="section-title">发布作品</h1>
-            <p class="section-sub" id="pub-sub">选择作品类型，填好信息就能发布了。</p>
+            <h1 class="section-title">创作发布</h1>
+            <p class="section-sub" id="pub-sub">在线编程、发布作品，一站搞定。</p>
+            <div class="filter-row" id="pub-tabs">
+                <button class="filter-chip active" data-ptab="publish">📝 发布作品</button>
+                <button class="filter-chip" data-ptab="scratch">🎮 Scratch 编程</button>
+                <button class="filter-chip" data-ptab="python">🐍 Python</button>
+                <button class="filter-chip" data-ptab="cpp">⚙️ C++</button>
+            </div>
+            <div id="ptab-publish">
             <form id="pub-form" class="contact-form">
                 <label>作品类型 * <span class="form-hint" id="type-locked" style="display:none">（编辑时不可更改类型）</span></label>
                 <div class="type-cards" id="type-cards">
@@ -98,7 +103,7 @@
                     <input type="file" id="f-sb3" accept=".sb3">
                     <p class="form-hint" id="file-info"></p>
                     <label class="check-row"><input type="checkbox" id="f-compress" checked> 压缩音频以加快上传（推荐，大文件效果明显）</label>
-                    <p class="form-hint">没有 .sb3？<a href="community-code.html">去在线编程做一个</a></p>
+                    <p class="form-hint">没有 .sb3？<a href="#" id="goto-scratch-tab">去 Scratch 编程做一个</a></p>
                 </div>
 
                 <!-- Python / C++ -->
@@ -136,12 +141,64 @@
 
                 <label for="f-cover">封面图（选填）</label>
                 <input type="file" id="f-cover" accept="image/*">
+                <label class="check-row"><input type="checkbox" id="f-opensource"> 🌐 开源：允许他人查看/下载本作品的源代码（.sb3 / 代码）</label>
+                <p class="form-hint">不勾选则他人只能试玩/运行，无法看到源码（防扒源）。</p>
                 <div class="progress" id="progress" style="display:none">
                     <div class="progress-bar" id="progress-bar"></div>
                 </div>
                 <p class="form-note" id="pub-note"></p>
                 <button type="submit" id="pub-btn">发布</button>
             </form>
+            </div><!-- /ptab-publish -->
+            <div id="ptab-scratch" style="display:none">
+                <div class="tip-box">
+                    <b>🎮 Scratch 在线编程（TurboWarp 编辑器）</b><br>
+                    点击下方按钮在<b>新标签页</b>打开编辑器，编完后用编辑器左上角 <b>文件 → 💾 保存草稿到社区 / 📤 发布到社区</b>，
+                    也可以用 <b>文件 → 保存到电脑</b> 得到 .sb3 再回到「发布作品」标签手动上传。<br>
+                    <span class="form-hint">新标签页编辑器每 90 秒自动保存一次草稿，左下角会显示保存状态。</span>
+                </div>
+                <p style="margin:18px 0">
+                    <a class="btn btn-blue btn-lg" id="open-scratch-editor" href="tw-editor/editor.html" target="_blank" rel="noopener">↗ 在新标签页打开 Scratch 编辑器</a>
+                </p>
+                <p class="form-hint">💾 草稿不会发布，在<a href="community-user.html">个人主页</a>「📝 未发布的作品」里查看、继续编辑或发布。</p>
+            </div>
+            <div id="ptab-python" style="display:none">
+                <p class="section-sub">在网页里写 Python 并直接运行（Pyodide 真实环境）。只支持控制台程序（print/input）。</p>
+                <label for="py-title">作品标题</label>
+                <input type="text" id="py-title" maxlength="60" placeholder="给作品起个名字（保存草稿/发布时用）">
+                <label>代码</label>
+                <textarea id="py-code"></textarea>
+                <div class="editor-bar">
+                    <button class="btn btn-blue" id="py-run" type="button">▶ 运行</button>
+                    <button class="btn btn-ghost" id="py-save" type="button">💾 保存草稿</button>
+                    <button class="btn btn-ghost" id="py-publish" type="button">📤 去发布</button>
+                    <span class="run-status" id="py-status"></span>
+                </div>
+                <p class="form-hint" id="py-note"></p>
+                <label for="py-input">程序输入 <span class="form-hint">（代码里有 input() 时，在这里按行填写）</span></label>
+                <textarea id="py-input" class="code-input" rows="3" spellcheck="false"></textarea>
+                <label>输出</label>
+                <pre id="py-output" class="console">点击"运行"开始…</pre>
+            </div>
+            <div id="ptab-cpp" style="display:none">
+                <p class="section-sub">在网页里写 C++ 并直接运行（JSCPP 解释器）。只支持控制台程序（cout/cin）。<br>
+                <span class="form-hint">注意：解释器不支持 <code>&lt;bits/stdc++.h&gt;</code> 万能头，请用 <code>&lt;iostream&gt;</code> 等标准头文件。</span></p>
+                <label for="cpp-title">作品标题</label>
+                <input type="text" id="cpp-title" maxlength="60" placeholder="给作品起个名字（保存草稿/发布时用）">
+                <label>代码</label>
+                <textarea id="cpp-code"></textarea>
+                <div class="editor-bar">
+                    <button class="btn btn-blue" id="cpp-run" type="button">▶ 运行</button>
+                    <button class="btn btn-ghost" id="cpp-save" type="button">💾 保存草稿</button>
+                    <button class="btn btn-ghost" id="cpp-publish" type="button">📤 去发布</button>
+                    <span class="run-status" id="cpp-status"></span>
+                </div>
+                <p class="form-hint" id="cpp-note"></p>
+                <label for="cpp-input">程序输入 <span class="form-hint">（代码里有 cin 时，在这里按行填写）</span></label>
+                <textarea id="cpp-input" class="code-input" rows="3" spellcheck="false"></textarea>
+                <label>输出</label>
+                <pre id="cpp-output" class="console">点击"运行"开始…</pre>
+            </div>
         </section>
     </main>
 
@@ -162,7 +219,10 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003i"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+    <script src="js/community.js?v=20261003m"></script>
     <script>
     function fmtMB(n) { return (n / 1048576).toFixed(1) + 'MB'; }
 
@@ -323,6 +383,7 @@
             document.getElementById('f-title').value = editWork.title || '';
             document.getElementById('f-desc').value = editWork.description || '';
             document.getElementById('f-cat').value = editWork.category || '游戏';
+            document.getElementById('f-opensource').checked = !!editWork.is_open_source;
             document.getElementById('pub-btn').textContent = '保存修改';
             document.getElementById('type-locked').style.display = '';
             cards.querySelectorAll('input[name="wtype"]').forEach(function (r) { r.disabled = r.value !== et; });
@@ -461,7 +522,8 @@
                     coverUrl = await uploadWithProgress('covers', me.id + '/' + Date.now() + '.' + ext, coverFile, coverFile.type || 'image/jpeg', null);
                 }
 
-                var payload = { title: title, description: desc, category: cat, cover_url: coverUrl };
+                var payload = { title: title, description: desc, category: cat, cover_url: coverUrl,
+                    is_open_source: document.getElementById('f-opensource').checked };
 
                 if (curType === 'scratch') {
                     var sb3File = document.getElementById('f-sb3').files[0];
@@ -590,5 +652,132 @@
     })();
     </script>
     <script defer src="https://vercount.one/js"></script>
+
+    <script>
+    /* ===== 创作发布：标签页 + Python/C++ 在线编程 ===== */
+    (async function () {
+        var qs = new URLSearchParams(location.search);
+        var tabs = document.querySelectorAll('#pub-tabs [data-ptab]');
+        function showTab(t) {
+            tabs.forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-ptab') === t); });
+            ['publish', 'scratch', 'python', 'cpp'].forEach(function (k) {
+                var el = document.getElementById('ptab-' + k);
+                if (el) el.style.display = k === t ? '' : 'none';
+            });
+            if (window._cms) { setTimeout(function () { window._cms[t] && window._cms[t].refresh(); }, 30); }
+            try { history.replaceState(null, '', location.pathname + '?tab=' + t); } catch (e) {}
+        }
+        window._showPubTab = showTab;
+        tabs.forEach(function (b) {
+            b.addEventListener('click', function () { showTab(b.getAttribute('data-ptab')); });
+        });
+        var g = document.getElementById('goto-scratch-tab');
+        if (g) g.addEventListener('click', function (e) { e.preventDefault(); showTab('scratch'); });
+
+        /* 草稿 */
+        var draftIds = { python: localStorage.getItem('draft_python') || null, cpp: localStorage.getItem('draft_cpp') || null };
+        async function upsertDraft(kind, fields, noteEl, manual) {
+            var me = await currentUser();
+            if (!me) { if (manual) authRequiredRedirect(); return null; }
+            var row = { user_id: me.id, work_type: kind, title: fields.title || '未命名草稿',
+                code: fields.code || null, updated_at: new Date().toISOString() };
+            try {
+                if (draftIds[kind]) {
+                    var ur = await sb.from('drafts').update(row).eq('id', draftIds[kind]).eq('user_id', me.id);
+                    if (ur.error) throw ur.error;
+                } else {
+                    var ir = await sb.from('drafts').insert(row).select('id').single();
+                    if (ir.error) throw ir.error;
+                    draftIds[kind] = ir.data.id;
+                    localStorage.setItem('draft_' + kind, draftIds[kind]);
+                }
+                if (noteEl) noteEl.textContent = (manual ? '草稿已保存 ' : '已自动保存 ') + new Date().toLocaleTimeString();
+                return draftIds[kind];
+            } catch (e) {
+                if (noteEl && manual) noteEl.textContent = '保存失败：' + e.message;
+                return null;
+            }
+        }
+        async function loadDraft(id) {
+            var me = await currentUser();
+            if (!me) { authRequiredRedirect(); return; }
+            var r = await sb.from('drafts').select('*').eq('id', id).eq('user_id', me.id).single();
+            if (!r.data) return;
+            var d = r.data, k = d.work_type;
+            if (k !== 'python' && k !== 'cpp') return;
+            draftIds[k] = d.id;
+            localStorage.setItem('draft_' + k, d.id);
+            showTab(k);
+            if (window._cms && window._cms[k]) {
+                document.getElementById(k === 'python' ? 'py-title' : 'cpp-title').value = d.title || '';
+                window._cms[k].setValue(d.code || '');
+            }
+        }
+
+        /* CodeMirror */
+        var cms = {};
+        if (window.CodeMirror) {
+            function initCM(id, mode, sample) {
+                var cm = CodeMirror.fromTextArea(document.getElementById(id),
+                    { mode: mode, theme: 'dracula', lineNumbers: true, indentUnit: 4, tabSize: 4 });
+                cm.setValue(sample);
+                return cm;
+            }
+            cms.python = initCM('py-code', 'python', '# 在这里写 Python（控制台程序）\nprint("你好，社区！")\n');
+            cms.cpp = initCM('cpp-code', 'text/x-c++src',
+                '#include <iostream>\nusing namespace std;\nint main() {\n    cout << "你好，社区！" << endl;\n    return 0;\n}\n');
+            window._cms = cms;
+            function bindKind(kind, cm, o) {
+                var out = document.getElementById(o.out), status = document.getElementById(o.status),
+                    note = document.getElementById(o.note), titleEl = document.getElementById(o.title);
+                function say(t) { status.textContent = t; }
+                function append(s) { out.textContent += s; out.scrollTop = out.scrollHeight; }
+                document.getElementById(o.run).addEventListener('click', async function () {
+                    out.textContent = '';
+                    try {
+                        if (kind === 'python') await runPython(cm.getValue(), document.getElementById(o.input).value, say, append);
+                        else await runCpp(cm.getValue(), document.getElementById(o.input).value, say, append);
+                    } catch (e) { append('\n[错误] ' + (e && e.message ? e.message : e)); say('运行出错'); }
+                });
+                var timer = null;
+                cm.on('change', function () {
+                    clearTimeout(timer);
+                    timer = setTimeout(function () {
+                        upsertDraft(kind, { title: titleEl.value.trim(), code: cm.getValue() }, note, false);
+                    }, 3000);
+                });
+                titleEl.addEventListener('change', function () {
+                    upsertDraft(kind, { title: titleEl.value.trim(), code: cm.getValue() }, note, false);
+                });
+                document.getElementById(o.save).addEventListener('click', async function () {
+                    await upsertDraft(kind, { title: titleEl.value.trim(), code: cm.getValue() }, note, true);
+                });
+                document.getElementById(o.pub).addEventListener('click', async function () {
+                    var me = await currentUser();
+                    if (!me) { authRequiredRedirect(); return; }
+                    var code = cm.getValue();
+                    if (!code.trim()) { alert('请先写点代码'); return; }
+                    await upsertDraft(kind, { title: titleEl.value.trim(), code: code }, note, true);
+                    /* 切到发布标签并预填 */
+                    showTab('publish');
+                    document.querySelector('input[name="wtype"][value="' + kind + '"]').click();
+                    document.getElementById('f-title').value = titleEl.value.trim() || '未命名作品';
+                    document.getElementById('f-code').value = code;
+                    document.getElementById('pub-sub').textContent = '已从在线编程带入代码，确认信息后发布。';
+                    window.scrollTo(0, 0);
+                });
+            }
+            bindKind('python', cms.python, { out: 'py-output', status: 'py-status', note: 'py-note', title: 'py-title', input: 'py-input', run: 'py-run', save: 'py-save', pub: 'py-publish' });
+            bindKind('cpp', cms.cpp, { out: 'cpp-output', status: 'cpp-status', note: 'cpp-note', title: 'cpp-title', input: 'cpp-input', run: 'cpp-run', save: 'cpp-save', pub: 'cpp-publish' });
+        }
+
+        /* ?tab= / ?draft= */
+        var tabParam = qs.get('tab');
+        var draftParam = qs.get('draft');
+        if (draftParam && (tabParam === 'python' || tabParam === 'cpp')) { await loadDraft(draftParam); }
+        else if (tabParam && ['publish', 'scratch', 'python', 'cpp'].indexOf(tabParam) >= 0) { showTab(tabParam); }
+        else if (qs.get('type') === 'python' || qs.get('type') === 'cpp') { showTab('publish'); }
+    })();
+    </script>
 </body>
 </html>

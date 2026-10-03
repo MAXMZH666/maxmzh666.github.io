@@ -51,8 +51,6 @@ async function renderSubHeader() {
     var map = {
         'community-home.html': 'home',
         'community.html': 'works',
-        'community-discover.html': 'discover',
-        'community-tasks.html': 'tasks',
         'community-shop.html': 'shop',
         'community-contests.html': 'contests',
         'community-contest.html': 'contests',
@@ -62,9 +60,7 @@ async function renderSubHeader() {
         'community-studio.html': 'studios',
         'community-studio-new.html': 'studios',
         'community-publish.html': 'publish',
-        'community-code.html': 'code',
-        'community-rank.html': 'rank',
-        'community-notify.html': 'notify',
+        'community-feed.html': 'feed',
         'community-user.html': 'mine',
         'community-auth.html': 'auth',
         'community-forum.html': 'forum',
@@ -134,9 +130,9 @@ async function renderSubHeader() {
                     .select('id', { count: 'exact', head: true })
                     .eq('user_id', p.id).eq('is_read', false);
                 var n = r.count || 0;
-                bellEl.innerHTML = '🔔 通知' + (n > 0 ? '<span class="bell-badge">' + (n > 99 ? '99+' : n) + '</span>' : '');
+                bellEl.innerHTML = '💬 动态' + (n > 0 ? '<span class="bell-badge">' + (n > 99 ? '99+' : n) + '</span>' : '');
                 bellEl.style.display = '';
-            } catch (e) { bellEl.innerHTML = '🔔 通知'; bellEl.style.display = ''; }
+            } catch (e) { bellEl.innerHTML = '💬 动态'; bellEl.style.display = ''; }
         }
     }
 }

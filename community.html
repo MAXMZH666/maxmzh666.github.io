@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="MAXMZH 游戏社区：分享你的 Scratch 作品，在线试玩、评论、点赞。">
+    <meta name="description" content="MAX社区：分享你的 Scratch 作品，在线试玩、评论、点赞。">
     <meta name="theme-color" content="#0b0b0e">
-    <meta property="og:title" content="MAXMZH - 游戏社区">
+    <meta property="og:title" content="MAXMZH - MAX社区">
     <meta property="og:type" content="website">
     <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
-    <title>MAXMZH - 游戏社区</title>
+    <title>MAXMZH - MAX社区</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="manifest" href="manifest.json">
@@ -37,7 +37,7 @@
     </header>
     <div class="sub-header">
         <div class="sub-header-inner">
-            <a class="sub-brand" href="community-home.html">🎮 <span>游戏社区</span></a>
+            <a class="sub-brand" href="community-home.html">🎮 <span>MAX社区</span></a>
             <nav class="sub-links" aria-label="社区导航">
                 <a href="community-home.html" data-sub="home">首页</a>
                 <a href="community.html" data-sub="works">作品</a>
@@ -80,6 +80,11 @@
                 <div class="card-grid" id="feat-grid"></div>
             </div>
 
+            <div id="random-wrap">
+                <h2 class="feat-title">🎲 随机发现 <button class="btn btn-ghost btn-sm" id="random-btn" type="button">换一批</button></h2>
+                <div class="card-grid" id="random-grid"><p class="works-note">加载中…</p></div>
+            </div>
+
             <h2 class="feat-title" id="list-title">全部作品</h2>
             <p id="works-note" class="works-note">加载中…</p>
             <div class="card-grid" id="works-grid"></div>
@@ -103,8 +108,54 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003i"></script>
+    <script src="js/community.js?v=20261003m"></script>
     <script>
+    /* ===== 随机发现（原发现页融合）：展示6个随机作品卡片，含详情 ===== */
+    var _randomPool = [];
+    async function renderRandom() {
+        var grid = document.getElementById('random-grid');
+        if (!grid) return;
+        try {
+            if (!_randomPool.length) {
+                var r = await sb.from('works').select('id,title,cover_url,author_id,category,views,work_type,created_at').limit(200);
+                _randomPool = r.data || [];
+            }
+            if (!_randomPool.length) { grid.innerHTML = '<p class="works-note">还没有作品。</p>'; return; }
+            var pool = _randomPool.slice();
+            var picked = [];
+            while (picked.length < 6 && pool.length) {
+                picked.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+            }
+            var nameMap = {};
+            try {
+                var pr = await sb.from('profiles').select('id,username').in('id', picked.map(function (w) { return w.author_id; }));
+                (pr.data || []).forEach(function (p) { nameMap[p.id] = p.username; });
+            } catch (e) {}
+            var likeMap = {};
+            try {
+                var lr = await sb.from('likes').select('work_id').in('work_id', picked.map(function (w) { return w.id; }));
+                (lr.data || []).forEach(function (l) { likeMap[l.work_id] = (likeMap[l.work_id] || 0) + 1; });
+            } catch (e) {}
+            grid.innerHTML = picked.map(function (w) {
+                var cover = w.cover_url
+                    ? '<img src="' + esc(w.cover_url) + '" alt="' + esc(w.title) + '" loading="lazy" decoding="async">'
+                    : '<span class="monogram">' + esc((w.title || '游').charAt(0)) + '</span>';
+                return '<a class="card" href="community-play.html?id=' + w.id + '">' +
+                    '<div class="card-cover">' + cover + '</div>' +
+                    '<div class="card-body"><h3>' + esc(w.title) + '</h3>' +
+                    '<p>' + esc(nameMap[w.author_id] || '未知') + ' · 👁 ' + (w.views || 0) + ' · ❤ ' + (likeMap[w.id] || 0) + '</p>' +
+                    '<div class="card-tags">' + typeBadge(workTypeOf(w)) +
+                    (w.category ? '<span class="tag blue">' + esc(w.category) + '</span>' : '') + '</div>' +
+                    '</div></a>';
+            }).join('');
+        } catch (e) { grid.innerHTML = '<p class="works-note">加载失败</p>'; }
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+        var rb = document.getElementById('random-btn');
+        if (rb) rb.addEventListener('click', renderRandom);
+        renderRandom();
+    });
+
     var state = { q: '', cat: '全部', type: 'all', sort: 'new' };
     /* 支持从发现页带参数跳转：?cat=游戏 / ?type=python */
     try {

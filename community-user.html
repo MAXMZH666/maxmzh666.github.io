@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="MAXMZH 游戏社区用户主页。">
+    <meta name="description" content="MAX社区用户主页。">
     <meta name="theme-color" content="#0b0b0e">
     <meta property="og:title" content="MAXMZH - 社区用户">
     <meta property="og:type" content="website">
@@ -37,20 +37,16 @@
     </header>
     <div class="sub-header">
         <div class="sub-header-inner">
-            <a class="sub-brand" href="community-home.html">🎮 <span>游戏社区</span></a>
+            <a class="sub-brand" href="community-home.html">🎮 <span>MAX社区</span></a>
             <nav class="sub-links" aria-label="社区导航">
                 <a href="community-home.html" data-sub="home">首页</a>
                 <a href="community.html" data-sub="works">作品</a>
-                <a href="community-discover.html" data-sub="discover">🔍 发现</a>
-                <a href="community-tasks.html" data-sub="tasks">📋 任务</a>
-                <a href="community-shop.html" data-sub="shop">🛍️ 商城</a>
+                <a href="community-shop.html" data-sub="shop">🎁 任务商城</a>
                 <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
                 <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
                 <a href="community-studios.html" data-sub="studios">🏢 工作室</a>
-                <a href="community-publish.html" data-sub="publish">发布作品</a>
-                <a href="community-code.html" data-sub="code">💻 在线编程</a>
-                <a href="community-rank.html" data-sub="rank">🏆 排行榜</a>
-                <a href="community-notify.html" data-sub="notify" id="sub-bell" style="display:none">🔔 通知</a>
+                <a href="community-publish.html" data-sub="publish">🚀 发布</a>
+                <a href="community-feed.html" data-sub="feed" id="sub-bell">💬 动态</a>
                 <span id="sub-auth"><a href="community-auth.html">登录</a></span>
             </nav>
         </div>
@@ -79,7 +75,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003i"></script>
+    <script src="js/community.js?v=20261003m"></script>
     <script>
     (async function () {
         await renderSubHeader();
@@ -92,7 +88,7 @@
         }
         if (!uid) { wrap.innerHTML = '<p class="works-note">用户不存在。<a href="community.html">返回社区</a></p>'; return; }
         try {
-            var pr = await sb.from('profiles').select('username,created_at,avatar_url,bio').eq('id', uid).single();
+            var pr = await sb.from('profiles').select('username,created_at,avatar_url,bio,background_url').eq('id', uid).single();
             if (pr.error || !pr.data) throw new Error('用户不存在');
             var works = (await sb.from('works').select('id,title,cover_url,created_at,category,views,work_type')
                 .eq('author_id', uid).order('created_at', { ascending: false })).data || [];
@@ -216,11 +212,12 @@
             }
             wrap.innerHTML =
                 '<p class="article-back"><a href="community.html">← 返回社区</a></p>' +
+                '<div class="profile-bg-wrap" id="profile-head">' +
                 '<div style="display:flex;gap:16px;align-items:center;margin-bottom:8px">' +
                 (pr.data.avatar_url ? '<img src="' + esc(pr.data.avatar_url) + '" alt="头像" id="u-avatar" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--border,rgba(255,255,255,.12))">' : '') +
                 '<div><h1 class="section-title" style="margin:0"><span id="u-title"></span>' + esc(pr.data.username) + '<span id="u-badges"></span></h1>' +
                 (pr.data.bio ? '<p class="section-sub" style="margin:4px 0 0">' + esc(pr.data.bio) + '</p>' : '') + '</div></div>' +
-                (isSelf ? '<p><a class="btn btn-blue" href="community-profile-edit.html">✏️ 编辑个人资料</a></p>' : '') +
+                (isSelf ? '<p><a class="btn btn-blue" href="community-profile-edit.html">✏️ 编辑个人资料</a></p></div>' : '</div>') +
                 '<p class="stat-line">加入于 ' + fmtDate(pr.data.created_at) +
                 ' · 作品 ' + works.length + ' · 获赞 ' + likes + ' · 总浏览 ' + views +
                 ' · 关注 ' + followingCount + ' · 粉丝 ' + followerCount + '</p>' +
@@ -246,6 +243,69 @@
                     }).join('') + '</div>'
                     : '<p class="works-note">TA 还没有发布作品。</p>') +
                 draftHtml + favHtml + portfolioHtml;
+            /* 个人背景 */
+            function applyBg(bg) {
+                var head = document.getElementById('profile-head');
+                if (!head) return;
+                head.classList.remove('animated-bg-nebula', 'animated-bg-aurora', 'animated-bg-cyber');
+                head.style.background = '';
+                if (!bg) return;
+                if (bg.indexOf('animated:') === 0) {
+                    head.classList.add('animated-bg-' + bg.slice(9));
+                } else {
+                    head.style.background = bg;
+                }
+            }
+            applyBg(pr.data.background_url);
+            if (isSelf) {
+                var bgBtnHtml = '<p><button class="btn btn-ghost" id="change-bg-btn">🎨 换背景</button></p>';
+                var editBtn = document.querySelector('a[href="community-profile-edit.html"]');
+                if (editBtn && editBtn.parentNode) editBtn.parentNode.insertAdjacentHTML('afterend', bgBtnHtml);
+                document.getElementById('change-bg-btn').addEventListener('click', openBgPicker);
+            }
+            async function openBgPicker() {
+                var modalId = 'bg-picker-modal';
+                var oldM = document.getElementById(modalId);
+                if (oldM) oldM.remove();
+                var mHtml = '<div class="modal-backdrop" id="' + modalId + '" style="display:flex">' +
+                    '<div class="modal" style="max-width:520px"><h3>🎨 选择背景</h3>' +
+                    '<div id="bg-options"><p class="works-note">加载中…</p></div>' +
+                    '<div class="modal-actions"><button class="btn" id="bg-cancel" type="button">关闭</button></div></div></div>';
+                document.body.insertAdjacentHTML('beforeend', mHtml);
+                var modal = document.getElementById(modalId);
+                document.getElementById('bg-cancel').addEventListener('click', function () { modal.remove(); });
+                modal.addEventListener('click', function (e) { if (e.target === modal) modal.remove(); });
+                /* 默认 + 已购背景 */
+                var opts = [{ name: '默认', data: '' }];
+                try {
+                    var ir = await sb.from('shop_items').select('id,name,item_data,price').eq('item_type', 'background').eq('is_active', true);
+                    var items = ir.data || [];
+                    var ur = await sb.from('user_items').select('item_id').eq('user_id', uid);
+                    var ownedIds = {};
+                    (ur.data || []).forEach(function (r) { ownedIds[r.item_id] = 1; });
+                    items.forEach(function (it) {
+                        if (it.item_data && (ownedIds[it.id] || it.price === 0)) opts.push({ name: it.name, data: it.item_data });
+                    });
+                } catch (e) {}
+                var cur = pr.data.background_url || '';
+                document.getElementById('bg-options').innerHTML = opts.map(function (o) {
+                    var cls = 'bg-option' + (o.data === cur ? ' selected' : '');
+                    var style = o.data.indexOf('animated:') === 0
+                        ? 'class="bg-option animated-bg-' + o.data.slice(9) + (o.data === cur ? ' selected' : '') + '"'
+                        : 'class="' + cls + '" style="background:' + (o.data || 'var(--surface-2)') + '"';
+                    return '<div ' + style + ' data-bg="' + esc(o.data) + '"><span class="bg-name">' + esc(o.name) + '</span></div>';
+                }).join('') + '<p class="form-hint">更多背景可在 <a href="community-shop.html#shop">任务商城</a> 购买</p>';
+                modal.querySelectorAll('.bg-option').forEach(function (el) {
+                    el.addEventListener('click', async function () {
+                        var bg = el.getAttribute('data-bg');
+                        var r = await sb.from('profiles').update({ background_url: bg || null }).eq('id', uid);
+                        if (r.error) { alert('设置失败：' + r.error.message); return; }
+                        pr.data.background_url = bg;
+                        applyBg(bg);
+                        modal.remove();
+                    });
+                });
+            }
             /* 商城装备展示 */
             try {
                 injectFrameCSS();

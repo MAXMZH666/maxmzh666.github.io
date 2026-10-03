@@ -147,47 +147,198 @@
           window.onerror = null;
         };
       })();</script><div id="app"></div><script src="js/pentapod/vendors~addon-settings~credits~editor~embed~fullscreen~player.a9c21474df6530cc7bcb.js"></script><script src="js/pentapod/vendors~editor~embed~fullscreen~player.ca27ef043ac01d536645.js"></script><script src="js/pentapod/addon-settings~addons~editor~fullscreen~player.d368c040af8d26993a1d.js"></script><script src="js/pentapod/addon-settings~editor~embed~fullscreen~player.ae55ed6b87fd5b016b19.js"></script><script src="js/pentapod/editor.c7aca82a8bf323a87f74.js"></script><script>
-/* MAXMZH 社区工具栏：保存草稿 / 发布到社区（注入，无需重新构建） */
+/* MAXMZH 社区：编辑器增强（注入，无需重新构建）
+   - 文件菜单内注入「保存草稿 / 发布到社区」
+   - 隐藏顶部「查看作品页面」「TurboWarp 反馈」按钮
+   - 新标签页独立模式：直连 Supabase 保存草稿/发布 + 每90秒自动保存 */
 (function () {
+    'use strict';
     var EMBEDDED = window.parent !== window;
-    function toast(msg) {
+    var SITE = 'https://maxmzh666.github.io';
+    var SB_URL = 'https://xkvpzxxtcnocofnsezpy.supabase.co';
+    var SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhrdnB6eHh0Y25vY29mbnNlenB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5MTY4MzQsImV4cCI6MjEwNjQ5MjgzNH0.zTpvyEsutA9hV_UIg36g5owBRnxdHaI-sy_fLUsu6ec';
+    var sb = null, sbReady = null;
+
+    function toast(msg, ms) {
         var t = document.createElement('div');
         t.textContent = msg;
         t.style.cssText = 'position:fixed;left:50%;bottom:90px;transform:translateX(-50%);' +
             'background:#222;color:#fff;padding:10px 18px;border-radius:8px;z-index:99999;font-size:14px;' +
             'box-shadow:0 4px 16px rgba(0,0,0,.4);max-width:80vw;text-align:center;';
         document.body.appendChild(t);
-        setTimeout(function () { t.remove(); }, 2600);
+        setTimeout(function () { t.remove(); }, ms || 2600);
     }
-    function send(type) {
-        if (EMBEDDED) {
-            try { window.parent.postMessage({ type: type }, '*'); } catch (e) {}
-        } else {
-            toast('请在社区「在线编程」页内打开编辑器，才能使用保存/发布');
+    function loadScript(src) {
+        return new Promise(function (resolve, reject) {
+            var s = document.createElement('script');
+            s.src = src; s.onload = resolve; s.onerror = reject;
+            document.head.appendChild(s);
+        });
+    }
+    function ensureSb() {
+        if (sbReady) return sbReady;
+        sbReady = (async function () {
+            if (!window.supabase) await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
+            sb = window.supabase.createClient(SB_URL, SB_ANON);
+            return sb;
+        })();
+        return sbReady;
+    }
+    async function getSb3() {
+        var store = window.ReduxStore;
+        if (!store || !store.getState) throw new Error('编辑器还没准备好，稍后再试');
+        var sg = store.getState().scratchGui;
+        var vm = sg && sg.vm;
+        if (!vm || typeof vm.saveProjectSb3 !== 'function') throw new Error('编辑器还没准备好，稍后再试');
+        var buffer = await vm.saveProjectSb3('arraybuffer');
+        var title = (sg && sg.projectTitle) || '未命名作品';
+        return { buffer: buffer, title: title };
+    }
+    async function requireUser() {
+        await ensureSb();
+        var r = await sb.auth.getUser();
+        var u = r.data && r.data.user;
+        if (!u) {
+            toast('请先登录社区账号', 2000);
+            setTimeout(function () {
+                location.href = SITE + '/community-auth.html?next=' + encodeURIComponent(location.href);
+            }, 800);
+            throw new Error('未登录');
+        }
+        return u;
+    }
+    async function uploadSb3(path, buffer) {
+        var blob = buffer instanceof Blob ? buffer : new Blob([buffer], { type: 'application/octet-stream' });
+        var s = await sb.storage.from('sb3').createSignedUploadUrl(path);
+        if (s.error) throw s.error;
+        var resp = await fetch(s.data.signedUrl, {
+            method: 'PUT', body: blob,
+            headers: { 'Content-Type': 'application/octet-stream' }
+        });
+        if (!resp.ok) throw new Error('上传失败(' + resp.status + ')');
+        return sb.storage.from('sb3').getPublicUrl(path).data.publicUrl;
+    }
+    var draftKey = 'mmc_draft_scratch_id';
+    async function saveDraft(auto) {
+        try {
+            var u = await requireUser();
+            if (!auto) toast('正在保存草稿…', 1500);
+            var got = await getSb3();
+            var url = await uploadSb3('drafts/' + u.id + '/' + Date.now() + '.sb3', got.buffer);
+            var row = {
+                user_id: u.id, work_type: 'scratch',
+                title: got.title || '未命名草稿',
+                sb3_url: url, updated_at: new Date().toISOString()
+            };
+            var did = null;
+            try { did = localStorage.getItem(draftKey); } catch (e) {}
+            if (did) {
+                var ur = await sb.from('drafts').update(row).eq('id', did).eq('user_id', u.id);
+                if (ur.error) throw ur.error;
+            } else {
+                var ir = await sb.from('drafts').insert(row).select('id').single();
+                if (ir.error) throw ir.error;
+                did = ir.data.id;
+                try { localStorage.setItem(draftKey, did); } catch (e) {}
+            }
+            setAutosaveLabel(auto ? true : false);
+            toast(auto ? '☁️ 已自动保存 ' + new Date().toLocaleTimeString() : '草稿已保存', 2000);
+        } catch (err) {
+            if (String(err.message) !== '未登录') toast('保存失败：' + err.message, 3000);
         }
     }
+    async function publishToCommunity() {
+        if (EMBEDDED) { /* 内嵌模式：交给父页面处理 */
+            try { window.parent.postMessage({ type: 'MMC_TOOLBAR_PUBLISH' }, '*'); } catch (e) {}
+            return;
+        }
+        try {
+            var u = await requireUser();
+            toast('正在获取作品并上传…', 2000);
+            var got = await getSb3();
+            var url = await uploadSb3(u.id + '/' + Date.now() + '.sb3', got.buffer);
+            location.href = SITE + '/community-publish.html?sb3=' + encodeURIComponent(url) +
+                '&title=' + encodeURIComponent(got.title || '未命名作品');
+        } catch (err) {
+            if (String(err.message) !== '未登录') toast('发布失败：' + err.message + '，可改用文件 → 保存到电脑后手动上传', 4000);
+        }
+    }
+    function setAutosaveLabel(show) {
+        var el = document.getElementById('mmc-autosave');
+        if (el) {
+            el.textContent = show ? '☁️ 已自动保存 ' + new Date().toLocaleTimeString() : '☁️ 自动保存已开启';
+            el.style.display = 'block';
+        }
+    }
+
+    /* ---- 注入文件菜单项 + 隐藏顶部按钮 ---- */
+    var menuDone = false;
+    function menuItemStyle(el) {
+        el.style.cssText = 'padding:8px 16px;cursor:pointer;font-size:14px;color:#fff;' +
+            'border-top:1px solid rgba(255,255,255,.12);white-space:nowrap;';
+        el.onmouseenter = function () { el.style.background = 'rgba(255,255,255,.12)'; };
+        el.onmouseleave = function () { el.style.background = ''; };
+    }
+    function tryInjectMenu() {
+        /* TurboWarp 文件下拉菜单：找到包含「保存到电脑」的菜单容器 */
+        var candidates = document.querySelectorAll('[class*="menu"], [role="menu"], ul');
+        for (var i = 0; i < candidates.length; i++) {
+            var m = candidates[i];
+            if (m.getAttribute('data-mmc-injected')) continue;
+            var txt = m.textContent || '';
+            if (txt.indexOf('保存到电脑') === -1 && txt.indexOf('保存到文件') === -1) continue;
+            if (m.querySelector('[data-mmc-item]')) continue;
+            m.setAttribute('data-mmc-injected', '1');
+            var save = document.createElement('div');
+            save.setAttribute('data-mmc-item', '1');
+            save.textContent = '💾 保存草稿到社区';
+            menuItemStyle(save);
+            save.addEventListener('click', function (ev) { ev.stopPropagation(); saveDraft(false); });
+            var pub = document.createElement('div');
+            pub.setAttribute('data-mmc-item', '1');
+            pub.textContent = '📤 发布到社区';
+            menuItemStyle(pub);
+            pub.addEventListener('click', function (ev) { ev.stopPropagation(); publishToCommunity(); });
+            m.appendChild(save);
+            m.appendChild(pub);
+        }
+    }
+    function hideTopButtons() {
+        var btns = document.querySelectorAll('button, a');
+        for (var i = 0; i < btns.length; i++) {
+            var t = (btns[i].textContent || '').trim();
+            if (t === '查看作品页面' || t === 'TurboWarp 反馈' || t.indexOf('TurboWarp 反馈') === 0) {
+                btns[i].style.display = 'none';
+            }
+        }
+    }
+    var obs = new MutationObserver(function () {
+        tryInjectMenu();
+        hideTopButtons();
+    });
+
     function build() {
-        if (document.getElementById('mmc-toolbar')) return;
-        var bar = document.createElement('div');
-        bar.id = 'mmc-toolbar';
-        bar.style.cssText = 'position:fixed;right:12px;bottom:12px;z-index:99999;display:flex;gap:8px;';
-        function btn(label, title, type) {
-            var b = document.createElement('button');
-            b.textContent = label;
-            b.title = title;
-            b.style.cssText = 'border:0;border-radius:20px;padding:10px 16px;font-size:14px;cursor:pointer;' +
-                'background:#ffcc00;color:#222;font-weight:bold;box-shadow:0 4px 12px rgba(0,0,0,.35);';
-            b.addEventListener('click', function () { send(type); });
-            return b;
+        if (document.getElementById('mmc-autosave')) return;
+        /* 自动保存状态 pill（左下角） */
+        var pill = document.createElement('div');
+        pill.id = 'mmc-autosave';
+        pill.textContent = '☁️ 自动保存已开启';
+        pill.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:99999;' +
+            'background:rgba(0,0,0,.55);color:#fff;font-size:12px;padding:6px 12px;border-radius:14px;' +
+            'pointer-events:none;';
+        document.body.appendChild(pill);
+        if (document.body) obs.observe(document.body, { childList: true, subtree: true });
+        tryInjectMenu();
+        hideTopButtons();
+        /* 每 90 秒自动保存（仅新标签页独立模式；内嵌时由父页面负责） */
+        if (!EMBEDDED) {
+            setInterval(function () { saveDraft(true); }, 90000);
         }
-        bar.appendChild(btn('💾 保存草稿', '保存到社区草稿箱（不发布）', 'MMC_TOOLBAR_SAVE'));
-        bar.appendChild(btn('📤 发布到社区', '获取作品并跳转到发布页', 'MMC_TOOLBAR_PUBLISH'));
-        document.body.appendChild(bar);
     }
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', build);
     } else { build(); }
-    setTimeout(build, 3000); /* 兜底：编辑器 DOM 晚加载时再试一次 */
+    setTimeout(build, 3000);
 })();
 </script>
 </body></html>
