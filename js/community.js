@@ -142,12 +142,24 @@ function authRequiredRedirect() {
 async function ensureProfile() {
     var u = await currentUser();
     if (!u) return null;
+    /* 已有档案直接返回，绝不覆盖用户改过的昵称（修：以前每次登录都 upsert 重置昵称） */
+    try {
+        var ex = await window.sb.from('profiles').select('id,username').eq('id', u.id).maybeSingle();
+        if (ex.data) return ex.data;
+    } catch (e) {}
     var base = String((u.user_metadata && u.user_metadata.username) || u.email.split('@')[0] || 'user').slice(0, 20);
     var candidates = [base, base + '_' + u.id.slice(0, 4)];
     for (var i = 0; i < candidates.length; i++) {
+        /* ignoreDuplicates：只插入不存在的行，已有行不碰 */
         var r = await window.sb.from('profiles').upsert(
-            { id: u.id, username: candidates[i] }, { onConflict: 'id' });
-        if (!r.error) return { id: u.id, username: candidates[i] };
+            { id: u.id, username: candidates[i] }, { onConflict: 'id', ignoreDuplicates: true });
+        if (!r.error) {
+            try {
+                var g = await window.sb.from('profiles').select('id,username').eq('id', u.id).single();
+                if (g.data) return g.data;
+            } catch (e2) {}
+            return { id: u.id, username: candidates[i] };
+        }
     }
     return { id: u.id, username: base };
 }
