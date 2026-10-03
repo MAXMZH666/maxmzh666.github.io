@@ -373,9 +373,20 @@
             hideTopButtons();
             if (++retryN >= 15) clearInterval(retryTimer);
         }, 2000);
-        /* 每 90 秒自动保存（仅新标签页独立模式；内嵌时由父页面负责） */
+        /* 自动保存（仅新标签页独立模式；内嵌时由父页面负责）
+           间隔可在社区「⚙️ 个人设置」里调整，存在 localStorage.mmc_autosave_interval */
         if (!EMBEDDED) {
-            setInterval(function () { saveDraft(true); }, 90000);
+            var AUTOSAVE_MS = 90000;
+            try {
+                var _ms = parseInt(localStorage.getItem('mmc_autosave_interval') || '90000', 10);
+                if (!isNaN(_ms) && _ms >= 0) AUTOSAVE_MS = _ms;
+            } catch (e) {}
+            if (AUTOSAVE_MS > 0) {
+                setInterval(function () { saveDraft(true); }, AUTOSAVE_MS);
+            } else {
+                var _pill = document.getElementById('mmc-autosave');
+                if (_pill) _pill.textContent = '⏸️ 自动保存已关闭';
+            }
         }
     }
     if (document.readyState === 'loading') {

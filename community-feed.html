@@ -24,6 +24,7 @@
         .feed-main { flex: 1; min-width: 0; }
         .feed-title { font-size: 1rem; font-weight: 600; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .feed-meta { font-size: .82rem; color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .notify-actions { margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
     </style>
 </head>
 <body>
@@ -49,7 +50,7 @@
             <a class="sub-brand" href="community-home.html">🎮 <span>MAX社区</span></a>
             <nav class="sub-links" aria-label="社区导航">
                 <a href="community-home.html" data-sub="home">首页</a>
-                <a href="community.html" data-sub="works">作品</a>
+                <a href="community.html" data-sub="works">🔍 发现</a>
                 <a href="community-shop.html" data-sub="shop">🎁 任务商城</a>
                 <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
                 <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
@@ -96,7 +97,7 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003o"></script>
+    <script src="js/community.js?v=20261003p"></script>
     <script src="js/scripts.js"></script>
     <script>
     (async function () {
@@ -167,18 +168,106 @@
                 var tq = await sb.from('forum_threads').select('id,title').in('id', tids);
                 (tq.data || []).forEach(function (t) { ttitles[t.id] = t.title; });
             }
+            /* 工作室相关：查工作室名 + 申请/邀请状态 */
+            var studioIds = Array.from(new Set(ns.map(function (n) { return n.studio_id; }).filter(Boolean)));
+            var studioNames = {};
+            if (studioIds.length) {
+                var sq = await sb.from('studios').select('id,name').in('id', studioIds);
+                (sq.data || []).forEach(function (x) { studioNames[x.id] = x.name; });
+            }
+            var reqMap = {}, invMap = {};
+            var reqIds = [], invIds = [];
+            ns.forEach(function (n) {
+                if ((n.type === 'studio_request' || n.type === 'studio_request_result') && n.ref_id) reqIds.push(n.ref_id);
+                if ((n.type === 'studio_invite' || n.type === 'studio_invite_result') && n.ref_id) invIds.push(n.ref_id);
+            });
+            if (reqIds.length) {
+                var rqq = await sb.from('studio_join_requests').select('id,status').in('id', reqIds);
+                (rqq.data || []).forEach(function (x) { reqMap[x.id] = x.status; });
+            }
+            if (invIds.length) {
+                var iqq = await sb.from('studio_invites').select('id,status').in('id', invIds);
+                (iqq.data || []).forEach(function (x) { invMap[x.id] = x.status; });
+            }
             wrap.innerHTML = ns.map(function (n) {
                 var who = esc(unames[n.from_user_id] || '有人');
                 var wt = n.work_id ? esc(wtitles[n.work_id] || '你的作品') : '';
                 var tt = n.thread_id ? esc(ttitles[n.thread_id] || '你的帖子') : '';
+                var cls = 'notify-item' + (n.is_read ? '' : ' unread');
+                var tm = '<div class="notify-time">' + fmtDate(n.created_at) + '</div>';
+                /* 入室申请（发给管理员）：消息内直接审批 */
+                if (n.type === 'studio_request') {
+                    var sname = esc(studioNames[n.studio_id] || '工作室');
+                    if (reqMap[n.ref_id] === 'pending') {
+                        return '<div class="' + cls + '"><div>📨 <b>' + who + '</b> 申请加入「' + sname + '」</div>' +
+                            '<div class="notify-actions">' +
+                            '<button class="btn btn-blue btn-sm" data-nreq-ok="' + n.ref_id + '">✅ 同意</button>' +
+                            '<button class="btn btn-sm" data-nreq-no="' + n.ref_id + '">❌ 拒绝</button>' +
+                            '<a class="btn btn-ghost btn-sm" href="community-studio.html?id=' + n.studio_id + '">查看工作室</a></div>' + tm + '</div>';
+                    }
+                    var rst = reqMap[n.ref_id];
+                    return '<a class="' + cls + '" href="community-studio.html?id=' + n.studio_id + '"><div>📨 ' + who +
+                        ' 的入室申请' + (rst === 'approved' ? '已通过' : rst === 'rejected' ? '已被拒绝' : '') +
+                        '（「' + sname + '」）</div>' + tm + '</a>';
+                }
+                /* 工作室邀请（发给被邀请人）：消息内直接接受/拒绝 */
+                if (n.type === 'studio_invite') {
+                    var iname = esc(studioNames[n.studio_id] || '工作室');
+                    if (invMap[n.ref_id] === 'pending') {
+                        return '<div class="' + cls + '"><div>✉️ <b>' + who + '</b> 邀请你加入工作室「' + iname + '」</div>' +
+                            '<div class="notify-actions">' +
+                            '<button class="btn btn-blue btn-sm" data-ninv-ok="' + n.ref_id + '">✅ 接受</button>' +
+                            '<button class="btn btn-sm" data-ninv-no="' + n.ref_id + '">❌ 拒绝</button>' +
+                            '<a class="btn btn-ghost btn-sm" href="community-studio.html?id=' + n.studio_id + '">先看看</a></div>' + tm + '</div>';
+                    }
+                    var ist = invMap[n.ref_id];
+                    return '<a class="' + cls + '" href="community-studio.html?id=' + n.studio_id + '"><div>✉️ ' + who +
+                        ' 曾邀请你加入「' + iname + '」(' + (ist === 'accepted' ? '已接受' : '已拒绝') + ')</div>' + tm + '</a>';
+                }
+                /* 申请结果（发给申请人） */
+                if (n.type === 'studio_request_result') {
+                    var rname = esc(studioNames[n.studio_id] || '工作室');
+                    var ok = reqMap[n.ref_id] === 'approved';
+                    return '<a class="' + cls + '" href="community-studio.html?id=' + n.studio_id + '"><div>' +
+                        (ok ? '🎉 你加入「' + rname + '」的申请<b>已通过</b>！' : '😞 你加入「' + rname + '」的申请未通过') +
+                        '</div>' + tm + '</a>';
+                }
+                /* 邀请结果（发给邀请人） */
+                if (n.type === 'studio_invite_result') {
+                    var vname = esc(studioNames[n.studio_id] || '工作室');
+                    return '<a class="' + cls + '" href="community-studio.html?id=' + n.studio_id + '"><div>🎉 ' + who +
+                        ' 接受了你的邀请，加入了「' + vname + '」</div>' + tm + '</a>';
+                }
                 var text, link;
                 if (n.type === 'like') { text = who + ' 点赞了你的作品《' + wt + '》'; link = 'community-play.html?id=' + n.work_id; }
                 else if (n.type === 'comment') { text = who + ' 评论了你的作品《' + wt + '》'; link = 'community-play.html?id=' + n.work_id; }
                 else if (n.type === 'reply') { text = who + ' 回复了你的帖子《' + tt + '》'; link = 'community-thread.html?id=' + n.thread_id; }
                 else { text = who + ' 关注了你'; link = 'community-user.html?id=' + n.from_user_id; }
-                return '<a class="notify-item' + (n.is_read ? '' : ' unread') + '" href="' + link + '">' +
-                    '<div>' + text + '</div><div class="notify-time">' + fmtDate(n.created_at) + '</div></a>';
+                return '<a class="' + cls + '" href="' + link + '">' +
+                    '<div>' + text + '</div>' + tm + '</a>';
             }).join('');
+            /* 消息内审批/应答按钮 */
+            wrap.querySelectorAll('[data-nreq-ok],[data-nreq-no]').forEach(function (b) {
+                b.addEventListener('click', async function () {
+                    var rid = b.getAttribute('data-nreq-ok') || b.getAttribute('data-nreq-no');
+                    var approve = !!b.getAttribute('data-nreq-ok');
+                    var r = await sb.rpc('handle_join_request', { p_request_id: rid, p_approve: approve });
+                    if (r.error) { alert('操作失败：' + r.error.message); return; }
+                    if (String(r.data || '').indexOf('rejected:') === 0) alert('⚠️ 对方已加入其他工作室，申请已自动拒绝');
+                    loadNotify();
+                });
+            });
+            wrap.querySelectorAll('[data-ninv-ok],[data-ninv-no]').forEach(function (b) {
+                b.addEventListener('click', async function () {
+                    var iid = b.getAttribute('data-ninv-ok') || b.getAttribute('data-ninv-no');
+                    var accept = !!b.getAttribute('data-ninv-ok');
+                    var r = await sb.rpc('handle_studio_invite', { p_invite_id: iid, p_accept: accept });
+                    if (r.error) { alert('操作失败：' + r.error.message); return; }
+                    if (String(r.data || '').indexOf('rejected:') === 0) alert('⚠️ 你已加入其他工作室，无法接受该邀请');
+                    else if (accept) alert('🎉 已加入工作室！');
+                    loadNotify();
+                });
+            });
             var unreadIds = ns.filter(function (n) { return !n.is_read; }).map(function (n) { return n.id; });
             if (unreadIds.length) {
                 await sb.from('notifications').update({ is_read: true }).in('id', unreadIds);

@@ -64,7 +64,7 @@
             <a class="sub-brand" href="community-home.html">🎮 <span>MAX社区</span></a>
             <nav class="sub-links" aria-label="社区导航">
                 <a href="community-home.html" data-sub="home">首页</a>
-                <a href="community.html" data-sub="works">作品</a>
+                <a href="community.html" data-sub="works">🔍 发现</a>
                 <a href="community-shop.html" data-sub="shop">🎁 任务商城</a>
                 <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
                 <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
@@ -99,13 +99,13 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003o"></script>
+    <script src="js/community.js?v=20261003p"></script>
     <script>
     function getId() {
         var m = location.search.match(/[?&]id=([^&]+)/);
         return m ? m[1] : null;
     }
-    var ROLE_TEXT = { owner: '市长', vice: '副市长', admin: '管理员', member: '成员' };
+    var ROLE_TEXT = { owner: '室长', vice: '副室长', admin: '管理员', member: '成员' };
 
     async function load() {
         var sid = getId();
@@ -155,10 +155,11 @@
         var html = coverBanner + '<div class="studio-hero"><div class="avatar">' + av + '</div><div>' +
             '<h1>' + esc(s.name) + '</h1>' +
             (s.description ? '<div class="desc">' + esc(s.description) + '</div>' : '') +
-            '<div class="case-meta" style="margin-top:6px">👥 ' + members.length + ' 位成员 · 🎮 ' + swList.length + ' 件作品' +
+            '<div class="case-meta" style="margin-top:6px">👥 ' + members.length + ' 位成员 · 🎮 ' + swList.length + ' 件作品 · 🏷️ ' + esc(s.category || '综合') +
             (myRole ? ' · 我的身份：<span class="role-tag ' + myRole + '">' + ROLE_TEXT[myRole] + '</span>' : '') + '</div>' +
             '</div>' +
-            (canEdit ? '<div style="margin-top:8px"><button class="btn btn-ghost btn-sm" id="edit-studio-btn">✏️ 修改工作室信息</button></div>' : '') +
+            '<div style="margin-top:8px"><button class="btn btn-ghost btn-sm" id="share-studio-btn">🔗 分享工作室</button>' +
+            (canEdit ? ' <button class="btn btn-ghost btn-sm" id="edit-studio-btn">✏️ 修改工作室信息</button>' : '') + '</div>' +
             '</div>';
 
         /* 成员区 */
@@ -179,6 +180,26 @@
                     ' <span class="role-tag ' + m.role + '">' + ROLE_TEXT[m.role] + '</span>' + appt + rm + '</span>';
             }).join('') + '</div>';
 
+        /* 入室申请（管理员可见） */
+        if (isManager) {
+            var prq = await sb.from('studio_join_requests').select('id,user_id,message,created_at')
+                .eq('studio_id', sid).eq('status', 'pending').order('created_at');
+            var reqs = (prq.data || []);
+            if (reqs.length) {
+                var rqUids = reqs.map(function (x) { return x.user_id; });
+                var rqNames = {};
+                var rqp = await sb.from('profiles').select('id,username').in('id', rqUids);
+                (rqp.data || []).forEach(function (p) { rqNames[p.id] = p.username; });
+                html += '<h2 class="sec-title">📥 入室申请（' + reqs.length + '）</h2><div class="member-list">' +
+                    reqs.map(function (q) {
+                        return '<span class="member-chip">' + esc(rqNames[q.user_id] || '未知') +
+                            (q.message ? '：' + esc(q.message) : '') +
+                            ' <button class="btn btn-blue btn-sm" data-req-ok="' + q.id + '">✅ 同意</button>' +
+                            ' <button class="btn btn-sm" data-req-no="' + q.id + '">❌ 拒绝</button></span>';
+                    }).join('') + '</div>';
+            }
+        }
+
         /* 公告区 */
         var annHtml = '<h2 class="sec-title">📢 工作室公告</h2><div id="announce-list"><p class="works-note">加载中…</p></div>';
         if (isManager) {
@@ -188,12 +209,12 @@
         }
         html += annHtml;
 
-        /* 管理：邀请成员 */
+        /* 管理：邀请成员（走消息确认流） */
         if (isManager) {
             html += '<div class="manage-box"><b>✉️ 邀请成员</b><br>' +
                 '<input type="text" id="invite-username" placeholder="输入用户名">' +
-                '<button class="btn btn-blue" id="invite-btn">邀请加入</button>' +
-                '<p class="form-hint">输入对方的用户名即可将其加入工作室。</p></div>';
+                '<button class="btn btn-blue" id="invite-btn">发送邀请</button>' +
+                '<p class="form-hint">邀请会发送到对方的消息（💬 动态 → 通知）中，对方确认后才能加入。</p></div>';
         }
         if (me && isMember && myRole !== 'owner') {
             html += '<p style="margin-top:10px"><button class="btn" id="leave-btn">退出工作室</button></p>';
@@ -225,7 +246,18 @@
                 html += '<p class="works-note">你还没有可添加的作品，先去<a href="community-publish.html">发布作品</a>吧。</p>';
             }
         } else if (!me) {
-            html += '<p class="works-note"><a href="community-auth.html">登录</a>后可加入工作室。</p>';
+            html += '<p class="works-note"><a href="community-auth.html">登录</a>后可申请加入工作室。</p>';
+        }
+        if (me && !isMember) {
+            var qr = await sb.from('studio_join_requests').select('id,status')
+                .eq('studio_id', sid).eq('user_id', me.id).order('created_at', { ascending: false }).limit(1);
+            var hasPending = qr.data && qr.data[0] && qr.data[0].status === 'pending';
+            html += hasPending
+                ? '<p class="works-note">📨 入室申请已发送，正在等待管理员审批…</p>'
+                : '<div class="manage-box"><b>📨 申请加入工作室</b><br>' +
+                  '<input type="text" id="apply-msg" maxlength="100" placeholder="给管理员留句话（选填）" style="width:100%;max-width:380px">' +
+                  '<div style="margin-top:8px"><button class="btn btn-blue" id="apply-btn">发送申请</button></div>' +
+                  '<p class="form-hint">管理员会在消息中审批，同意后你即可加入。</p></div>';
         }
 
         wrap.innerHTML = html;
@@ -238,14 +270,46 @@
             var ur = await sb.from('profiles').select('id').eq('username', uname).limit(1);
             if (!ur.data || !ur.data.length) { alert('找不到该用户'); return; }
             var uid = ur.data[0].id;
-            var r = await sb.from('studio_members').insert({ studio_id: sid, user_id: uid, role: 'member' });
-            if (r.error) {
-                var em = r.error.message || '';
-                if (/只能/.test(em)) em = '⚠️ ' + em + '：每人只能加入一个工作室';
-                alert('邀请失败：' + em); return;
+            if (uid === me.id) { alert('不能邀请自己'); return; }
+            var r = await sb.rpc('invite_to_studio', { p_studio_id: sid, p_invitee_id: uid });
+            if (r.error) { alert('邀请失败：' + r.error.message); return; }
+            alert('✅ 邀请已发送到 ' + uname + ' 的消息中，对方确认后即可加入！');
+            document.getElementById('invite-username').value = '';
+        });
+
+        /* 分享工作室 */
+        var shareBtn = document.getElementById('share-studio-btn');
+        if (shareBtn) shareBtn.addEventListener('click', async function () {
+            var url = location.origin + location.pathname + '?id=' + sid;
+            var sdata = { title: s.name + ' - MAX社区工作室', text: s.description || '', url: url };
+            if (navigator.share) { try { await navigator.share(sdata); } catch (e) {} }
+            else {
+                try { await navigator.clipboard.writeText(url); alert('✅ 工作室链接已复制，快分享给朋友吧！'); }
+                catch (e) { prompt('复制下面的链接分享给朋友：', url); }
             }
-            alert('已邀请 ' + uname + ' 加入！');
+        });
+
+        /* 发送入室申请 */
+        var applyBtn = document.getElementById('apply-btn');
+        if (applyBtn) applyBtn.addEventListener('click', async function () {
+            var msg = document.getElementById('apply-msg').value.trim();
+            var r = await sb.rpc('request_join_studio', { p_studio_id: sid, p_message: msg });
+            if (r.error) { alert('申请失败：' + r.error.message); return; }
+            alert('✅ 申请已发送，管理员会在消息中审批，通过后你即可加入！');
             load();
+        });
+
+        /* 审批入室申请 */
+        document.querySelectorAll('[data-req-ok],[data-req-no]').forEach(function (b) {
+            b.addEventListener('click', async function () {
+                var rid = b.getAttribute('data-req-ok') || b.getAttribute('data-req-no');
+                var approve = !!b.getAttribute('data-req-ok');
+                if (!confirm(approve ? '同意该成员加入工作室？' : '拒绝这条入室申请？')) return;
+                var r = await sb.rpc('handle_join_request', { p_request_id: rid, p_approve: approve });
+                if (r.error) { alert('操作失败：' + r.error.message); return; }
+                if (String(r.data || '').indexOf('rejected:') === 0) alert('⚠️ 对方已加入其他工作室，申请已自动拒绝');
+                else { alert(approve ? '✅ 已同意加入' : '已拒绝'); load(); }
+            });
         });
 
         /* 移除成员 */
@@ -265,11 +329,11 @@
                 var newRole = sel.value;
                 var cur = sel.getAttribute('data-cur');
                 if (newRole === cur) return;
-                /* 副市长只能有1个，管理员最多3个 */
+                /* 副室长只能有1个，管理员最多3个 */
                 if (newRole === 'vice') {
                     var hasVice = members.some(function (m) { return m.role === 'vice' && m.user_id !== uid; });
-                    if (hasVice) { alert('副市长只能有1位'); sel.value = cur; return; }
-                    if (myRole !== 'owner') { alert('只有市长可以任命副市长'); sel.value = cur; return; }
+                    if (hasVice) { alert('副室长只能有1位'); sel.value = cur; return; }
+                    if (myRole !== 'owner') { alert('只有室长可以任命副室长'); sel.value = cur; return; }
                 }
                 if (newRole === 'admin') {
                     var adminCount = members.filter(function (m) { return m.role === 'admin' && m.user_id !== uid; }).length;

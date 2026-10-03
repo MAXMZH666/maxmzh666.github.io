@@ -40,7 +40,7 @@
             <a class="sub-brand" href="community-home.html">🎮 <span>MAX社区</span></a>
             <nav class="sub-links" aria-label="社区导航">
                 <a href="community-home.html" data-sub="home">首页</a>
-                <a href="community.html" data-sub="works">作品</a>
+                <a href="community.html" data-sub="works">🔍 发现</a>
                 <a href="community-shop.html" data-sub="shop">🎁 任务商城</a>
                 <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
                 <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
@@ -65,6 +65,12 @@
                 <div class="form-group">
                     <label>简介</label>
                     <textarea id="f-desc" rows="4" maxlength="500" placeholder="介绍你们的团队、擅长方向等"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>类别</label>
+                    <select id="f-cat">
+                        <option>综合</option><option>游戏</option><option>动画</option><option>工具</option><option>音乐</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label>封面图（选填）</label>
@@ -92,7 +98,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003o"></script>
+    <script src="js/community.js?v=20261003p"></script>
     <script>
     (async function () {
         await renderSubHeader();
@@ -116,7 +122,8 @@
                 var ext = (coverFile.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
                 coverUrl = await uploadWithProgress('covers', 'studio/' + me.id + '_' + Date.now() + '.' + ext, coverFile, coverFile.type || 'image/jpeg', null);
             }
-            var r = await sb.from('studios').insert({ name: name, description: desc, cover_url: coverUrl, owner_id: me.id }).select('id').single();
+            var cat = document.getElementById('f-cat').value;
+            var r = await sb.from('studios').insert({ name: name, description: desc, category: cat, cover_url: coverUrl, owner_id: me.id }).select('id').single();
             if (r.error) {
                 var msg = r.error.message || '';
                 if (/只能创建|只能加入|已加入|已创建/.test(msg)) msg = '⚠️ ' + msg + '：每人只能拥有或加入一个工作室';

@@ -54,7 +54,7 @@
             <a class="sub-brand" href="community-home.html">🎮 <span>MAX社区</span></a>
             <nav class="sub-links" aria-label="社区导航">
                 <a href="community-home.html" data-sub="home">首页</a>
-                <a href="community.html" data-sub="works">作品</a>
+                <a href="community.html" data-sub="works">🔍 发现</a>
                 <a href="community-shop.html" data-sub="shop">🎁 任务商城</a>
                 <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
                 <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
@@ -71,6 +71,18 @@
             <h1 class="section-title">🏁 赛事中心</h1>
             <p class="section-sub">参加社区比赛，投稿作品、投票评选，前三名获得积分奖励（100/50/30）。</p>
             <p><a class="btn btn-blue" href="community-contest-new.html">＋ 发起赛事</a></p>
+            <div class="filter-row" id="contest-tabs">
+                <button class="filter-chip active" data-ctab="hot">🔥 热门赛事</button>
+                <button class="filter-chip" data-ctab="new">🆕 最新赛事</button>
+            </div>
+            <div class="filter-row" id="contest-cats" style="margin-top:8px">
+                <button class="filter-chip active" data-ccat="">全部类别</button>
+                <button class="filter-chip" data-ccat="综合">综合</button>
+                <button class="filter-chip" data-ccat="游戏">🎮 游戏</button>
+                <button class="filter-chip" data-ccat="动画">🎬 动画</button>
+                <button class="filter-chip" data-ccat="工具">🔧 工具</button>
+                <button class="filter-chip" data-ccat="音乐">🎵 音乐</button>
+            </div>
             <div id="contest-list"><p class="works-note">加载中…</p></div>
         </section>
     </main>
@@ -91,7 +103,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003o"></script>
+    <script src="js/community.js?v=20261003p"></script>
     <script>
     function fmtDT(s) {
         if (!s) return '';
@@ -100,16 +112,23 @@
             String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
     }
 
-    async function load() {
-        var r = await sb.from('contests').select('*').order('created_at', { ascending: false }).limit(50);
-        var list = r.data || [];
+    var contestTab = 'hot', contestCat = '';
+    var allContests = [], contestEntryCounts = {};
+    function renderContests() {
+        var order = { submitting: 0, voting: 1, upcoming: 2, ended: 3 };
+        var list = allContests.filter(function (c) { return !contestCat || (c.category || '综合') === contestCat; });
+        if (contestTab === 'hot') {
+            list.sort(function (a, b) { return (contestEntryCounts[b.id] || 0) - (contestEntryCounts[a.id] || 0); });
+        } else {
+            list.sort(function (a, b) {
+                var d = order[contestStatus(a)] - order[contestStatus(b)];
+                return d !== 0 ? d : new Date(b.created_at) - new Date(a.created_at);
+            });
+        }
         if (!list.length) {
-            document.getElementById('contest-list').innerHTML = '<p class="works-note">还没有赛事，来发起第一个吧！</p>';
+            document.getElementById('contest-list').innerHTML = '<p class="works-note">这个类别还没有赛事，来发起第一个吧！</p>';
             return;
         }
-        /* 按状态分组：进行中优先 */
-        var order = { submitting: 0, voting: 1, upcoming: 2, ended: 3 };
-        list.sort(function (a, b) { return order[contestStatus(a)] - order[contestStatus(b)]; });
         document.getElementById('contest-list').innerHTML = '<div class="contest-grid">' +
             list.map(function (c) {
                 var st = contestStatus(c);
@@ -119,10 +138,38 @@
                 return '<a class="contest-card" href="community-contest.html?id=' + c.id + '">' + cover +
                     '<div class="contest-body"><span class="status-tag ' + st + '">' + CONTEST_STATUS_TEXT[st] + '</span>' +
                     '<div class="contest-title">' + esc(c.title) + '</div>' +
-                    '<div class="contest-meta">投稿 ' + fmtDT(c.submit_start) + ' ~ ' + fmtDT(c.submit_end) +
+                    '<div class="contest-meta">📁 ' + (contestEntryCounts[c.id] || 0) + ' 件投稿 · ' + esc(c.category || '综合') +
+                    '<br>投稿 ' + fmtDT(c.submit_start) + ' ~ ' + fmtDT(c.submit_end) +
                     '<br>投票截止 ' + fmtDT(c.vote_end) + '</div></div></a>';
             }).join('') + '</div>';
     }
+    async function load() {
+        var r = await sb.from('contests').select('*').order('created_at', { ascending: false }).limit(100);
+        allContests = r.data || [];
+        var ids = allContests.map(function (c) { return c.id; });
+        contestEntryCounts = {};
+        if (ids.length) {
+            var er = await sb.from('contest_entries').select('contest_id').in('contest_id', ids);
+            (er.data || []).forEach(function (e) { contestEntryCounts[e.contest_id] = (contestEntryCounts[e.contest_id] || 0) + 1; });
+        }
+        renderContests();
+    }
+    document.querySelectorAll('#contest-tabs [data-ctab]').forEach(function (b) {
+        b.addEventListener('click', function () {
+            document.querySelectorAll('#contest-tabs [data-ctab]').forEach(function (x) { x.classList.remove('active'); });
+            b.classList.add('active');
+            contestTab = b.getAttribute('data-ctab');
+            renderContests();
+        });
+    });
+    document.querySelectorAll('#contest-cats [data-ccat]').forEach(function (b) {
+        b.addEventListener('click', function () {
+            document.querySelectorAll('#contest-cats [data-ccat]').forEach(function (x) { x.classList.remove('active'); });
+            b.classList.add('active');
+            contestCat = b.getAttribute('data-ccat');
+            renderContests();
+        });
+    });
 
     (async function () {
         await renderSubHeader();

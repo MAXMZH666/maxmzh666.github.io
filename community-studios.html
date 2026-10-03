@@ -50,7 +50,7 @@
             <a class="sub-brand" href="community-home.html">🎮 <span>MAX社区</span></a>
             <nav class="sub-links" aria-label="社区导航">
                 <a href="community-home.html" data-sub="home">首页</a>
-                <a href="community.html" data-sub="works">作品</a>
+                <a href="community.html" data-sub="works">🔍 发现</a>
                 <a href="community-shop.html" data-sub="shop">🎁 任务商城</a>
                 <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
                 <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
@@ -67,6 +67,18 @@
             <h1 class="section-title">🏢 工作室</h1>
             <p class="section-sub">创建你的创作团队，邀请成员加入，展示团队作品。</p>
             <p><a class="btn btn-blue" href="community-studio-new.html">＋ 创建工作室</a></p>
+            <div class="filter-row" id="studio-tabs">
+                <button class="filter-chip active" data-stab="hot">🔥 热门工作室</button>
+                <button class="filter-chip" data-stab="new">🆕 最新工作室</button>
+            </div>
+            <div class="filter-row" id="studio-cats" style="margin-top:8px">
+                <button class="filter-chip active" data-scat="">全部类别</button>
+                <button class="filter-chip" data-scat="综合">综合</button>
+                <button class="filter-chip" data-scat="游戏">🎮 游戏</button>
+                <button class="filter-chip" data-scat="动画">🎬 动画</button>
+                <button class="filter-chip" data-scat="工具">🔧 工具</button>
+                <button class="filter-chip" data-scat="音乐">🎵 音乐</button>
+            </div>
             <div id="studio-list"><p class="works-note">加载中…</p></div>
         </section>
     </main>
@@ -87,21 +99,20 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003o"></script>
+    <script src="js/community.js?v=20261003p"></script>
     <script>
-    async function load() {
-        var r = await sb.from('studios').select('id,name,description,avatar_url,created_at').order('created_at', { ascending: false }).limit(50);
-        var list = r.data || [];
+    var studioTab = 'hot', studioCat = '';
+    var allStudios = [], studioCounts = {};
+    function renderStudios() {
+        var list = allStudios.filter(function (s) { return !studioCat || (s.category || '综合') === studioCat; });
+        list.sort(function (a, b) {
+            if (studioTab === 'hot') return (studioCounts[b.id] || 0) - (studioCounts[a.id] || 0);
+            return new Date(b.created_at) - new Date(a.created_at);
+        });
         if (!list.length) {
-            document.getElementById('studio-list').innerHTML = '<p class="works-note">还没有工作室，来创建第一个吧！</p>';
+            document.getElementById('studio-list').innerHTML = '<p class="works-note">这个类别还没有工作室，来创建第一个吧！</p>';
             return;
         }
-        /* 成员数 */
-        var ids = list.map(function (s) { return s.id; });
-        var mr = await sb.from('studio_members').select('studio_id').in('studio_id', ids);
-        var counts = {};
-        (mr.data || []).forEach(function (m) { counts[m.studio_id] = (counts[m.studio_id] || 0) + 1; });
-
         document.getElementById('studio-list').innerHTML = '<div class="studio-grid">' +
             list.map(function (s) {
                 var av = s.avatar_url ? '<img src="' + esc(s.avatar_url) + '" alt="">' : '🏢';
@@ -109,9 +120,36 @@
                     '<div class="studio-avatar">' + av + '</div>' +
                     '<div class="studio-name">' + esc(s.name) + '</div>' +
                     (s.description ? '<div class="studio-desc">' + esc(s.description) + '</div>' : '') +
-                    '<div class="studio-meta">👥 ' + (counts[s.id] || 0) + ' 位成员</div></a>';
+                    '<div class="studio-meta">👥 ' + (studioCounts[s.id] || 0) + ' 位成员 · ' + esc(s.category || '综合') + '</div></a>';
             }).join('') + '</div>';
     }
+    async function load() {
+        var r = await sb.from('studios').select('id,name,description,avatar_url,category,created_at').order('created_at', { ascending: false }).limit(100);
+        allStudios = r.data || [];
+        var ids = allStudios.map(function (s) { return s.id; });
+        studioCounts = {};
+        if (ids.length) {
+            var mr = await sb.from('studio_members').select('studio_id').in('studio_id', ids);
+            (mr.data || []).forEach(function (m) { studioCounts[m.studio_id] = (studioCounts[m.studio_id] || 0) + 1; });
+        }
+        renderStudios();
+    }
+    document.querySelectorAll('#studio-tabs [data-stab]').forEach(function (b) {
+        b.addEventListener('click', function () {
+            document.querySelectorAll('#studio-tabs [data-stab]').forEach(function (x) { x.classList.remove('active'); });
+            b.classList.add('active');
+            studioTab = b.getAttribute('data-stab');
+            renderStudios();
+        });
+    });
+    document.querySelectorAll('#studio-cats [data-scat]').forEach(function (b) {
+        b.addEventListener('click', function () {
+            document.querySelectorAll('#studio-cats [data-scat]').forEach(function (x) { x.classList.remove('active'); });
+            b.classList.add('active');
+            studioCat = b.getAttribute('data-scat');
+            renderStudios();
+        });
+    });
     (async function () {
         await renderSubHeader();
         await load();
