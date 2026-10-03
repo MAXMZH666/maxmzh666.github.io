@@ -53,6 +53,7 @@ async function renderSubHeader() {
         'community.html': 'works',
         'community-discover.html': 'discover',
         'community-tasks.html': 'tasks',
+        'community-shop.html': 'shop',
         'community-publish.html': 'publish',
         'community-code.html': 'code',
         'community-rank.html': 'rank',
@@ -219,7 +220,57 @@ async function claimTaskReward(userTaskId) {
         return { ok: true, points: r.data };
     } catch (e) { return { ok: false }; }
 }
-/* 获取我的积分 */
+/* ===== 第六期：积分商城 ===== */
+async function purchaseShopItem(itemId) {
+    try {
+        var r = await window.sb.rpc('purchase_shop_item', { p_item_id: itemId });
+        if (r.error) return { ok: false, error: r.error.message };
+        return { ok: true };
+    } catch (e) { return { ok: false }; }
+}
+async function equipShopItem(itemId) {
+    try {
+        var r = await window.sb.rpc('equip_shop_item', { p_item_id: itemId });
+        if (r.error) return { ok: false, error: r.error.message };
+        return { ok: true };
+    } catch (e) { return { ok: false }; }
+}
+async function unequipShopItem(itemId) {
+    try {
+        var r = await window.sb.rpc('unequip_shop_item', { p_item_id: itemId });
+        if (r.error) return { ok: false };
+        return { ok: true };
+    } catch (e) { return { ok: false }; }
+}
+/* 获取某用户已装备的物品 {frame, badge, title}，badge 为数组 */
+async function equippedItemsOf(userId) {
+    var out = { frame: null, badges: [], title: null };
+    try {
+        var r = await window.sb.from('user_items').select('item_id,shop_items(item_type,item_data,name)')
+            .eq('user_id', userId).eq('is_equipped', true);
+        (r.data || []).forEach(function (row) {
+            var it = row.shop_items; if (!it) return;
+            if (it.item_type === 'frame') out.frame = it;
+            else if (it.item_type === 'badge') out.badges.push(it);
+            else if (it.item_type === 'title') out.title = it;
+        });
+    } catch (e) {}
+    return out;
+}
+/* 头像框 CSS（商城页与个人主页共用） */
+var SHOP_FRAME_CSS = [
+    '.avatar-frame{border-radius:50%;padding:3px;}',
+    '.frame-gold{border:3px solid #ffd43b;box-shadow:0 0 14px rgba(255,212,59,.65);}',
+    '.frame-cyber{border:3px solid #00e5ff;box-shadow:0 0 14px rgba(0,229,255,.6);}',
+    '.frame-rainbow{border:3px solid transparent;background:linear-gradient(45deg,#ff5f5f,#ffb84d,#f9f871,#7bf59b,#5fb8ff,#c07bff,#ff7bd5) border-box;animation:frameSpin 3s linear infinite;background-size:300% 300%;}',
+    '@keyframes frameSpin{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}'
+].join('\n');
+function injectFrameCSS() {
+    if (document.getElementById('shop-frame-css')) return;
+    var st = document.createElement('style');
+    st.id = 'shop-frame-css'; st.textContent = SHOP_FRAME_CSS;
+    document.head.appendChild(st);
+}
 async function myPoints() {
     try {
         var me = await currentUser();

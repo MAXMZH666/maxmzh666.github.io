@@ -43,6 +43,7 @@
                 <a href="community.html" data-sub="works">作品</a>
                 <a href="community-discover.html" data-sub="discover">🔍 发现</a>
                 <a href="community-tasks.html" data-sub="tasks">📋 任务</a>
+                <a href="community-shop.html" data-sub="shop">🛍️ 商城</a>
                 <a href="community-publish.html" data-sub="publish">发布作品</a>
                 <a href="community-code.html" data-sub="code">💻 在线编程</a>
                 <a href="community-rank.html" data-sub="rank">🏆 排行榜</a>
@@ -75,7 +76,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003h"></script>
+    <script src="js/community.js?v=20261003i"></script>
     <script>
     (async function () {
         await renderSubHeader();
@@ -213,8 +214,8 @@
             wrap.innerHTML =
                 '<p class="article-back"><a href="community.html">← 返回社区</a></p>' +
                 '<div style="display:flex;gap:16px;align-items:center;margin-bottom:8px">' +
-                (pr.data.avatar_url ? '<img src="' + esc(pr.data.avatar_url) + '" alt="头像" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--border,rgba(255,255,255,.12))">' : '') +
-                '<div><h1 class="section-title" style="margin:0">' + esc(pr.data.username) + '</h1>' +
+                (pr.data.avatar_url ? '<img src="' + esc(pr.data.avatar_url) + '" alt="头像" id="u-avatar" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--border,rgba(255,255,255,.12))">' : '') +
+                '<div><h1 class="section-title" style="margin:0"><span id="u-title"></span>' + esc(pr.data.username) + '<span id="u-badges"></span></h1>' +
                 (pr.data.bio ? '<p class="section-sub" style="margin:4px 0 0">' + esc(pr.data.bio) + '</p>' : '') + '</div></div>' +
                 (isSelf ? '<p><a class="btn btn-blue" href="community-profile-edit.html">✏️ 编辑个人资料</a></p>' : '') +
                 '<p class="stat-line">加入于 ' + fmtDate(pr.data.created_at) +
@@ -242,6 +243,25 @@
                     }).join('') + '</div>'
                     : '<p class="works-note">TA 还没有发布作品。</p>') +
                 draftHtml + favHtml + portfolioHtml;
+            /* 商城装备展示 */
+            try {
+                injectFrameCSS();
+                var eq = await equippedItemsOf(uid);
+                if (eq.frame) {
+                    var av = document.getElementById('u-avatar');
+                    if (av) av.className = (av.className + ' avatar-frame ' + eq.frame.item_data).trim();
+                }
+                if (eq.title) {
+                    var te = document.getElementById('u-title');
+                    if (te) te.innerHTML = '<span style="font-size:.55em;color:#ffd43b;border:1px solid #ffd43b;border-radius:12px;padding:2px 10px;margin-right:8px;vertical-align:middle">' + esc(eq.title.item_data) + '</span>';
+                }
+                if (eq.badges.length) {
+                    var be = document.getElementById('u-badges');
+                    if (be) be.innerHTML = ' ' + eq.badges.map(function (b) {
+                        return '<span title="' + esc(b.name) + '" style="font-size:.7em;vertical-align:middle">' + esc(b.item_data) + '</span>';
+                    }).join('');
+                }
+            } catch (e) {}
         } catch (e) {
             wrap.innerHTML = '<p class="works-note">' + esc(e.message) + '。<a href="community.html">返回社区</a></p>';
             return;
