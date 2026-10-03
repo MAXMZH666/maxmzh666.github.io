@@ -282,24 +282,18 @@
         /* 先清理旧注入（React 重渲染会重建菜单，防止重复） */
         var olds = document.querySelectorAll('[data-mmc-item]');
         for (var oi = 0; oi < olds.length; oi++) olds[oi].remove();
-        /* 找到「保存到电脑/文件」叶子菜单项 */
+        /* 找到「保存到电脑/文件」叶子菜单项
+           注意：TurboWarp 的下拉菜单渲染在 menu-bar 容器内部，不能按 menu-bar 排除 */
         var saveItem = null;
         var all = document.getElementsByTagName('*');
         for (var i = 0; i < all.length; i++) {
             var el = all[i];
             if (el.children.length !== 0) continue;
             var t = (el.textContent || '').trim();
-            if (SAVE_TEXTS.indexOf(t) === -1) continue;
-            /* 排除顶栏 */
-            var p = el, inBar = false;
-            while (p && p !== document.body) {
-                if (cls(p).indexOf('menu-bar') !== -1) { inBar = true; break; }
-                p = p.parentNode;
-            }
-            if (!inBar) { saveItem = el; break; }
+            if (SAVE_TEXTS.indexOf(t) !== -1) { saveItem = el; break; }
         }
         if (!saveItem) return;
-        /* 向上找真正的下拉菜单容器：class 含 menu，但排除 menu-item 和 menu-bar */
+        /* 向上找下拉菜单容器：第一个 class 含 menu、但不含 menu-item/menu-bar 的祖先 */
         var menu = saveItem.parentNode;
         while (menu && menu !== document.body) {
             var mcn = cls(menu);
@@ -307,7 +301,14 @@
             menu = menu.parentNode;
         }
         if (!menu || menu === document.body) return;
-        /* 找到菜单项的直接子元素作为样式模板（可能是 span 包裹） */
+        /* 安全校验：容器内至少有 2 个菜单项，防止误插到顶栏 */
+        var items = 0;
+        var desc = menu.getElementsByTagName('*');
+        for (var di = 0; di < desc.length; di++) {
+            if (cls(desc[di]).indexOf('menu-item') !== -1) items++;
+        }
+        if (items < 2) return;
+        /* 用真正的菜单项 div 作为样式模板 */
         var styleSrc = saveItem;
         if (cls(saveItem.parentNode).indexOf('menu-item') !== -1) styleSrc = saveItem.parentNode;
         function makeItem(label, fn) {
@@ -319,17 +320,32 @@
             div.addEventListener('click', function (ev) { ev.stopPropagation(); fn(); });
             return div;
         }
-        menu.appendChild(makeItem('💾 保存草稿到社区', function () { saveDraft(false); }));
-        menu.appendChild(makeItem('📤 发布到社区', publishToCommunity));
+        menu.appendChild(makeItem('\uD83D\uDCBE \u4FDD\u5B58\u8349\u7A3F\u5230\u793E\u533A', function () { saveDraft(false); }));
+        menu.appendChild(makeItem('\uD83D\uDCE4 \u53D1\u5E03\u5230\u793E\u533A', publishToCommunity));
     }
     var HIDE_TEXTS = ['查看作品页面', 'TurboWarp 反馈', 'See project page', 'TurboWarp Feedback'];
     function hideTopButtons() {
-        var btns = document.querySelectorAll('button, a, div[role="button"]');
-        for (var i = 0; i < btns.length; i++) {
-            var t = (btns[i].textContent || '').trim();
+        /* 全量叶子扫描：顶栏按钮可能是无 role 的普通 div */
+        var all = document.getElementsByTagName('*');
+        for (var i = 0; i < all.length; i++) {
+            var el = all[i];
+            if (el.children.length !== 0) continue;
+            var t = (el.textContent || '').trim();
+            var hit = false;
             for (var k = 0; k < HIDE_TEXTS.length; k++) {
-                if (t.indexOf(HIDE_TEXTS[k]) !== -1) { btns[i].style.display = 'none'; break; }
+                if (t === HIDE_TEXTS[k]) { hit = true; break; }
             }
+            if (!hit) continue;
+            /* 向上找可点击容器隐藏 */
+            var p = el, target = null;
+            for (var d = 0; d < 4 && p && p !== document.body; d++) {
+                var tag = (p.tagName || '').toLowerCase();
+                var pc = cls(p);
+                if (tag === 'button' || tag === 'a' || p.getAttribute('role') === 'button' ||
+                    pc.indexOf('button') !== -1) { target = p; break; }
+                p = p.parentNode;
+            }
+            (target || el.parentNode || el).style.display = 'none';
         }
     }
     var obs = new MutationObserver(function () {
@@ -350,6 +366,13 @@
         if (document.body) obs.observe(document.body, { childList: true, subtree: true });
         tryInjectMenu();
         hideTopButtons();
+        /* 兜底：React 懒渲染，30 秒内多次重试 */
+        var retryN = 0;
+        var retryTimer = setInterval(function () {
+            tryInjectMenu();
+            hideTopButtons();
+            if (++retryN >= 15) clearInterval(retryTimer);
+        }, 2000);
         /* 每 90 秒自动保存（仅新标签页独立模式；内嵌时由父页面负责） */
         if (!EMBEDDED) {
             setInterval(function () { saveDraft(true); }, 90000);
