@@ -225,7 +225,7 @@ async function vtCheck(file) {
 
 /* ===== Cloudflare Worker（R2 存储 + VT 云查杀代理）=====
    Worker 部署好后把地址填到下面。未填时上传走 Supabase、云查杀跳过（原有行为）。 */
-var R2_WORKER_URL = '';
+var R2_WORKER_URL = 'https://mmc-community.9675036.workers.dev';
 
 async function workerToken() {
     try {
