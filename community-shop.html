@@ -117,6 +117,12 @@
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/community.js?v=20261003i"></script>
+    <div class="modal-backdrop" id="buy-modal" style="display:none">
+        <div class="modal"><h3>确认购买</h3>
+            <p class="form-hint" id="buy-modal-name"></p>
+            <div class="modal-actions"><button class="btn" id="buy-cancel" type="button">取消</button>
+            <button class="btn btn-blue" id="buy-confirm" type="button">确认购买</button></div></div>
+    </div>
     <script>
     function previewHtml(it) {
         if (it.item_type === 'frame') {
@@ -161,16 +167,33 @@
         document.getElementById('grid-title').innerHTML = grids.title || '<p class="works-note">暂无</p>';
 
         document.querySelectorAll('[data-buy]').forEach(function (b) {
-            b.addEventListener('click', async function () {
-                if (!confirm('确认购买吗？')) return;
-                b.disabled = true; b.textContent = '购买中…';
-                var r = await purchaseShopItem(b.getAttribute('data-buy'));
-                if (r.ok) { alert('购买成功！'); load(); }
-                else {
-                    alert(r.error && r.error.indexOf('not enough') >= 0 ? '积分不足，去做任务赚积分吧！' : '购买失败，请重试');
-                    b.disabled = false; b.textContent = '购买';
-                }
+            b.addEventListener('click', function () {
+                var itemId = b.getAttribute('data-buy');
+                var card = b.closest('.shop-item');
+                var iname = card ? card.querySelector('.si-name').textContent.replace(' ✅', '') : '';
+                var iprice = card ? card.querySelector('.si-price').textContent : '';
+                document.getElementById('buy-modal-name').textContent = iname + '（' + iprice + '）';
+                document.getElementById('buy-confirm').setAttribute('data-item', itemId);
+                document.getElementById('buy-modal').style.display = 'flex';
             });
+        });
+        document.getElementById('buy-cancel').addEventListener('click', function () {
+            document.getElementById('buy-modal').style.display = 'none';
+        });
+        document.getElementById('buy-modal').addEventListener('click', function (e) {
+            if (e.target.id === 'buy-modal') e.target.style.display = 'none';
+        });
+        document.getElementById('buy-confirm').addEventListener('click', async function () {
+            var itemId = this.getAttribute('data-item');
+            var btn = this;
+            btn.disabled = true; btn.textContent = '购买中…';
+            var r = await purchaseShopItem(itemId);
+            document.getElementById('buy-modal').style.display = 'none';
+            btn.disabled = false; btn.textContent = '确认购买';
+            if (r.ok) { alert('购买成功！'); load(); }
+            else {
+                alert(r.error && r.error.indexOf('not enough') >= 0 ? '积分不足，去做任务赚积分吧！' : '购买失败，请重试');
+            }
         });
         document.querySelectorAll('[data-equip]').forEach(function (b) {
             b.addEventListener('click', async function () {
