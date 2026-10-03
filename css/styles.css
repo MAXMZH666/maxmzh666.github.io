@@ -1567,3 +1567,82 @@ img { decoding: async; }
 .skeleton { background: linear-gradient(90deg, rgba(255,255,255,.05) 25%, rgba(255,255,255,.12) 50%, rgba(255,255,255,.05) 75%);
     background-size: 200% 100%; animation: skeleton 1.4s infinite; border-radius: 10px; }
 @keyframes skeleton { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ============================================================
+   三端响应式优化（2026-10-03）
+   断点：平板 ≤1024px，手机 ≤640px
+   只做加法，不改动现有桌面端样式
+   ============================================================ */
+
+/* ---------- 1. 子导航：8 链接横向滚动（覆盖旧的 62vw 限制） ---------- */
+.sub-links { scrollbar-width: none; -ms-overflow-style: none; }
+.sub-links::-webkit-scrollbar { display: none; }
+@media (max-width: 1024px) {
+    .sub-header-inner { padding: 0 12px; gap: 8px; }
+    .sub-brand { flex-shrink: 0; }
+    #sub-auth { flex-shrink: 0; }
+    .sub-links {
+        flex: 1 1 auto;
+        min-width: 0; /* flex 子项允许收缩，内部滚动才生效 */
+        overflow-x: auto;
+        overflow-y: hidden;
+        flex-wrap: nowrap;
+        white-space: nowrap;
+        max-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+    .sub-links a { flex: 0 0 auto; }
+}
+
+/* ---------- 2. 卡片网格：小屏降列/减间距 ---------- */
+@media (max-width: 1024px) {
+    .card-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+}
+@media (max-width: 640px) {
+    .card-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+    /* 内联定义的网格（HTML <style> 优先级更高，用更高特异性覆盖只调间距） */
+    div.shop-grid, div.studio-grid, div.contest-grid, div.entry-grid, div.work-grid { gap: 10px; }
+}
+
+/* ---------- 3. 表格防溢出（预留，排行榜已用 flex 实现） ---------- */
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table-scroll table { min-width: 560px; }
+
+/* ---------- 4. 弹窗手机宽度 ---------- */
+@media (max-width: 640px) {
+    .modal-backdrop { padding: 12px; }
+    .modal { max-width: 92vw; padding: 20px 16px; }
+    .modal-actions { flex-wrap: wrap; }
+}
+
+/* ---------- 5. 表单输入框不溢出 ---------- */
+input, textarea, select { max-width: 100%; box-sizing: border-box; }
+
+/* ---------- 6. 触控目标：手机上最小 44px 高度 ---------- */
+@media (max-width: 640px) {
+    .btn { min-height: 44px; }
+    .sub-links a { min-height: 44px; display: inline-flex; align-items: center; }
+    .filter-chip { min-height: 44px; }
+    button.btn-claim { min-height: 44px; }
+    .fav-btn { min-height: 44px; }
+}
+
+/* ---------- 7. 成员/评论等 flex 布局小屏不挤压 ---------- */
+@media (max-width: 640px) {
+    /* .member-chip 在 HTML 内联 <style> 定义，用更高特异性覆盖 */
+    .member-list .member-chip { flex-wrap: wrap; row-gap: 6px; }
+    .comment { padding: 12px; }
+    .rank-row { gap: 8px; padding: 8px; }
+    .thread-row { padding: 10px 12px; }
+    .task-card { flex-wrap: wrap; }
+    .home-sec-head { flex-wrap: wrap; gap: 8px; }
+    .profile-head-inner { gap: 12px; }
+}
+
+/* ---------- 8. 通用防横向溢出 ---------- */
+img, video, iframe { max-width: 100%; }
+@media (max-width: 640px) {
+    pre, code { word-break: break-word; overflow-wrap: break-word; }
+    /* 超长标题/链接强制换行，防撑开布局 */
+    h1, h2, h3, .t-title, .rank-info b { overflow-wrap: break-word; }
+}

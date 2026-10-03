@@ -466,7 +466,7 @@
         /* 评论列表 */
         async function loadComments() {
             var list = document.getElementById('comment-list');
-            var r = await sb.from('comments').select('content,created_at,author_id')
+            var r = await sb.from('comments').select('id,content,created_at,author_id')
                 .eq('work_id', id).order('created_at', { ascending: true }).limit(100);
             if (r.error) { list.innerHTML = '<p class="works-note">评论加载失败</p>'; return; }
             var cs = r.data || [];
@@ -478,11 +478,26 @@
                     (pr.data || []).forEach(function (p) { nameMap[p.id] = p.username; });
                 }
             } catch (e) {}
+            var adminDel = await isAdmin();
             list.innerHTML = cs.length ? cs.map(function (c) {
+                var canDel = (me && c.author_id === me.id) || adminDel;
                 return '<div class="comment"><div class="comment-meta">' +
                     esc(nameMap[c.author_id] || '未知') + ' · ' + fmtDate(c.created_at) +
+                    (canDel ? ' <button class="remove-btn" data-del-comment="' + c.id + '">删除</button>' : '') +
                     '</div><div class="comment-body">' + md(c.content) + '</div></div>';
             }).join('') : '<p class="works-note">还没有评论，来抢沙发！</p>';
+            list.querySelectorAll('[data-del-comment]').forEach(function (b) {
+                b.addEventListener('click', async function () {
+                    if (!confirm('删除这条评论？')) return;
+                    showLoading('删除中…');
+                    try {
+                        var r = await withTimeout(sb.from('comments').delete().eq('id', b.getAttribute('data-del-comment')), 15000, '删除超时');
+                        if (r.error) throw r.error;
+                    } catch (e) { alert('删除失败：' + (e.message || '')); }
+                    hideLoading();
+                    await loadComments();
+                });
+            });
         }
         await loadComments();
 
