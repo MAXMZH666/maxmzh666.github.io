@@ -55,8 +55,24 @@ async function renderSubHeader() {
         'community-rank.html': 'rank',
         'community-notify.html': 'notify',
         'community-user.html': 'mine',
-        'community-auth.html': 'auth'
+        'community-auth.html': 'auth',
+        'community-forum.html': 'forum',
+        'community-thread.html': 'forum',
+        'community-forum-new.html': 'forum'
     };
+    /* 论坛入口注入：插到"发布作品"后面 */
+    try {
+        var _fnav = document.querySelector('.sub-links');
+        if (_fnav && !_fnav.querySelector('[data-sub="forum"]')) {
+            var _fa = document.createElement('a');
+            _fa.href = 'community-forum.html';
+            _fa.setAttribute('data-sub', 'forum');
+            _fa.textContent = '💬 论坛';
+            var _pub = _fnav.querySelector('[data-sub="publish"]');
+            if (_pub && _pub.nextSibling) _fnav.insertBefore(_fa, _pub.nextSibling);
+            else _fnav.appendChild(_fa);
+        }
+    } catch (e) {}
     document.querySelectorAll('.sub-links a[data-sub]').forEach(function (a) {
         a.classList.toggle('active', a.getAttribute('data-sub') === map[page]);
     });

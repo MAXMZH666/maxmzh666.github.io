@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAXMZH 游戏社区论坛帖子详情。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="MAXMZH - 论坛帖子">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>帖子 - MAXMZH 社区</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="css/styles.css">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+    <style>
+        .post { border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; background: var(--card, rgba(255,255,255,.02)); }
+        .post.op { border-color: rgba(77,124,254,.4); }
+        .post-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: .85rem; color: var(--muted); margin-bottom: 8px; }
+        .post-head .floor { font-weight: 700; color: var(--accent, #4d7cfe); }
+        .post-head .uname { font-weight: 600; color: inherit; }
+        .post-body { white-space: pre-wrap; word-break: break-word; line-height: 1.7; }
+        .post-actions { margin-top: 8px; font-size: .82rem; }
+        .post-actions a { color: var(--muted); margin-right: 12px; cursor: pointer; text-decoration: none; }
+        .post-actions a:hover { color: var(--accent, #4d7cfe); }
+        .thread-admin { margin: 12px 0; display: flex; gap: 8px; flex-wrap: wrap; }
+        .thread-admin button { padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border, rgba(255,255,255,.12)); background: transparent; color: inherit; cursor: pointer; font-size: .85rem; }
+        .thread-admin button.danger { color: #ff5d5d; border-color: rgba(255,93,93,.4); }
+        #reply-box textarea { width: 100%; min-height: 110px; padding: 12px; border-radius: 10px; border: 1px solid var(--border, rgba(255,255,255,.12)); background: var(--card, rgba(255,255,255,.03)); color: inherit; font-size: .95rem; box-sizing: border-box; resize: vertical; }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">主页</a></li>
+                <li><a href="about.html">个人简介</a></li>
+                <li><a href="blog.html">博客</a></li>
+                <li><a href="community.html" class="active">社区</a></li>
+                <li><a href="forum.html">论坛</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="sub-header">
+        <div class="sub-header-inner">
+            <a class="sub-brand" href="community.html">🎮 <span>游戏社区</span></a>
+            <nav class="sub-links" aria-label="社区导航">
+                <a href="community.html" data-sub="home">首页</a>
+                <a href="community-publish.html" data-sub="publish">发布作品</a>
+                <a href="community-code.html" data-sub="code">💻 在线编程</a>
+                <a href="community-rank.html" data-sub="rank">🏆 排行榜</a>
+                <a href="community-notify.html" data-sub="notify" id="sub-bell" style="display:none">🔔 通知</a>
+                <span id="sub-auth"><a href="community-auth.html">登录</a></span>
+            </nav>
+        </div>
+    </div>
+
+    <main>
+        <section class="portfolio" style="max-width:820px">
+            <p class="article-back"><a href="community-forum.html">← 返回论坛</a></p>
+            <div id="thread-wrap"><p class="works-note">加载中…</p></div>
+            <div class="thread-admin" id="admin-bar" style="display:none"></div>
+            <h2 class="section-title" style="font-size:1.2rem;margin-top:26px">💬 回帖</h2>
+            <div id="post-list"></div>
+            <div id="reply-box" style="margin-top:16px">
+                <div id="reply-need-login" class="works-note" style="display:none">请先<a href="community-auth.html">登录</a>后再回帖。</div>
+                <div id="reply-locked" class="works-note" style="display:none">🔒 该帖已锁定，不能回帖。</div>
+                <div id="reply-form" style="display:none">
+                    <textarea id="reply-content" maxlength="5000" placeholder="说点什么…"></textarea>
+                    <p><button class="btn-submit" id="reply-submit" style="padding:10px 28px;border-radius:10px;border:none;background:var(--accent,#4d7cfe);color:#fff;cursor:pointer">发表回帖</button>
+                    <span id="reply-msg" class="works-note" style="display:inline"></span></p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="blog.html">博客</a>
+            <a href="community.html">社区</a>
+            <a href="forum.html">论坛</a>
+            <a href="contact.html">联系方式</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/community.js"></script>
+    <script src="js/scripts.js"></script>
+    <script>
+    (async function () {
+        await renderSubHeader();
+        var sb = window.sb;
+        var id = new URLSearchParams(location.search).get('id');
+        var wrap = document.getElementById('thread-wrap');
+        if (!id) { wrap.innerHTML = '<p class="works-note">缺少帖子 ID。</p>'; return; }
+        var me = await currentUser(), prof = me ? await currentProfile() : null;
+        var isAdmin = !!(prof && prof.is_admin);
+        var thread;
+        try {
+            var tr = await sb.from('forum_threads').select('*').eq('id', id).single();
+            if (tr.error) throw tr.error;
+            thread = tr.data;
+            try { await sb.rpc('increment_thread_views', { tid: id }); } catch (e) {}
+            var cr = await sb.from('forum_categories').select('name,icon').eq('id', thread.category_id).single();
+            var cat = cr.data || {};
+            var ar = await sb.from('profiles').select('username').eq('id', thread.author_id).single();
+            var aname = (ar.data && ar.data.username) || '未知';
+            document.title = thread.title + ' - MAXMZH 社区';
+            var h = '<h1 class="section-title" style="font-size:1.4rem">' + (thread.is_pinned ? '📌 ' : '') + esc(thread.title) + '</h1>' +
+                '<p class="section-sub"><span class="tag">' + esc((cat.icon || '') + ' ' + (cat.name || '')) + '</span> ' +
+                esc(aname) + ' · ' + fmtDate(thread.created_at) + ' · 👁 ' + thread.views + ' · 💬 ' + thread.reply_count +
+                (thread.is_locked ? ' · 🔒 已锁定' : '') + '</p>';
+            /* 管理条 */
+            var bar = document.getElementById('admin-bar'), btns = [];
+            if (isAdmin) {
+                btns.push('<button data-act="pin">' + (thread.is_pinned ? '取消置顶' : '📌 置顶') + '</button>');
+                btns.push('<button data-act="lock">' + (thread.is_locked ? '解锁' : '🔒 锁定') + '</button>');
+            }
+            if (isAdmin || (me && me.id === thread.author_id)) {
+                btns.push('<button data-act="del" class="danger">🗑 删除主题</button>');
+            }
+            if (btns.length) { bar.style.display = 'flex'; bar.innerHTML = btns.join(''); }
+            wrap.innerHTML = h;
+            bar.querySelectorAll('button').forEach(function (b) {
+                b.addEventListener('click', async function () {
+                    var act = b.getAttribute('data-act');
+                    try {
+                        if (act === 'del') {
+                            if (!confirm('确定删除整个主题（含全部回帖）吗？')) return;
+                            var dr = await sb.from('forum_threads').delete().eq('id', id);
+                            if (dr.error) throw dr.error;
+                            location.href = 'community-forum.html'; return;
+                        }
+                        var upd = act === 'pin' ? { is_pinned: !thread.is_pinned } : { is_locked: !thread.is_locked };
+                        var ur = await sb.from('forum_threads').update(upd).eq('id', id);
+                        if (ur.error) throw ur.error;
+                        location.reload();
+                    } catch (e) { alert('操作失败：' + e.message); }
+                });
+            });
+        } catch (e) { wrap.innerHTML = '<p class="works-note">帖子不存在或加载失败。</p>'; return; }
+        /* 回帖列表 */
+        async function loadPosts() {
+            var list = document.getElementById('post-list');
+            try {
+                var pr = await sb.from('forum_posts').select('*').eq('thread_id', id).order('created_at');
+                if (pr.error) throw pr.error;
+                var posts = pr.data || [];
+                if (!posts.length) { list.innerHTML = '<p class="works-note">还没有回帖，来抢沙发！</p>'; return; }
+                var aids = Array.from(new Set(posts.map(function (p) { return p.author_id; })));
+                var unames = {};
+                var ur2 = await sb.from('profiles').select('id,username').in('id', aids);
+                (ur2.data || []).forEach(function (p) { unames[p.id] = p.username; });
+                list.innerHTML = posts.map(function (p, i) {
+                    var canDel = isAdmin || (me && me.id === p.author_id);
+                    return '<div class="post' + (i === 0 ? ' op' : '') + '"><div class="post-head">' +
+                        '<span class="floor">' + (i + 1) + '楼</span>' +
+                        '<span class="uname">' + esc(unames[p.author_id] || '未知') + '</span>' +
+                        '<span>' + fmtDate(p.created_at) + '</span></div>' +
+                        '<div class="post-body">' + esc(p.content) + '</div>' +
+                        (canDel ? '<div class="post-actions"><a data-del="' + p.id + '">删除</a></div>' : '') + '</div>';
+                }).join('');
+                list.querySelectorAll('[data-del]').forEach(function (a) {
+                    a.addEventListener('click', async function () {
+                        if (!confirm('确定删除这条回帖吗？')) return;
+                        var dr = await sb.from('forum_posts').delete().eq('id', a.getAttribute('data-del'));
+                        if (dr.error) { alert('删除失败：' + dr.error.message); return; }
+                        loadPosts();
+                    });
+                });
+            } catch (e) { list.innerHTML = '<p class="works-note">回帖加载失败：' + esc(e.message) + '</p>'; }
+        }
+        await loadPosts();
+        /* 回帖框 */
+        if (!me) document.getElementById('reply-need-login').style.display = '';
+        else if (thread.is_locked && !isAdmin) document.getElementById('reply-locked').style.display = '';
+        else {
+            document.getElementById('reply-form').style.display = '';
+            document.getElementById('reply-submit').addEventListener('click', async function () {
+                var c = document.getElementById('reply-content').value.trim();
+                var msg = document.getElementById('reply-msg');
+                if (!c) { msg.textContent = '请填写回帖内容'; return; }
+                this.disabled = true; msg.textContent = '发表中…';
+                try {
+                    var ir = await sb.from('forum_posts').insert({ thread_id: id, author_id: me.id, content: c });
+                    if (ir.error) throw ir.error;
+                    document.getElementById('reply-content').value = '';
+                    msg.textContent = '';
+                    await loadPosts();
+                } catch (e) { msg.textContent = '发表失败：' + e.message; }
+                this.disabled = false;
+            });
+        }
+    })();
+    </script>
+</body>
+</html>

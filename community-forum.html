@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAXMZH 游戏社区论坛：综合讨论、作品求助、建议反馈。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="MAXMZH - 社区论坛">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>论坛 - MAXMZH 社区</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="css/styles.css">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+    <style>
+        .thread-row { display: block; padding: 14px 16px; border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 12px; margin-bottom: 10px; text-decoration: none; color: inherit; background: var(--card, rgba(255,255,255,.02)); }
+        .thread-row:hover { border-color: var(--accent, #4d7cfe); }
+        .thread-row .t-title { font-size: 1.02rem; font-weight: 600; margin-bottom: 6px; }
+        .thread-row .t-meta { font-size: .82rem; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .pin-badge { color: #ff5d5d; font-weight: 700; }
+        .lock-badge { color: var(--muted); }
+        .forum-topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+        .btn-new { padding: 10px 20px; border-radius: 10px; border: none; background: var(--accent, #4d7cfe); color: #fff; font-size: .95rem; cursor: pointer; text-decoration: none; display: inline-block; }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">主页</a></li>
+                <li><a href="about.html">个人简介</a></li>
+                <li><a href="blog.html">博客</a></li>
+                <li><a href="community.html" class="active">社区</a></li>
+                <li><a href="forum.html">论坛</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="sub-header">
+        <div class="sub-header-inner">
+            <a class="sub-brand" href="community.html">🎮 <span>游戏社区</span></a>
+            <nav class="sub-links" aria-label="社区导航">
+                <a href="community.html" data-sub="home">首页</a>
+                <a href="community-publish.html" data-sub="publish">发布作品</a>
+                <a href="community-code.html" data-sub="code">💻 在线编程</a>
+                <a href="community-rank.html" data-sub="rank">🏆 排行榜</a>
+                <a href="community-notify.html" data-sub="notify" id="sub-bell" style="display:none">🔔 通知</a>
+                <span id="sub-auth"><a href="community-auth.html">登录</a></span>
+            </nav>
+        </div>
+    </div>
+
+    <main>
+        <section class="portfolio">
+            <p class="article-back"><a href="community.html">← 返回社区</a></p>
+            <h1 class="section-title">💬 社区论坛</h1>
+            <p class="section-sub">聊游戏、问问题、提建议，和社区账号打通。</p>
+            <div class="forum-topbar">
+                <div class="sort-tabs" id="cat-tabs"><button data-cat="" class="active">全部</button></div>
+                <a class="btn-new" href="community-forum-new.html">✏️ 发新帖</a>
+            </div>
+            <div class="sort-tabs" id="sort-tabs" style="margin-bottom:14px">
+                <button data-sort="new" class="active">🆕 最新</button>
+                <button data-sort="hot">🔥 最热</button>
+            </div>
+            <p id="forum-note" class="works-note">加载中…</p>
+            <div id="thread-list"></div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="blog.html">博客</a>
+            <a href="community.html">社区</a>
+            <a href="forum.html">论坛</a>
+            <a href="contact.html">联系方式</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/community.js"></script>
+    <script src="js/scripts.js"></script>
+    <script>
+    (async function () {
+        await renderSubHeader();
+        var sb = window.sb, catId = '', sort = 'new';
+        var cats = [], catMap = {};
+        /* 版块 */
+        try {
+            var cr = await sb.from('forum_categories').select('*').order('sort_order');
+            cats = cr.data || [];
+            cats.forEach(function (c) { catMap[c.id] = c; });
+            var tabs = document.getElementById('cat-tabs');
+            cats.forEach(function (c) {
+                var b = document.createElement('button');
+                b.setAttribute('data-cat', c.id);
+                b.textContent = (c.icon || '💬') + ' ' + c.name;
+                b.addEventListener('click', function () {
+                    catId = c.id;
+                    tabs.querySelectorAll('button').forEach(function (x) { x.classList.remove('active'); });
+                    b.classList.add('active');
+                    load();
+                });
+                tabs.appendChild(b);
+            });
+            tabs.querySelector('[data-cat=""]').addEventListener('click', function () {
+                catId = '';
+                tabs.querySelectorAll('button').forEach(function (x) { x.classList.remove('active'); });
+                this.classList.add('active');
+                load();
+            });
+        } catch (e) {}
+        /* 排序 */
+        document.getElementById('sort-tabs').querySelectorAll('button').forEach(function (b) {
+            b.addEventListener('click', function () {
+                sort = b.getAttribute('data-sort');
+                document.getElementById('sort-tabs').querySelectorAll('button').forEach(function (x) { x.classList.remove('active'); });
+                b.classList.add('active');
+                load();
+            });
+        });
+        async function load() {
+            var note = document.getElementById('forum-note'), list = document.getElementById('thread-list');
+            note.textContent = '加载中…'; list.innerHTML = '';
+            try {
+                var q = sb.from('forum_threads').select('id,title,category_id,author_id,created_at,updated_at,views,reply_count,is_pinned,is_locked');
+                if (catId) q = q.eq('category_id', catId);
+                q = q.order('is_pinned', { ascending: false });
+                q = sort === 'hot' ? q.order('reply_count', { ascending: false }) : q.order('updated_at', { ascending: false });
+                var r = await q.limit(50);
+                if (r.error) throw r.error;
+                var ts = r.data || [];
+                if (!ts.length) { note.textContent = '还没有帖子，来发第一帖吧！'; return; }
+                note.textContent = '';
+                var aids = Array.from(new Set(ts.map(function (t) { return t.author_id; })));
+                var unames = {};
+                if (aids.length) {
+                    var pr = await sb.from('profiles').select('id,username').in('id', aids);
+                    (pr.data || []).forEach(function (p) { unames[p.id] = p.username; });
+                }
+                list.innerHTML = ts.map(function (t) {
+                    var c = catMap[t.category_id] || {};
+                    return '<a class="thread-row" href="community-thread.html?id=' + t.id + '">' +
+                        '<div class="t-title">' + (t.is_pinned ? '<span class="pin-badge">📌 </span>' : '') + esc(t.title) + '</div>' +
+                        '<div class="t-meta"><span class="tag">' + esc((c.icon || '') + ' ' + (c.name || '综合')) + '</span>' +
+                        '<span>' + esc(unames[t.author_id] || '未知') + '</span>' +
+                        '<span>💬 ' + t.reply_count + '</span><span>👁 ' + t.views + '</span>' +
+                        (t.is_locked ? '<span class="lock-badge">🔒 已锁定</span>' : '') +
+                        '<span>' + fmtDate(t.updated_at) + '</span></div></a>';
+                }).join('');
+            } catch (e) { note.textContent = '加载失败：' + e.message; }
+        }
+        load();
+    })();
+    </script>
+</body>
+</html>

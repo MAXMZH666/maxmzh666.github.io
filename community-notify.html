@@ -90,7 +90,8 @@
             if (!ns.length) { wrap.innerHTML = '<p class="works-note">还没有通知。</p>'; return; }
             var uids = Array.from(new Set(ns.map(function (n) { return n.from_user_id; })));
             var wids = Array.from(new Set(ns.map(function (n) { return n.work_id; }).filter(Boolean)));
-            var unames = {}, wtitles = {};
+            var tids = Array.from(new Set(ns.map(function (n) { return n.thread_id; }).filter(Boolean)));
+            var unames = {}, wtitles = {}, ttitles = {};
             if (uids.length) {
                 var pu = await sb.from('profiles').select('id,username').in('id', uids);
                 (pu.data || []).forEach(function (p) { unames[p.id] = p.username; });
@@ -99,12 +100,18 @@
                 var wq = await sb.from('works').select('id,title').in('id', wids);
                 (wq.data || []).forEach(function (w) { wtitles[w.id] = w.title; });
             }
+            if (tids.length) {
+                var tq = await sb.from('forum_threads').select('id,title').in('id', tids);
+                (tq.data || []).forEach(function (t) { ttitles[t.id] = t.title; });
+            }
             wrap.innerHTML = ns.map(function (n) {
                 var who = esc(unames[n.from_user_id] || '有人');
                 var wt = n.work_id ? esc(wtitles[n.work_id] || '你的作品') : '';
+                var tt = n.thread_id ? esc(ttitles[n.thread_id] || '你的帖子') : '';
                 var text, link;
                 if (n.type === 'like') { text = who + ' 点赞了你的作品《' + wt + '》'; link = 'community-play.html?id=' + n.work_id; }
                 else if (n.type === 'comment') { text = who + ' 评论了你的作品《' + wt + '》'; link = 'community-play.html?id=' + n.work_id; }
+                else if (n.type === 'reply') { text = who + ' 回复了你的帖子《' + tt + '》'; link = 'community-thread.html?id=' + n.thread_id; }
                 else { text = who + ' 关注了你'; link = 'community-user.html?id=' + n.from_user_id; }
                 return '<a class="notify-item' + (n.is_read ? '' : ' unread') + '" href="' + link + '">' +
                     '<div>' + text + '</div><div class="notify-time">' + fmtDate(n.created_at) + '</div></a>';

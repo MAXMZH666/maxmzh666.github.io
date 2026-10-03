@@ -3,84 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="MAX 论坛：由 GitHub Discussions 提供支持，欢迎踊跃发言。">
+    <meta name="description" content="MAXMZH 论坛已并入游戏社区，正在跳转…">
     <meta name="theme-color" content="#0b0b0e">
-    <meta property="og:title" content="MAXMZH - 论坛">
-    <meta property="og:type" content="website">
-    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">    <title>MAXMZH - 论坛</title>
+    <meta http-equiv="refresh" content="1;url=community-forum.html">
+    <title>论坛已搬家 - MAXMZH</title>
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png">
-    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="css/styles.css">
     <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
 </head>
 <body>
-    <header class="site-header">
-        <nav class="nav" aria-label="主导航">
-            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
-            <div class="nav-actions">
-                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
-                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
-            </div>
-            <ul class="nav-links">
-                <li><a href="index.html">主页</a></li>
-                <li><a href="about.html">个人简介</a></li>
-                <li><a href="blog.html">博客</a></li>
-                <li><a href="community.html">社区</a></li>
-                <li><a href="forum.html">论坛</a></li>
-                <li><a href="contact.html">联系方式</a></li>
-            </ul>
-        </nav>
-    </header>
-
     <main>
-        <section class="forum">
-            <h1 class="section-title reveal">MAX 论坛</h1>
-            <p class="section-sub reveal">欢迎来到 MAX 论坛，基于 GitHub Discussions，登录 GitHub 账号即可参与讨论。</p>
-
-            <div class="forum-actions reveal">
-                <a class="btn btn-blue" href="https://github.com/MAXMZH666/maxmzh666.github.io/discussions" target="_blank" rel="noopener">进入论坛</a>
-                <a class="btn btn-ghost" href="https://github.com/MAXMZH666/maxmzh666.github.io/discussions/new" target="_blank" rel="noopener">发表新帖</a>
-            </div>
-
-            <div class="card reveal">
-                <h2>留言板</h2>
-                <p class="section-sub" style="margin-top: 0;">在这里留言、反馈问题或分享想法，留言会同步到论坛的综合区。</p>
-                <script src="https://giscus.app/client.js"
-                    data-repo="MAXMZH666/maxmzh666.github.io"
-                    data-repo-id="R_kgDOMQDQVQ"
-                    data-category="General"
-                    data-category-id="DIC_kwDOMQDQVc4CnAri"
-                    data-mapping="pathname"
-                    data-strict="0"
-                    data-reactions-enabled="1"
-                    data-emit-metadata="0"
-                    data-input-position="top"
-                    data-theme="dark"
-                    data-lang="zh-CN"
-                    crossorigin="anonymous"
-                    async>
-                </script>
-            </div>
+        <section class="portfolio" style="text-align:center;padding:80px 20px">
+            <h1 class="section-title">💬 论坛已并入游戏社区</h1>
+            <p class="section-sub">正在跳转到新论坛…如果没有自动跳转，请<a href="community-forum.html">点这里</a>。</p>
+            <p class="works-note">旧的 GitHub Discussions 留言板已归档：<a href="https://github.com/MAXMZH666/maxmzh666.github.io/discussions" target="_blank" rel="noopener">查看归档</a></p>
         </section>
     </main>
-
-    <footer>
-        <div class="foot-links">
-            <a href="index.html">主页</a>
-            <a href="about.html">个人简介</a>
-            <a href="blog.html">博客</a>
-            <a href="community.html">社区</a>
-            <a href="forum.html">论坛</a>
-            <a href="contact.html">联系方式</a>
-            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
-        </div>
-        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
-        <p>本站托管于 GitHub Pages</p>
-        <p class="foot-stats"><span id="busuanzi_container_site_pv">本站总访问量 <span id="busuanzi_value_site_pv">统计中…</span> 次</span><span> · </span><span id="busuanzi_container_page_pv">本页访问 <span id="busuanzi_value_page_pv">统计中…</span> 次</span></p>
-    </footer>
-
+    <script>setTimeout(function(){location.href='community-forum.html';},1200);</script>
     <script src="js/scripts.js"></script>
-    <script defer src="https://vercount.one/js"></script>
 </body>
 </html>
