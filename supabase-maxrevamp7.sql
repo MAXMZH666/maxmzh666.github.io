@@ -28,7 +28,7 @@ create index if not exists idx_dm_pair on direct_messages (least(sender_id, rece
 /* 私信通知：发私信时给接收者发通知（复用 notifications 表） */
 create or replace function notify_dm() returns trigger as $$
 begin
-  insert into notifications (user_id, type, actor_id, content, ref_id)
+  insert into notifications (user_id, type, from_user_id, content, ref_id)
   values (new.receiver_id, 'dm', new.sender_id, '发来一条私信', new.id);
   return new;
 exception when others then
@@ -40,12 +40,12 @@ create trigger trg_notify_dm after insert on direct_messages
   for each row execute function notify_dm();
 
 /* ---------- @提及通知 ---------- */
-create or replace function send_mention(p_user_id uuid, p_actor_id uuid, p_content text, p_ref_id uuid, p_ref_type text)
+create or replace function send_mention(p_user_id uuid, p_from_user_id uuid, p_content text, p_ref_id uuid, p_ref_type text)
 returns void as $$
 begin
-  if p_user_id = p_actor_id then return; end if;
-  insert into notifications (user_id, type, actor_id, content, ref_id)
-  values (p_user_id, 'mention', p_actor_id, p_content, p_ref_id);
+  if p_user_id = p_from_user_id then return; end if;
+  insert into notifications (user_id, type, from_user_id, content, ref_id)
+  values (p_user_id, 'mention', p_from_user_id, p_content, p_ref_id);
 exception when others then
   null;
 end;
