@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAXMZH 游戏社区共建：被举报作品公示，全民投票裁决。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="社区共建 - MAXMZH 社区">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>社区共建 - MAXMZH 社区</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="css/styles.css">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+    <style>
+        .case-card { border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 14px; padding: 18px; margin-bottom: 16px; background: var(--card, rgba(255,255,255,.02)); }
+        .case-card.closed { opacity: .75; }
+        .case-head { display: flex; gap: 14px; align-items: center; margin-bottom: 10px; }
+        .case-cover { width: 72px; height: 72px; border-radius: 10px; background: rgba(255,255,255,.05); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; overflow: hidden; flex-shrink: 0; }
+        .case-cover img { width: 100%; height: 100%; object-fit: cover; }
+        .case-title { font-weight: 700; font-size: 1.05rem; }
+        .case-reason { font-size: .85rem; color: var(--muted); margin: 6px 0; }
+        .case-meta { font-size: .78rem; color: var(--muted); }
+        .vote-bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: rgba(255,255,255,.06); margin: 12px 0 6px; }
+        .vote-bar .keep { background: #51cf66; }
+        .vote-bar .remove { background: #ff6b6b; }
+        .vote-nums { font-size: .85rem; margin-bottom: 10px; }
+        .vote-nums .k { color: #51cf66; font-weight: 700; }
+        .vote-nums .r { color: #ff6b6b; font-weight: 700; }
+        .case-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+        .status-tag { display: inline-block; font-size: .75rem; padding: 3px 10px; border-radius: 12px; margin-bottom: 8px; }
+        .status-tag.voting { background: rgba(255,212,59,.15); color: #ffd43b; }
+        .status-tag.closed-keep { background: rgba(81,207,102,.15); color: #51cf66; }
+        .status-tag.closed-remove { background: rgba(255,107,107,.15); color: #ff6b6b; }
+        .admin-box { border-top: 1px dashed var(--border, rgba(255,255,255,.12)); margin-top: 12px; padding-top: 12px; }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">主页</a></li>
+                <li><a href="about.html">个人简介</a></li>
+                <li><a href="blog.html">博客</a></li>
+                <li><a href="community-home.html" class="active">社区</a></li>
+                <li><a href="forum.html">论坛</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="sub-header">
+        <div class="sub-header-inner">
+            <a class="sub-brand" href="community-home.html">🎮 <span>游戏社区</span></a>
+            <nav class="sub-links" aria-label="社区导航">
+                <a href="community-home.html" data-sub="home">首页</a>
+                <a href="community.html" data-sub="works">作品</a>
+                <a href="community-discover.html" data-sub="discover">🔍 发现</a>
+                <a href="community-tasks.html" data-sub="tasks">📋 任务</a>
+                <a href="community-shop.html" data-sub="shop">🛍️ 商城</a>
+                <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
+                <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
+                <a href="community-publish.html" data-sub="publish">发布作品</a>
+                <a href="community-code.html" data-sub="code">💻 在线编程</a>
+                <a href="community-rank.html" data-sub="rank">🏆 排行榜</a>
+                <a href="community-notify.html" data-sub="notify" id="sub-bell" style="display:none">🔔 通知</a>
+                <span id="sub-auth"><a href="community-auth.html">登录</a></span>
+            </nav>
+        </div>
+    </div>
+
+    <main>
+        <section class="portfolio" style="max-width:960px">
+            <h1 class="section-title">⚖️ 社区共建</h1>
+            <p class="section-sub">被举报的作品会在这里公示，每个登录账号可投票裁决：保留或下架。最终由管理员执行。</p>
+            <div id="case-list"><p class="works-note">加载中…</p></div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="blog.html">博客</a>
+            <a href="community-home.html">社区</a>
+            <a href="forum.html">论坛</a>
+            <a href="contact.html">联系方式</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
+    </footer>
+
+    <script src="js/scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/community.js?v=20261003k"></script>
+    <div class="modal-backdrop" id="vote-modal" style="display:none">
+        <div class="modal"><h3 id="vote-title">投票裁决</h3>
+            <p class="form-hint" id="vote-hint"></p>
+            <div class="modal-actions"><button class="btn" id="vote-cancel" type="button">取消</button>
+            <button class="btn btn-blue" id="vote-confirm" type="button">确认</button></div></div>
+    </div>
+    <script>
+    var _pendingCase = null, _pendingVerdict = null;
+
+    function bindVoteModalOnce() {
+        if (bindVoteModalOnce.done) return;
+        bindVoteModalOnce.done = true;
+        document.getElementById('vote-cancel').addEventListener('click', function () {
+            document.getElementById('vote-modal').style.display = 'none';
+        });
+        document.getElementById('vote-modal').addEventListener('click', function (e) {
+            if (e.target.id === 'vote-modal') e.target.style.display = 'none';
+        });
+        document.getElementById('vote-confirm').addEventListener('click', async function () {
+            if (!_pendingCase || !_pendingVerdict) return;
+            var me = await currentUser();
+            if (!me) { location.href = 'community-auth.html'; return; }
+            this.disabled = true; this.textContent = '投票中…';
+            var r = await sb.from('report_votes').insert({
+                case_id: _pendingCase, voter_id: me.id, verdict: _pendingVerdict
+            });
+            document.getElementById('vote-modal').style.display = 'none';
+            this.disabled = false; this.textContent = '确认';
+            _pendingCase = null; _pendingVerdict = null;
+            if (r.error) alert('投票失败：' + r.error.message);
+            else { alert('投票成功！'); load(); }
+        });
+    }
+
+    async function load() {
+        var wrap = document.getElementById('case-list');
+        var me = await currentUser();
+        var admin = me ? await isAdmin() : false;
+
+        var cr = await sb.from('report_cases').select('*').order('created_at', { ascending: false }).limit(50);
+        var cases = cr.data || [];
+        if (!cases.length) {
+            wrap.innerHTML = '<p class="works-note">暂无举报案件，社区环境良好 👏</p>';
+            return;
+        }
+
+        /* 批量取作品信息 */
+        var workIds = cases.map(function (c) { return c.work_id; });
+        var works = {};
+        if (workIds.length) {
+            var wr = await sb.from('works').select('id,title,cover_url,author_id').in('id', workIds);
+            (wr.data || []).forEach(function (w) { works[w.id] = w; });
+        }
+        /* 批量取票数 */
+        var caseIds = cases.map(function (c) { return c.id; });
+        var vr = await sb.from('report_votes').select('case_id,verdict').in('case_id', caseIds);
+        var votes = {};
+        (vr.data || []).forEach(function (v) {
+            if (!votes[v.case_id]) votes[v.case_id] = { keep: 0, remove: 0 };
+            votes[v.case_id][v.verdict]++;
+        });
+        /* 我的投票 */
+        var myVotes = {};
+        if (me) {
+            var mvr = await sb.from('report_votes').select('case_id,verdict').in('case_id', caseIds).eq('voter_id', me.id);
+            (mvr.data || []).forEach(function (v) { myVotes[v.case_id] = v.verdict; });
+        }
+
+        wrap.innerHTML = cases.map(function (c) {
+            var w = works[c.work_id] || {};
+            var v = votes[c.id] || { keep: 0, remove: 0 };
+            var total = v.keep + v.remove;
+            var keepPct = total ? Math.round(v.keep / total * 100) : 50;
+            var myV = myVotes[c.id];
+            var isVoting = c.status === 'voting';
+            var tagCls = isVoting ? 'voting' : (c.verdict === 'keep' ? 'closed-keep' : 'closed-remove');
+            var tagTxt = isVoting ? '🗳️ 裁决中' : (c.verdict === 'keep' ? '✅ 已保留' : '🗑️ 已下架');
+            var cover = w.cover_url ? '<img src="' + esc(w.cover_url) + '" alt="">' : '🎮';
+
+            var html = '<div class="case-card' + (isVoting ? '' : ' closed') + '">' +
+                '<span class="status-tag ' + tagCls + '">' + tagTxt + '</span>' +
+                '<div class="case-head"><div class="case-cover">' + cover + '</div>' +
+                '<div><div class="case-title">' + esc(w.title || '（作品已删除）') + '</div>' +
+                '<div class="case-meta">被举报 ' + c.report_count + ' 次 · ' + new Date(c.created_at).toLocaleDateString() + '</div></div></div>' +
+                '<div class="case-reason">举报原因：' + esc(c.reason || '（未填写）') + '</div>' +
+                '<div class="vote-bar"><div class="keep" style="width:' + keepPct + '%"></div><div class="remove" style="width:' + (100 - keepPct) + '%"></div></div>' +
+                '<div class="vote-nums"><span class="k">👍 保留 ' + v.keep + '</span> &nbsp; <span class="r">👎 下架 ' + v.remove + '</span></div>';
+
+            if (isVoting) {
+                html += '<div class="case-actions">' +
+                    (w.id ? '<a class="btn" href="community-play.html?id=' + w.id + '">查看作品</a>' : '');
+                if (!me) html += '<span class="works-note">登录后可参与投票</span>';
+                else if (myV) html += '<button class="btn" disabled>你投了「' + (myV === 'keep' ? '保留' : '下架') + '」 ✓</button>';
+                else html += '<button class="btn" data-case="' + c.id + '" data-verdict="keep">👍 保留</button>' +
+                    '<button class="btn" data-case="' + c.id + '" data-verdict="remove">👎 下架</button>';
+                html += '</div>';
+            }
+
+            if (admin && isVoting) {
+                html += '<div class="admin-box"><span class="case-meta">管理员执行：</span> ' +
+                    '<button class="btn" data-exec="' + c.id + '" data-verdict="keep">✅ 保留作品</button> ' +
+                    '<button class="btn" data-exec="' + c.id + '" data-verdict="remove" style="color:#ff6b6b">🗑️ 下架作品</button></div>';
+            }
+            return html + '</div>';
+        }).join('');
+
+        /* 投票按钮 */
+        document.querySelectorAll('[data-case]').forEach(function (b) {
+            b.addEventListener('click', function () {
+                _pendingCase = b.getAttribute('data-case');
+                _pendingVerdict = b.getAttribute('data-verdict');
+                document.getElementById('vote-title').textContent = _pendingVerdict === 'keep' ? '投票：保留作品' : '投票：下架作品';
+                document.getElementById('vote-hint').textContent = '每人每案件限投 1 票，投票后不可更改，确认吗？';
+                document.getElementById('vote-modal').style.display = 'flex';
+            });
+        });
+        /* 管理员执行 */
+        document.querySelectorAll('[data-exec]').forEach(function (b) {
+            b.addEventListener('click', async function () {
+                var vid = b.getAttribute('data-exec'), vv = b.getAttribute('data-verdict');
+                b.disabled = true;
+                var r = await executeReportVerdict(vid, vv);
+                if (r.ok) { alert(vv === 'keep' ? '已保留作品，案件关闭。' : '已下架作品，案件关闭。'); load(); }
+                else { alert('执行失败：' + (r.error || '未知错误')); b.disabled = false; }
+            });
+        });
+    }
+
+    (async function () {
+        await renderSubHeader();
+        bindVoteModalOnce();
+        await load();
+    })();
+    </script>
+</body>
+</html>
