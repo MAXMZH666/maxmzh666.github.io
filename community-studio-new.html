@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="发起社区赛事 - MAXMZH 游戏社区。">
+    <meta name="description" content="创建工作室 - MAXMZH 游戏社区。">
     <meta name="theme-color" content="#0b0b0e">
-    <meta property="og:title" content="发起赛事 - MAXMZH 社区">
+    <meta property="og:title" content="创建工作室 - MAXMZH 社区">
     <meta property="og:type" content="website">
     <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
-    <title>发起赛事 - MAXMZH 社区</title>
+    <title>创建工作室 - MAXMZH 社区</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="manifest" href="manifest.json">
@@ -58,32 +58,20 @@
 
     <main>
         <section class="portfolio" style="max-width:640px">
-            <h1 class="section-title">🏁 发起赛事</h1>
-            <p class="section-sub">设置赛事信息、投稿时间和投票截止时间。结束后可结算，前三名获得积分奖励。</p>
-            <div id="need-login" class="works-note" style="display:none">请先<a href="community-auth.html">登录</a>后发起赛事。</div>
-            <form id="contest-form" style="display:none">
+            <h1 class="section-title">🏢 创建工作室</h1>
+            <p class="section-sub">创建后你将成为工作室创建者，可以邀请成员、展示团队作品。</p>
+            <div id="need-login" class="works-note" style="display:none">请先<a href="community-auth.html">登录</a>后创建工作室。</div>
+            <form id="studio-form" style="display:none">
                 <div class="form-group">
-                    <label>赛事标题 *</label>
-                    <input type="text" id="f-title" maxlength="60" placeholder="如：暑期游戏创作大赛" required>
+                    <label>工作室名称 *</label>
+                    <input type="text" id="f-name" maxlength="40" placeholder="如：星空游戏组" required>
                 </div>
                 <div class="form-group">
-                    <label>赛事介绍</label>
-                    <textarea id="f-desc" rows="4" maxlength="2000" placeholder="赛事规则、主题要求、评选标准等"></textarea>
-                </div>
-                <div class="form-group">
-                    <label>投稿开始时间 *</label>
-                    <input type="datetime-local" id="f-submit-start" required>
-                </div>
-                <div class="form-group">
-                    <label>投稿截止时间 *</label>
-                    <input type="datetime-local" id="f-submit-end" required>
-                </div>
-                <div class="form-group">
-                    <label>投票截止时间 *</label>
-                    <input type="datetime-local" id="f-vote-end" required>
+                    <label>简介</label>
+                    <textarea id="f-desc" rows="4" maxlength="500" placeholder="介绍你们的团队、擅长方向等"></textarea>
                 </div>
                 <p class="form-note" id="f-note"></p>
-                <button type="submit" class="btn btn-blue" id="f-submit">发布赛事</button>
+                <button type="submit" class="btn btn-blue" id="f-submit">创建工作室</button>
             </form>
         </section>
     </main>
@@ -104,44 +92,26 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003j"></script>
+    <script src="js/community.js?v=20261003l"></script>
     <script>
     (async function () {
         await renderSubHeader();
         var me = await currentUser();
         if (!me) { document.getElementById('need-login').style.display = ''; return; }
-        var form = document.getElementById('contest-form');
+        var form = document.getElementById('studio-form');
         form.style.display = '';
-
-        /* 默认时间：明天开始投稿，7天后截止投稿，14天后截止投票 */
-        function dtl(d) {
-            var p = function (n) { return String(n).padStart(2, '0'); };
-            return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes());
-        }
-        var now = new Date();
-        document.getElementById('f-submit-start').value = dtl(new Date(now.getTime() + 86400000));
-        document.getElementById('f-submit-end').value = dtl(new Date(now.getTime() + 8 * 86400000));
-        document.getElementById('f-vote-end').value = dtl(new Date(now.getTime() + 15 * 86400000));
 
         form.addEventListener('submit', async function (e) {
             e.preventDefault();
             var note = document.getElementById('f-note');
             var btn = document.getElementById('f-submit');
-            var title = document.getElementById('f-title').value.trim();
+            var name = document.getElementById('f-name').value.trim();
             var desc = document.getElementById('f-desc').value.trim();
-            var ss = new Date(document.getElementById('f-submit-start').value);
-            var se = new Date(document.getElementById('f-submit-end').value);
-            var ve = new Date(document.getElementById('f-vote-end').value);
-            if (!title) { note.textContent = '请填写标题'; note.className = 'form-note err'; return; }
-            if (!(ss < se && se < ve)) { note.textContent = '时间顺序应为：投稿开始 < 投稿截止 < 投票截止'; note.className = 'form-note err'; return; }
-            btn.disabled = true; note.textContent = '发布中…'; note.className = 'form-note sending';
-            var r = await sb.from('contests').insert({
-                title: title, description: desc,
-                submit_start: ss.toISOString(), submit_end: se.toISOString(), vote_end: ve.toISOString(),
-                created_by: me.id
-            }).select('id').single();
-            if (r.error) { note.textContent = '发布失败：' + r.error.message; note.className = 'form-note err'; btn.disabled = false; return; }
-            location.href = 'community-contest.html?id=' + r.data.id;
+            if (!name) { note.textContent = '请填写工作室名称'; note.className = 'form-note err'; return; }
+            btn.disabled = true; note.textContent = '创建中…'; note.className = 'form-note sending';
+            var r = await sb.from('studios').insert({ name: name, description: desc, owner_id: me.id }).select('id').single();
+            if (r.error) { note.textContent = '创建失败：' + r.error.message; note.className = 'form-note err'; btn.disabled = false; return; }
+            location.href = 'community-studio.html?id=' + r.data.id;
         });
     })();
     </script>

@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="MAXMZH 游戏社区赛事中心：参加比赛、投稿作品、投票评选。">
+    <meta name="description" content="MAXMZH 游戏社区工作室：创建团队、邀请成员、展示团队作品。">
     <meta name="theme-color" content="#0b0b0e">
-    <meta property="og:title" content="赛事中心 - MAXMZH 社区">
+    <meta property="og:title" content="工作室 - MAXMZH 社区">
     <meta property="og:type" content="website">
     <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
-    <title>赛事中心 - MAXMZH 社区</title>
+    <title>工作室 - MAXMZH 社区</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="manifest" href="manifest.json">
@@ -17,18 +17,14 @@
     <link rel="stylesheet" href="css/styles.css">
     <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
     <style>
-        .contest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-top: 16px; }
-        .contest-card { border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 12px; overflow: hidden; background: var(--card, rgba(255,255,255,.02)); text-decoration: none; color: inherit; display: block; }
-        .contest-card:hover { border-color: #4d7cfe; }
-        .contest-cover { height: 120px; background: linear-gradient(135deg, #4d7cfe, #9c4dfe); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; }
-        .contest-cover img { width: 100%; height: 100%; object-fit: cover; }
-        .contest-body { padding: 14px; }
-        .contest-title { font-weight: 700; font-size: 1.05rem; margin-bottom: 6px; }
-        .contest-meta { font-size: .8rem; color: var(--muted); margin-bottom: 8px; }
-        .status-tag { display: inline-block; font-size: .75rem; padding: 3px 10px; border-radius: 12px; background: rgba(77,124,254,.15); color: #8fb0ff; margin-bottom: 8px; }
-        .status-tag.submitting { background: rgba(81,207,102,.15); color: #51cf66; }
-        .status-tag.voting { background: rgba(255,212,59,.15); color: #ffd43b; }
-        .status-tag.ended { background: rgba(255,255,255,.08); color: var(--muted); }
+        .studio-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; margin-top: 16px; }
+        .studio-card { border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 12px; padding: 18px; background: var(--card, rgba(255,255,255,.02)); text-decoration: none; color: inherit; display: block; }
+        .studio-card:hover { border-color: #4d7cfe; }
+        .studio-avatar { width: 56px; height: 56px; border-radius: 14px; background: linear-gradient(135deg, #4d7cfe, #9c4dfe); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 10px; overflow: hidden; }
+        .studio-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .studio-name { font-weight: 700; font-size: 1.05rem; margin-bottom: 4px; }
+        .studio-desc { font-size: .82rem; color: var(--muted); margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .studio-meta { font-size: .78rem; color: var(--muted); }
     </style>
 </head>
 <body>
@@ -72,10 +68,10 @@
 
     <main>
         <section class="portfolio" style="max-width:960px">
-            <h1 class="section-title">🏁 赛事中心</h1>
-            <p class="section-sub">参加社区比赛，投稿作品、投票评选，前三名获得积分奖励（100/50/30）。</p>
-            <p><a class="btn btn-blue" href="community-contest-new.html">＋ 发起赛事</a></p>
-            <div id="contest-list"><p class="works-note">加载中…</p></div>
+            <h1 class="section-title">🏢 工作室</h1>
+            <p class="section-sub">创建你的创作团队，邀请成员加入，展示团队作品。</p>
+            <p><a class="btn btn-blue" href="community-studio-new.html">＋ 创建工作室</a></p>
+            <div id="studio-list"><p class="works-note">加载中…</p></div>
         </section>
     </main>
 
@@ -95,39 +91,31 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003j"></script>
+    <script src="js/community.js?v=20261003l"></script>
     <script>
-    function fmtDT(s) {
-        if (!s) return '';
-        var d = new Date(s);
-        return (d.getMonth() + 1) + '月' + d.getDate() + '日 ' +
-            String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-    }
-
     async function load() {
-        var r = await sb.from('contests').select('*').order('created_at', { ascending: false }).limit(50);
+        var r = await sb.from('studios').select('id,name,description,avatar_url,created_at').order('created_at', { ascending: false }).limit(50);
         var list = r.data || [];
         if (!list.length) {
-            document.getElementById('contest-list').innerHTML = '<p class="works-note">还没有赛事，来发起第一个吧！</p>';
+            document.getElementById('studio-list').innerHTML = '<p class="works-note">还没有工作室，来创建第一个吧！</p>';
             return;
         }
-        /* 按状态分组：进行中优先 */
-        var order = { submitting: 0, voting: 1, upcoming: 2, ended: 3 };
-        list.sort(function (a, b) { return order[contestStatus(a)] - order[contestStatus(b)]; });
-        document.getElementById('contest-list').innerHTML = '<div class="contest-grid">' +
-            list.map(function (c) {
-                var st = contestStatus(c);
-                var cover = c.cover_url
-                    ? '<div class="contest-cover"><img src="' + esc(c.cover_url) + '" alt=""></div>'
-                    : '<div class="contest-cover">🏁</div>';
-                return '<a class="contest-card" href="community-contest.html?id=' + c.id + '">' + cover +
-                    '<div class="contest-body"><span class="status-tag ' + st + '">' + CONTEST_STATUS_TEXT[st] + '</span>' +
-                    '<div class="contest-title">' + esc(c.title) + '</div>' +
-                    '<div class="contest-meta">投稿 ' + fmtDT(c.submit_start) + ' ~ ' + fmtDT(c.submit_end) +
-                    '<br>投票截止 ' + fmtDT(c.vote_end) + '</div></div></a>';
+        /* 成员数 */
+        var ids = list.map(function (s) { return s.id; });
+        var mr = await sb.from('studio_members').select('studio_id').in('studio_id', ids);
+        var counts = {};
+        (mr.data || []).forEach(function (m) { counts[m.studio_id] = (counts[m.studio_id] || 0) + 1; });
+
+        document.getElementById('studio-list').innerHTML = '<div class="studio-grid">' +
+            list.map(function (s) {
+                var av = s.avatar_url ? '<img src="' + esc(s.avatar_url) + '" alt="">' : '🏢';
+                return '<a class="studio-card" href="community-studio.html?id=' + s.id + '">' +
+                    '<div class="studio-avatar">' + av + '</div>' +
+                    '<div class="studio-name">' + esc(s.name) + '</div>' +
+                    (s.description ? '<div class="studio-desc">' + esc(s.description) + '</div>' : '') +
+                    '<div class="studio-meta">👥 ' + (counts[s.id] || 0) + ' 位成员</div></a>';
             }).join('') + '</div>';
     }
-
     (async function () {
         await renderSubHeader();
         await load();

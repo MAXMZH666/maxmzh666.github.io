@@ -58,6 +58,9 @@ async function renderSubHeader() {
         'community-contest.html': 'contests',
         'community-contest-new.html': 'contests',
         'community-moderation.html': 'moderation',
+        'community-studios.html': 'studios',
+        'community-studio.html': 'studios',
+        'community-studio-new.html': 'studios',
         'community-publish.html': 'publish',
         'community-code.html': 'code',
         'community-rank.html': 'rank',
@@ -223,6 +226,14 @@ async function claimTaskReward(userTaskId) {
         if (r.error) return { ok: false, error: r.error.message };
         return { ok: true, points: r.data };
     } catch (e) { return { ok: false }; }
+}
+/* ===== 第九期：工作室 ===== */
+async function myStudioRole(studioId, userId) {
+    if (!userId) return null;
+    try {
+        var r = await window.sb.from('studio_members').select('role').eq('studio_id', studioId).eq('user_id', userId).limit(1);
+        return (r.data && r.data.length) ? r.data[0].role : null;
+    } catch (e) { return null; }
 }
 /* ===== 第八期：社区共建 ===== */
 async function executeReportVerdict(caseId, verdict) {
