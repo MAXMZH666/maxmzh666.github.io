@@ -52,6 +52,7 @@ async function renderSubHeader() {
         'community-home.html': 'home',
         'community.html': 'works',
         'community-discover.html': 'discover',
+        'community-tasks.html': 'tasks',
         'community-publish.html': 'publish',
         'community-code.html': 'code',
         'community-rank.html': 'rank',
@@ -170,6 +171,62 @@ if (window.sb) {
     window.sb.auth.onAuthStateChange(function (event, session) {
         if (event === 'SIGNED_IN' && session) { ensureProfile(); }
     });
+}
+
+/* ===== 第五期：任务与积分 ===== */
+/* 记录任务进度：actionType 见 tasks 表；state-based 的由任务页检查 */
+async function recordTaskProgress(actionType, increment) {
+    try {
+        var me = await currentUser();
+        if (!me) return;
+        var tr = await window.sb.from('tasks').select('*').eq('action_type', actionType).eq('is_active', true);
+        var tasks = tr.data || [];
+        if (!tasks.length) return;
+        var today = new Date().toISOString().slice(0, 10);
+        for (var i = 0; i < tasks.length; i++) {
+            var t = tasks[i];
+            var isDaily = t.task_type === 'daily';
+            var qr = await window.sb.from('user_tasks').select('*')
+                .eq('user_id', me.id).eq('task_id', t.id);
+            var row = null;
+            (qr.data || []).forEach(function (r) {
+                if (isDaily ? r.task_date === today : !r.task_date) row = r;
+            });
+            if (row && row.completed) continue;
+            if (!row) {
+                var ins = await window.sb.from('user_tasks').insert({
+                    user_id: me.id, task_id: t.id, progress: 0,
+                    task_date: isDaily ? today : null
+                }).select().single();
+                if (ins.error || !ins.data) continue;
+                row = ins.data;
+            }
+            var np = Math.min(row.progress + (increment || 1), t.target_count);
+            var upd = { progress: np };
+            if (np >= t.target_count && !row.completed) {
+                upd.completed = true;
+                upd.completed_at = new Date().toISOString();
+            }
+            await window.sb.from('user_tasks').update(upd).eq('id', row.id);
+        }
+    } catch (e) {}
+}
+/* 领取任务奖励，返回 {ok, points} */
+async function claimTaskReward(userTaskId) {
+    try {
+        var r = await window.sb.rpc('claim_task_reward', { p_user_task_id: userTaskId });
+        if (r.error) return { ok: false, error: r.error.message };
+        return { ok: true, points: r.data };
+    } catch (e) { return { ok: false }; }
+}
+/* 获取我的积分 */
+async function myPoints() {
+    try {
+        var me = await currentUser();
+        if (!me) return 0;
+        var r = await window.sb.from('profiles').select('points').eq('id', me.id).single();
+        return (r.data && r.data.points) || 0;
+    } catch (e) { return 0; }
 }
 
 /* ===== 社区 v2：分类、上传优化 ===== */

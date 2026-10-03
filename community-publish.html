@@ -45,6 +45,7 @@
                 <a href="community-home.html" data-sub="home">首页</a>
                 <a href="community.html" data-sub="works">作品</a>
                 <a href="community-discover.html" data-sub="discover">🔍 发现</a>
+                <a href="community-tasks.html" data-sub="tasks">📋 任务</a>
                 <a href="community-publish.html" data-sub="publish">发布作品</a>
                 <a href="community-code.html" data-sub="code">💻 在线编程</a>
                 <a href="community-rank.html" data-sub="rank">🏆 排行榜</a>
@@ -157,7 +158,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003g"></script>
+    <script src="js/community.js?v=20261003h"></script>
     <script>
     function fmtMB(n) { return (n / 1048576).toFixed(1) + 'MB'; }
 
@@ -573,6 +574,7 @@
                         try { localStorage.removeItem('draft_' + curType); } catch (e) {}
                     }
                     setNote('发布成功，正在跳转…', 'ok');
+                    try { await recordTaskProgress('publish_work', 1); } catch (e) {}
                     location.href = 'community-play.html?id=' + ins.data.id;
                 }
             } catch (err) {
