@@ -45,7 +45,7 @@
             <a class="sub-brand" href="community-home.html">🎮 <span>MAX社区</span></a>
             <nav class="sub-links" aria-label="社区导航">
                 <a href="community-home.html" data-sub="home">首页</a>
-                <a href="community.html" data-sub="works">作品</a>
+                <a href="community.html" data-sub="works">🔍 发现</a>
                 <a href="community-shop.html" data-sub="shop">🎁 任务商城</a>
                 <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
                 <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
@@ -67,6 +67,7 @@
                 <button class="filter-chip" data-ptab="scratch">🎮 Scratch 编程</button>
                 <button class="filter-chip" data-ptab="python">🐍 Python</button>
                 <button class="filter-chip" data-ptab="cpp">⚙️ C++</button>
+                <button class="filter-chip" data-ptab="website">🌐 网站</button>
             </div>
             <div id="ptab-publish">
             <form id="pub-form" class="contact-form">
@@ -155,7 +156,7 @@
                     <b>🎮 Scratch 在线编程（TurboWarp 编辑器）</b><br>
                     点击下方按钮在<b>新标签页</b>打开编辑器，编完后用编辑器左上角 <b>文件 → 💾 保存草稿到社区 / 📤 发布到社区</b>，
                     也可以用 <b>文件 → 保存到电脑</b> 得到 .sb3 再回到「发布作品」标签手动上传。<br>
-                    <span class="form-hint">新标签页编辑器每 90 秒自动保存一次草稿，左下角会显示保存状态。</span>
+                    <span class="form-hint" id="scratch-autosave-hint">新标签页编辑器每 90 秒自动保存一次草稿，左下角会显示保存状态。</span>
                 </div>
                 <p style="margin:18px 0">
                     <a class="btn btn-blue btn-lg" id="open-scratch-editor" href="tw-editor/editor.html" target="_blank" rel="noopener">↗ 在新标签页打开 Scratch 编辑器</a>
@@ -199,6 +200,26 @@
                 <label>输出</label>
                 <pre id="cpp-output" class="console">点击"运行"开始…</pre>
             </div>
+            <div id="ptab-website" style="display:none">
+                <p class="section-sub">在网页里写 HTML / CSS / JavaScript，右侧实时预览效果。发布后大家可直接在社区里打开你的网页。</p>
+                <label for="web-title">作品标题</label>
+                <input type="text" id="web-title" maxlength="60" placeholder="给作品起个名字（保存草稿/发布时用）">
+                <div class="web-editor-grid">
+                    <div><label for="web-html">HTML</label><textarea id="web-html" spellcheck="false"></textarea></div>
+                    <div><label for="web-css">CSS</label><textarea id="web-css" spellcheck="false"></textarea></div>
+                    <div><label for="web-js">JavaScript</label><textarea id="web-js" spellcheck="false"></textarea></div>
+                </div>
+                <div class="editor-bar">
+                    <button class="btn btn-blue" id="web-refresh" type="button">🔄 刷新预览</button>
+                    <button class="btn btn-ghost" id="web-save" type="button">💾 保存草稿</button>
+                    <button class="btn btn-ghost" id="web-publish" type="button">📤 去发布</button>
+                    <span class="run-status" id="web-status"></span>
+                </div>
+                <p class="form-hint" id="web-note"></p>
+                <label>实时预览</label>
+                <div class="player-wrap site-frame"><iframe id="web-preview" sandbox="allow-scripts" title="网页预览"></iframe></div>
+                <p class="form-hint">预览在沙箱中运行，无法读取本站数据，请放心。发布后的网页同样在沙箱中展示。</p>
+            </div>
         </section>
     </main>
 
@@ -222,7 +243,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
-    <script src="js/community.js?v=20261003o"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+    <style>
+        .web-editor-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .web-editor-grid .CodeMirror { height: 220px; border-radius: 8px; border: 1px solid var(--border, rgba(255,255,255,.12)); }
+        .web-editor-grid textarea { width: 100%; min-height: 220px; font-family: monospace; }
+        .web-editor-grid label { display: block; margin-bottom: 4px; font-weight: 600; font-size: .9rem; }
+        #web-preview { width: 100%; height: 420px; border: 1px solid var(--border, rgba(255,255,255,.12)); border-radius: 12px; background: #fff; }
+        @media (max-width: 760px) { .web-editor-grid { grid-template-columns: 1fr; } }
+    </style>
+    <script src="js/community.js?v=20261003p"></script>
     <script>
     function fmtMB(n) { return (n / 1048576).toFixed(1) + 'MB'; }
 
@@ -396,6 +429,16 @@
             }
             if (BIN_TYPES[et]) {
                 document.getElementById('bin-label').innerHTML = BIN_TYPES[et].label + '文件 <span class="form-hint">（不换请留空）</span>';
+            }
+            if (et === 'website' && editWork.code) {
+                var wb = document.createElement('p');
+                wb.innerHTML = '<button type="button" class="btn btn-ghost" id="edit-in-webtab">💻 在网站在线编程中继续编辑</button>';
+                document.getElementById('sec-site').appendChild(wb);
+                document.getElementById('edit-in-webtab').addEventListener('click', function () {
+                    showTab('website');
+                    document.getElementById('web-title').value = editWork.title || '';
+                    setWebCode(parseWebCode(editWork.code));
+                });
             }
         } else {
             var qs2 = new URLSearchParams(location.search);
@@ -574,6 +617,7 @@
                     if (siteUrl && !/^https?:\/\//i.test(siteUrl)) siteUrl = 'https://' + siteUrl;
                     payload.work_type = 'website';
                     payload.site_url = siteUrl || (editWork ? editWork.site_url : null);
+                    if (window._webCode) payload.code = window._webCode;
                 } else if (BIN_TYPES[curType]) {
                     var bcfg = BIN_TYPES[curType];
                     var binFile = document.getElementById('f-bin').files[0];
@@ -660,7 +704,7 @@
         var tabs = document.querySelectorAll('#pub-tabs [data-ptab]');
         function showTab(t) {
             tabs.forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-ptab') === t); });
-            ['publish', 'scratch', 'python', 'cpp'].forEach(function (k) {
+            ['publish', 'scratch', 'python', 'cpp', 'website'].forEach(function (k) {
                 var el = document.getElementById('ptab-' + k);
                 if (el) el.style.display = k === t ? '' : 'none';
             });
@@ -671,11 +715,21 @@
         tabs.forEach(function (b) {
             b.addEventListener('click', function () { showTab(b.getAttribute('data-ptab')); });
         });
+        /* 自动保存间隔提示（跟随个人设置） */
+        try {
+            var _ms = parseInt(localStorage.getItem('mmc_autosave_interval') || '90000', 10);
+            var _hint = document.getElementById('scratch-autosave-hint');
+            if (_hint) {
+                _hint.textContent = isNaN(_ms) || _ms <= 0
+                    ? '新标签页编辑器的自动保存已关闭（可在「⚙️ 个人设置」里开启）。'
+                    : '新标签页编辑器每 ' + Math.round(_ms / 1000) + ' 秒自动保存一次草稿，左下角会显示保存状态。';
+            }
+        } catch (e) {}
         var g = document.getElementById('goto-scratch-tab');
         if (g) g.addEventListener('click', function (e) { e.preventDefault(); showTab('scratch'); });
 
         /* 草稿 */
-        var draftIds = { python: localStorage.getItem('draft_python') || null, cpp: localStorage.getItem('draft_cpp') || null };
+        var draftIds = { python: localStorage.getItem('draft_python') || null, cpp: localStorage.getItem('draft_cpp') || null, website: localStorage.getItem('draft_website') || null };
         async function upsertDraft(kind, fields, noteEl, manual) {
             var me = await currentUser();
             if (!me) { if (manual) authRequiredRedirect(); return null; }
@@ -704,11 +758,14 @@
             var r = await sb.from('drafts').select('*').eq('id', id).eq('user_id', me.id).single();
             if (!r.data) return;
             var d = r.data, k = d.work_type;
-            if (k !== 'python' && k !== 'cpp') return;
+            if (k !== 'python' && k !== 'cpp' && k !== 'website') return;
             draftIds[k] = d.id;
             localStorage.setItem('draft_' + k, d.id);
             showTab(k);
-            if (window._cms && window._cms[k]) {
+            if (k === 'website') {
+                document.getElementById('web-title').value = d.title || '';
+                setWebCode(parseWebCode(d.code));
+            } else if (window._cms && window._cms[k]) {
                 document.getElementById(k === 'python' ? 'py-title' : 'cpp-title').value = d.title || '';
                 window._cms[k].setValue(d.code || '');
             }
@@ -769,13 +826,133 @@
             }
             bindKind('python', cms.python, { out: 'py-output', status: 'py-status', note: 'py-note', title: 'py-title', input: 'py-input', run: 'py-run', save: 'py-save', pub: 'py-publish' });
             bindKind('cpp', cms.cpp, { out: 'cpp-output', status: 'cpp-status', note: 'cpp-note', title: 'cpp-title', input: 'cpp-input', run: 'cpp-run', save: 'cpp-save', pub: 'cpp-publish' });
+            /* 网站三栏编辑器 */
+            try {
+                cms.webHtml = initCM('web-html', 'htmlmixed',
+                    '<h1>你好，社区！</h1>\n<p>这是我的第一个网页作品。</p>\n<button id="btn">点我</button>');
+                cms.webCss = initCM('web-css', 'css',
+                    'body { font-family: sans-serif; text-align: center; padding: 40px; background: #f0f4ff; }\nh1 { color: #4d7cfe; }\nbutton { padding: 10px 24px; font-size: 16px; border-radius: 8px; border: none; background: #4d7cfe; color: #fff; cursor: pointer; }');
+                cms.webJs = initCM('web-js', 'javascript',
+                    'document.getElementById("btn").onclick = function () {\n    alert("你好！");\n};');
+            } catch (e) { /* mode 加载失败则回退 textarea */ }
         }
+
+        /* ===== 🌐 网站在线编程 ===== */
+        function parseWebCode(code) {
+            try {
+                var o = JSON.parse(code || '{}');
+                return { html: o.html || '', css: o.css || '', js: o.js || '' };
+            } catch (e) { return { html: code || '', css: '', js: '' }; }
+        }
+        function getWebCode() {
+            if (window._cms && window._cms.webHtml) {
+                return { html: window._cms.webHtml.getValue(), css: window._cms.webCss.getValue(), js: window._cms.webJs.getValue() };
+            }
+            return {
+                html: document.getElementById('web-html').value,
+                css: document.getElementById('web-css').value,
+                js: document.getElementById('web-js').value
+            };
+        }
+        function setWebCode(c) {
+            if (window._cms && window._cms.webHtml) {
+                window._cms.webHtml.setValue(c.html || '');
+                window._cms.webCss.setValue(c.css || '');
+                window._cms.webJs.setValue(c.js || '');
+            } else {
+                document.getElementById('web-html').value = c.html || '';
+                document.getElementById('web-css').value = c.css || '';
+                document.getElementById('web-js').value = c.js || '';
+            }
+            refreshWebPreview();
+        }
+        function buildWebPage(c) {
+            return '<!DOCTYPE html><html><head><meta charset="utf-8">' +
+                '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+                '<style>' + (c.css || '') + '</style></head><body>' + (c.html || '') +
+                '<script>' + (c.js || '') + '<\/script></body></html>';
+        }
+        function refreshWebPreview() {
+            var f = document.getElementById('web-preview');
+            if (f) f.srcdoc = buildWebPage(getWebCode());
+        }
+        window._refreshWebPreview = refreshWebPreview;
+        (function initWebsiteTab() {
+            var note = document.getElementById('web-note');
+            var statusEl = document.getElementById('web-status');
+            var titleEl = document.getElementById('web-title');
+            function say(t) { if (statusEl) statusEl.textContent = t; }
+            var timer = null;
+            function scheduleAutosave() {
+                clearTimeout(timer);
+                timer = setTimeout(function () {
+                    var c = getWebCode();
+                    if (!c.html.trim() && !c.css.trim() && !c.js.trim()) return;
+                    upsertDraft('website', { title: titleEl.value.trim(), code: JSON.stringify(c) }, note, false);
+                }, 3000);
+                /* 防抖刷新预览 */
+                clearTimeout(scheduleAutosave._pv);
+                scheduleAutosave._pv = setTimeout(refreshWebPreview, 800);
+            }
+            function bindEditor(ta) {
+                var el = document.getElementById(ta);
+                if (el) el.addEventListener('input', scheduleAutosave);
+            }
+            bindEditor('web-html'); bindEditor('web-css'); bindEditor('web-js');
+            /* CodeMirror 的 change 事件 */
+            var cmCheck = setInterval(function () {
+                if (window._cms && window._cms.webHtml) {
+                    clearInterval(cmCheck);
+                    ['webHtml', 'webCss', 'webJs'].forEach(function (k) {
+                        window._cms[k].on('change', scheduleAutosave);
+                    });
+                }
+            }, 500);
+            setTimeout(function () { clearInterval(cmCheck); }, 10000);
+            titleEl.addEventListener('change', function () {
+                var c = getWebCode();
+                upsertDraft('website', { title: titleEl.value.trim(), code: JSON.stringify(c) }, note, false);
+            });
+            document.getElementById('web-refresh').addEventListener('click', function () {
+                refreshWebPreview(); say('已刷新 ' + new Date().toLocaleTimeString());
+            });
+            document.getElementById('web-save').addEventListener('click', async function () {
+                var c = getWebCode();
+                await upsertDraft('website', { title: titleEl.value.trim(), code: JSON.stringify(c) }, note, true);
+            });
+            document.getElementById('web-publish').addEventListener('click', async function () {
+                var me = await currentUser();
+                if (!me) { authRequiredRedirect(); return; }
+                var c = getWebCode();
+                if (!c.html.trim() && !c.css.trim() && !c.js.trim()) { alert('请先写点内容'); return; }
+                say('正在准备发布…');
+                var page = buildWebPage(c);
+                if (page.length > 10 * 1024 * 1024) { alert('网页太大，请小于 10MB'); say(''); return; }
+                /* 先存草稿，再上传单页 HTML，带到发布标签 */
+                await upsertDraft('website', { title: titleEl.value.trim(), code: JSON.stringify(c) }, note, true);
+                say('正在上传网页文件…');
+                var blob = new Blob([page], { type: 'text/html' });
+                var url;
+                try {
+                    url = await uploadWithProgress('appfiles', me.id + '/' + Date.now() + '.html', blob, 'text/html', null);
+                } catch (e) { alert('上传失败：' + (e.message || e)); say(''); return; }
+                window._webCode = JSON.stringify(c);
+                showTab('publish');
+                document.querySelector('input[name="wtype"][value="website"]').click();
+                document.getElementById('f-title').value = titleEl.value.trim() || '未命名网页';
+                document.getElementById('f-siteurl').value = url;
+                document.getElementById('pub-sub').textContent = '已从网站在线编程带入网页文件，确认信息后发布。';
+                window.scrollTo(0, 0);
+            });
+            /* 初次打开标签时刷新一次预览 */
+            refreshWebPreview();
+        })();
 
         /* ?tab= / ?draft= */
         var tabParam = qs.get('tab');
         var draftParam = qs.get('draft');
-        if (draftParam && (tabParam === 'python' || tabParam === 'cpp')) { await loadDraft(draftParam); }
-        else if (tabParam && ['publish', 'scratch', 'python', 'cpp'].indexOf(tabParam) >= 0) { showTab(tabParam); }
+        if (draftParam && (tabParam === 'python' || tabParam === 'cpp' || tabParam === 'website')) { await loadDraft(draftParam); }
+        else if (tabParam && ['publish', 'scratch', 'python', 'cpp', 'website'].indexOf(tabParam) >= 0) { showTab(tabParam); }
         else if (qs.get('type') === 'python' || qs.get('type') === 'cpp') { showTab('publish'); }
     })();
     </script>

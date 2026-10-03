@@ -61,7 +61,7 @@
             <a class="sub-brand" href="community-home.html">🎮 <span>MAX社区</span></a>
             <nav class="sub-links" aria-label="社区导航">
                 <a href="community-home.html" data-sub="home">首页</a>
-                <a href="community.html" data-sub="works">作品</a>
+                <a href="community.html" data-sub="works">🔍 发现</a>
                 <a href="community-shop.html" data-sub="shop">🎁 任务商城</a>
                 <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
                 <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
@@ -94,6 +94,11 @@
             <div class="home-sec">
                 <div class="home-sec-head"><h2>🔥 热门作品</h2><a href="community.html">全部作品 →</a></div>
                 <div class="card-grid" id="hot-grid"><div class="works-note">加载中…</div></div>
+            </div>
+
+            <div class="home-sec">
+                <div class="home-sec-head"><h2>🏁 热门赛事</h2><a href="community-contests.html">全部赛事 →</a></div>
+                <div class="card-grid" id="hot-contests"><div class="works-note">加载中…</div></div>
             </div>
 
             <div class="home-sec">
@@ -145,7 +150,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003o"></script>
+    <script src="js/community.js?v=20261003p"></script>
     <script>
     var nameMap = {};
     async function fillNames(ids) {
@@ -196,6 +201,39 @@
                 }).join('');
             }
         } catch (e) {}
+
+        /* 热门赛事：投稿数 Top3（进行中的优先） */
+        try {
+            var cr = await sb.from('contests').select('id,title,cover_url,submit_start,submit_end,vote_end,category')
+                .order('created_at', { ascending: false }).limit(20);
+            var contests = cr.data || [];
+            var cids = contests.map(function (c) { return c.id; });
+            var ec = {};
+            if (cids.length) {
+                var er = await sb.from('contest_entries').select('contest_id').in('contest_id', cids);
+                (er.data || []).forEach(function (e) { ec[e.contest_id] = (ec[e.contest_id] || 0) + 1; });
+            }
+            var sorder = { submitting: 0, voting: 1, upcoming: 2, ended: 3 };
+            contests.sort(function (a, b) {
+                var d = (ec[b.id] || 0) - (ec[a.id] || 0);
+                return d !== 0 ? d : sorder[contestStatus(a)] - sorder[contestStatus(b)];
+            });
+            var hotc = contests.slice(0, 3);
+            document.getElementById('hot-contests').innerHTML = hotc.length
+                ? hotc.map(function (c) {
+                    var st = contestStatus(c);
+                    var cover = c.cover_url ? '<img src="' + esc(c.cover_url) + '" alt="" loading="lazy">' : '<span class="monogram">🏁</span>';
+                    return '<a class="card" href="community-contest.html?id=' + c.id + '">' +
+                        '<div class="card-cover">' + cover + '</div>' +
+                        '<div class="card-body"><h3>' + esc(c.title) + '</h3>' +
+                        '<div class="card-tags"><span class="tag">' + CONTEST_STATUS_TEXT[st] + '</span>' +
+                        '<span class="tag">📁 ' + (ec[c.id] || 0) + ' 投稿</span></div>' +
+                        '</div></a>';
+                }).join('')
+                : '<div class="works-note">还没有赛事，<a href="community-contest-new.html">发起第一个</a>吧！</div>';
+        } catch (e) {
+            document.getElementById('hot-contests').innerHTML = '<div class="works-note">加载失败</div>';
+        }
 
         /* 热门作品：点赞 Top4 */
         try {

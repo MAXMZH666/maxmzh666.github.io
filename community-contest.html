@@ -70,7 +70,7 @@
             <a class="sub-brand" href="community-home.html">🎮 <span>MAX社区</span></a>
             <nav class="sub-links" aria-label="社区导航">
                 <a href="community-home.html" data-sub="home">首页</a>
-                <a href="community.html" data-sub="works">作品</a>
+                <a href="community.html" data-sub="works">🔍 发现</a>
                 <a href="community-shop.html" data-sub="shop">🎁 任务商城</a>
                 <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
                 <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
@@ -105,7 +105,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003o"></script>
+    <script src="js/community.js?v=20261003p"></script>
     <div class="modal-backdrop" id="vote-modal" style="display:none">
         <div class="modal"><h3>确认投票</h3>
             <p class="form-hint">每人每赛事限投 1 票，投票后不可更改，确认吗？</p>
@@ -171,7 +171,8 @@
             (c.description ? '<div class="contest-desc">' + esc(c.description) + '</div>' : '') +
             '<div class="contest-times">📝 投稿：' + fmtDT(c.submit_start) + ' ~ ' + fmtDT(c.submit_end) +
             '<br>🗳️ 投票截止：' + fmtDT(c.vote_end) +
-            '<br>🏆 奖励：冠军 +' + (c.reward_1st || 100) + ' 积分 / 亚军 +' + (c.reward_2nd || 50) + ' / 季军 +' + (c.reward_3rd || 30) + '</div>' +
+            '<br>🏆 奖励：冠军 +' + (c.reward_1st == null ? 100 : c.reward_1st) + ' 积分 / 亚军 +' + (c.reward_2nd == null ? 50 : c.reward_2nd) + ' / 季军 +' + (c.reward_3rd == null ? 30 : c.reward_3rd) +
+            '<br>🏷️ 类别：' + esc(c.category || '综合') + '</div>' +
             (canManage && st !== 'ended'
                 ? '<p style="margin-top:8px"><button class="btn btn-ghost btn-sm" id="edit-contest-btn">✏️ 修改赛事</button></p>' : '') +
             (st === 'ended' && canManage && !c.settled
