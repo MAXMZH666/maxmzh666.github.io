@@ -141,7 +141,7 @@
             document.getElementById('result-wrap').style.display = '';
             showLoading('搜索中…');
             try {
-                var like = '%' + q.replace(/[%_]/g, '') + '%';
+                var like = '%' + q.replace(/([%_\\])/g, '\\$1') + '%';
                 var wr = await sb.from('works').select('id,title,cover_url,author_id,views')
                     .or('title.ilike.' + like + ',description.ilike.' + like).limit(12);
                 var ur = await sb.from('profiles').select('id,username,avatar_url,bio')
