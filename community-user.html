@@ -85,7 +85,7 @@
         }
         if (!uid) { wrap.innerHTML = '<p class="works-note">用户不存在。<a href="community.html">返回社区</a></p>'; return; }
         try {
-            var pr = await sb.from('profiles').select('username,created_at').eq('id', uid).single();
+            var pr = await sb.from('profiles').select('username,created_at,avatar_url,bio').eq('id', uid).single();
             if (pr.error || !pr.data) throw new Error('用户不存在');
             var works = (await sb.from('works').select('id,title,cover_url,created_at,category,views,work_type')
                 .eq('author_id', uid).order('created_at', { ascending: false })).data || [];
@@ -209,7 +209,11 @@
             }
             wrap.innerHTML =
                 '<p class="article-back"><a href="community.html">← 返回社区</a></p>' +
-                '<h1 class="section-title">' + esc(pr.data.username) + '</h1>' +
+                '<div style="display:flex;gap:16px;align-items:center;margin-bottom:8px">' +
+                (pr.data.avatar_url ? '<img src="' + esc(pr.data.avatar_url) + '" alt="头像" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--border,rgba(255,255,255,.12))">' : '') +
+                '<div><h1 class="section-title" style="margin:0">' + esc(pr.data.username) + '</h1>' +
+                (pr.data.bio ? '<p class="section-sub" style="margin:4px 0 0">' + esc(pr.data.bio) + '</p>' : '') + '</div></div>' +
+                (isSelf ? '<p><a class="btn btn-blue" href="community-profile-edit.html">✏️ 编辑个人资料</a></p>' : '') +
                 '<p class="stat-line">加入于 ' + fmtDate(pr.data.created_at) +
                 ' · 作品 ' + works.length + ' · 获赞 ' + likes + ' · 总浏览 ' + views +
                 ' · 关注 ' + followingCount + ' · 粉丝 ' + followerCount + '</p>' +
