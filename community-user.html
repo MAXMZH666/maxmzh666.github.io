@@ -75,7 +75,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003n"></script>
+    <script src="js/community.js?v=20261003o"></script>
     <script>
     (async function () {
         await renderSubHeader();
@@ -213,14 +213,18 @@
             wrap.innerHTML =
                 '<p class="article-back"><a href="community.html">← 返回社区</a></p>' +
                 '<div class="profile-bg-wrap" id="profile-head">' +
-                '<div style="display:flex;gap:16px;align-items:center;margin-bottom:8px">' +
-                (pr.data.avatar_url ? '<img src="' + esc(pr.data.avatar_url) + '" alt="头像" id="u-avatar" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--border,rgba(255,255,255,.12))">' : '') +
-                '<div><h1 class="section-title" style="margin:0"><span id="u-title"></span>' + esc(pr.data.username) + '<span id="u-badges"></span></h1>' +
+                '<div class="profile-head-inner">' +
+                (pr.data.avatar_url ? '<img src="' + esc(pr.data.avatar_url) + '" alt="头像" id="u-avatar" class="profile-avatar">' : '<span class="profile-avatar" style="display:flex;align-items:center;justify-content:center;font-size:2rem;background:var(--surface-2)" id="u-avatar">👤</span>') +
+                '<div style="flex:1;min-width:200px"><h1 class="section-title" style="margin:0"><span id="u-title"></span>' + esc(pr.data.username) + '<span id="u-badges"></span></h1>' +
                 (pr.data.bio ? '<p class="section-sub" style="margin:4px 0 0">' + esc(pr.data.bio) + '</p>' : '') + '</div></div>' +
                 (isSelf ? '<p><a class="btn btn-blue" href="community-profile-edit.html">✏️ 编辑个人资料</a></p></div>' : '</div>') +
-                '<p class="stat-line">加入于 ' + fmtDate(pr.data.created_at) +
-                ' · 作品 ' + works.length + ' · 获赞 ' + likes + ' · 总浏览 ' + views +
-                ' · 关注 ' + followingCount + ' · 粉丝 ' + followerCount + '</p>' +
+                '<div class="profile-stats">' +
+                '<span class="stat">📅 加入于 ' + fmtDate(pr.data.created_at) + '</span>' +
+                '<span class="stat"><b>' + works.length + '</b>作品</span>' +
+                '<span class="stat"><b>' + likes + '</b>获赞</span>' +
+                '<span class="stat"><b>' + views + '</b>浏览</span>' +
+                '<span class="stat"><b>' + followingCount + '</b>关注</span>' +
+                '<span class="stat"><b>' + followerCount + '</b>粉丝</span></div>' +
                 '<div class="work-actions">' +
                 (!isSelf && me ? '<button class="follow-btn" id="u-follow-btn">＋ 关注</button>' : '') +
                 (!isSelf && !me ? '<a class="btn btn-blue" href="community-auth.html">登录后关注</a>' : '') +

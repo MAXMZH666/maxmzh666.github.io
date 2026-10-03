@@ -78,6 +78,15 @@
                     <label>投票截止时间 *</label>
                     <input type="datetime-local" id="f-vote-end" required>
                 </div>
+                <div class="form-group">
+                    <label>🏆 奖励设置（积分）</label>
+                    <div style="display:flex;gap:12px;flex-wrap:wrap">
+                        <label style="flex:1;min-width:100px">🥇 冠军<input type="number" id="f-r1" min="0" max="10000" value="100"></label>
+                        <label style="flex:1;min-width:100px">🥈 亚军<input type="number" id="f-r2" min="0" max="10000" value="50"></label>
+                        <label style="flex:1;min-width:100px">🥉 季军<input type="number" id="f-r3" min="0" max="10000" value="30"></label>
+                    </div>
+                    <p class="form-hint" id="reward-hint">管理员发布的赛事奖励由系统发放；普通用户发布则从你的积分中锁定扣除，结算后发放给获奖者。</p>
+                </div>
                 <p class="form-note" id="f-note"></p>
                 <button type="submit" class="btn btn-blue" id="f-submit">发布赛事</button>
             </form>
@@ -100,7 +109,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003n"></script>
+    <script src="js/community.js?v=20261003o"></script>
     <script>
     (async function () {
         await renderSubHeader();
@@ -130,14 +139,17 @@
             var ve = new Date(document.getElementById('f-vote-end').value);
             if (!title) { note.textContent = '请填写标题'; note.className = 'form-note err'; return; }
             if (!(ss < se && se < ve)) { note.textContent = '时间顺序应为：投稿开始 < 投稿截止 < 投票截止'; note.className = 'form-note err'; return; }
+            var r1 = Math.max(0, parseInt(document.getElementById('f-r1').value, 10) || 0);
+            var r2 = Math.max(0, parseInt(document.getElementById('f-r2').value, 10) || 0);
+            var r3 = Math.max(0, parseInt(document.getElementById('f-r3').value, 10) || 0);
             btn.disabled = true; note.textContent = '发布中…'; note.className = 'form-note sending';
-            var r = await sb.from('contests').insert({
-                title: title, description: desc,
-                submit_start: ss.toISOString(), submit_end: se.toISOString(), vote_end: ve.toISOString(),
-                created_by: me.id
-            }).select('id').single();
+            var r = await sb.rpc('create_contest', {
+                p_title: title, p_desc: desc, p_cover: null,
+                p_submit_start: ss.toISOString(), p_submit_end: se.toISOString(), p_vote_end: ve.toISOString(),
+                p_r1: r1, p_r2: r2, p_r3: r3
+            });
             if (r.error) { note.textContent = '发布失败：' + r.error.message; note.className = 'form-note err'; btn.disabled = false; return; }
-            location.href = 'community-contest.html?id=' + r.data.id;
+            location.href = 'community-contest.html?id=' + r.data;
         });
     })();
     </script>
