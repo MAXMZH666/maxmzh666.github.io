@@ -68,11 +68,14 @@
 
                 <div class="set-card">
                     <h2>🔐 修改密码</h2>
+                    <label for="pw0">原密码</label>
+                    <input type="password" id="pw0" autocomplete="current-password" placeholder="输入原密码">
                     <label for="pw1">新密码（至少 6 位）</label>
                     <input type="password" id="pw1" autocomplete="new-password" placeholder="输入新密码">
                     <label for="pw2">确认新密码</label>
                     <input type="password" id="pw2" autocomplete="new-password" placeholder="再输入一次">
-                    <p style="margin-top:10px"><button class="btn btn-blue" id="pw-btn">更新密码</button></p>
+                    <p style="margin-top:10px"><button class="btn btn-blue" id="pw-btn">更新密码</button>
+                        <a href="javascript:void(0)" id="pw-forgot" style="margin-left:12px;font-size:.85rem">忘记密码？</a></p>
                     <p class="set-note" id="pw-note"></p>
                 </div>
 
@@ -124,7 +127,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003p"></script>
+    <script src="js/community.js?v=20261003q"></script>
     <script>
     (async function () {
         await renderSubHeader();
@@ -140,19 +143,47 @@
             n.className = 'set-note ' + (ok ? 'ok' : 'err');
         }
 
-        /* 修改密码 */
+        /* 修改密码：先验证原密码 */
         document.getElementById('pw-btn').addEventListener('click', async function () {
+            var p0 = document.getElementById('pw0').value;
             var p1 = document.getElementById('pw1').value;
             var p2 = document.getElementById('pw2').value;
-            if (p1.length < 6) { note('pw-note', '密码至少 6 位', false); return; }
+            if (!p0) { note('pw-note', '请输入原密码', false); return; }
+            if (p1.length < 6) { note('pw-note', '新密码至少 6 位', false); return; }
             if (p1 !== p2) { note('pw-note', '两次输入不一致', false); return; }
-            note('pw-note', '更新中…', true);
-            var r = await sb.auth.updateUser({ password: p1 });
-            if (r.error) note('pw-note', '更新失败：' + r.error.message, false);
-            else {
+            var btn = document.getElementById('pw-btn');
+            if (btn.disabled) return;
+            btn.disabled = true;
+            showLoading('更新中…');
+            note('pw-note', '验证原密码…', true);
+            try {
+                var v = await withTimeout(sb.auth.signInWithPassword({ email: me.email, password: p0 }), 20000, '验证超时，请重试');
+                if (v.error) throw new Error('原密码不正确');
+                note('pw-note', '更新中…', true);
+                var r = await withTimeout(sb.auth.updateUser({ password: p1 }), 20000, '更新超时，请重试');
+                if (r.error) throw r.error;
                 note('pw-note', '✅ 密码已更新', true);
+                document.getElementById('pw0').value = '';
                 document.getElementById('pw1').value = '';
                 document.getElementById('pw2').value = '';
+            } catch (err) {
+                note('pw-note', '更新失败：' + (err.message || '请稍后再试'), false);
+            } finally {
+                hideLoading();
+                btn.disabled = false;
+            }
+        });
+        /* 忘记密码：发重置邮件 */
+        document.getElementById('pw-forgot').addEventListener('click', async function () {
+            note('pw-note', '正在发送重置邮件…', true);
+            try {
+                var r = await withTimeout(sb.auth.resetPasswordForEmail(me.email, {
+                    redirectTo: 'https://maxmzh666.github.io/community-auth.html?mode=recover'
+                }), 20000, '发送超时，请重试');
+                if (r.error) throw r.error;
+                note('pw-note', '✅ 重置邮件已发送到 ' + me.email + '，请去邮箱点击链接设置新密码', true);
+            } catch (err) {
+                note('pw-note', '发送失败：' + (err.message || '请稍后再试'), false);
             }
         });
 
@@ -162,10 +193,17 @@
             if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { note('em-note', '请输入有效的邮箱地址', false); return; }
             if (em === me.email) { note('em-note', '与当前邮箱相同，无需修改', false); return; }
             note('em-note', '发送中…', true);
-            var r = await sb.auth.updateUser({ email: em });
+            var r = await withTimeout(sb.auth.updateUser({ email: em }, {
+                emailRedirectTo: 'https://maxmzh666.github.io/community-settings.html?email_changed=1'
+            }), 20000, '发送超时，请重试');
             if (r.error) note('em-note', '发送失败：' + r.error.message, false);
             else note('em-note', '✅ 确认邮件已发送到 ' + em + '，请点击邮件中的链接完成更换', true);
         });
+        /* 从改邮箱确认链接回来 */
+        if (new URLSearchParams(location.search).get('email_changed') === '1') {
+            note('em-note', '✅ 邮箱已更换为 ' + (me.email || '新邮箱'), true);
+            try { document.getElementById('cur-email').textContent = me.email || '—'; } catch (e) {}
+        }
 
         /* 偏好：读取 */
         var settings = {};

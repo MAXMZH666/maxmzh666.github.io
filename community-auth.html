@@ -86,6 +86,7 @@
                     <div id="row-password">
                         <label for="a-password">密码</label>
                         <input type="password" id="a-password" minlength="6" placeholder="至少 6 位">
+                        <p class="form-hint" id="forgot-row" style="text-align:right;margin-top:6px"><a href="javascript:void(0)" id="forgot-link">忘记密码？</a></p>
                     </div>
                     <div id="row-captcha">
                         <label for="a-captcha">验证码 <span class="form-hint">（人机验证）</span></label>
@@ -122,7 +123,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003p"></script>
+    <script src="js/community.js?v=20261003q"></script>
     <script>
     (async function () {
         await renderSubHeader();
@@ -130,12 +131,13 @@
         var next = params.get('next') || 'community.html';
         var verified = params.get('verified') === '1';
         var urlMode = params.get('mode');
+        var isRecovery = /type=recovery/.test(location.hash) || params.get('type') === 'recovery' || urlMode === 'recover';
 
         var sess0 = null;
         try { sess0 = (await sb.auth.getSession()).data.session; } catch (e) {}
         var me = sess0 ? sess0.user : (await currentUser());
 
-        if (me && !verified) {
+        if (me && !verified && !isRecovery) {
             var p = await currentProfile();
             document.getElementById('auth-box').style.display = 'none';
             document.getElementById('already').style.display = 'block';
@@ -167,6 +169,7 @@
             document.getElementById('row-captcha').style.display = 'block';
             /* 注册步骤1：只填用户名/邮箱/验证码并发送验证邮件，密码在点邮件链接回来后设置 */
             document.getElementById('row-password').style.display = isSignup ? 'none' : 'block';
+            document.getElementById('forgot-row').style.display = isSignup ? 'none' : 'block';
             document.getElementById('row-legal').style.display = 'block';
             btn.style.display = isSignup ? 'none' : 'block';
             btn.textContent = '登录';
@@ -278,6 +281,26 @@
 
         document.getElementById('auth-form').addEventListener('submit', async function (e) {
             e.preventDefault();
+            /* 重置密码：从邮件链接回来设置新密码 */
+            if (recoverMode) {
+                var pw3 = document.getElementById('a-password').value;
+                if (!pw3 || pw3.length < 6) { note.textContent = '密码至少 6 位'; note.className = 'form-note err'; return; }
+                if (btn.disabled) return;
+                btn.disabled = true;
+                showLoading('正在设置新密码…');
+                try {
+                    var u3 = await withTimeout(sb.auth.updateUser({ password: pw3 }), 25000, '请求超时，请重试');
+                    if (u3.error) throw u3.error;
+                    showLoading('设置成功，跳转中…');
+                    location.href = 'community.html';
+                } catch (err) {
+                    hideLoading();
+                    note.textContent = '设置失败：' + (err.message || '链接可能已过期，请重新发送重置邮件');
+                    note.className = 'form-note err';
+                    btn.disabled = false;
+                }
+                return;
+            }
             /* 注册步骤2：从邮件链接回来，只需设置密码 */
             if (signupStep2) {
                 var pw2 = document.getElementById('a-password').value;
@@ -287,15 +310,20 @@
                     note.className = 'form-note err';
                     return;
                 }
+                if (btn.disabled) return;
                 btn.disabled = true;
+                showLoading('正在完成注册…');
                 note.textContent = '正在完成注册…';
                 note.className = 'form-note sending';
                 try {
-                    var u = await sb.auth.updateUser({ password: pw2 });
+                    var u = await withTimeout(sb.auth.updateUser({ password: pw2 }), 25000, '设置密码超时，请检查网络后重试');
                     if (u.error) throw u.error;
-                    try { await ensureProfile(); } catch (e2) {}
+                    try { await withTimeout(ensureProfile(), 15000, '创建档案超时'); } catch (e2) {}
+                    hideLoading();
+                    showLoading('注册成功，跳转中…');
                     location.href = next;
                 } catch (err) {
+                    hideLoading();
                     note.textContent = '设置密码失败：' + (err.message || '请稍后再试');
                     note.className = 'form-note err';
                     btn.disabled = false;
@@ -314,15 +342,19 @@
                 document.getElementById('a-captcha').value = '';
                 return;
             }
+            if (btn.disabled) return;
             btn.disabled = true;
+            showLoading('登录中…');
             note.textContent = '登录中…';
             note.className = 'form-note sending';
             try {
-                var r2 = await sb.auth.signInWithPassword({ email: email, password: password });
+                var r2 = await withTimeout(sb.auth.signInWithPassword({ email: email, password: password }), 25000, '登录超时，请检查网络后重试');
                 if (r2.error) throw r2.error;
-                try { await ensureProfile(); } catch (e3) {}
+                try { await withTimeout(ensureProfile(), 15000, '加载档案超时'); } catch (e3) {}
+                showLoading('登录成功，跳转中…');
                 location.href = next;
             } catch (err) {
+                hideLoading();
                 var msg = err.message || '操作失败';
                 if (/invalid login credentials/i.test(msg)) msg = '邮箱或密码不对';
                 note.textContent = msg;
@@ -341,12 +373,50 @@
             return;
         }
 
+        /* 忘记密码：发重置邮件 */
+        document.getElementById('forgot-link').addEventListener('click', async function () {
+            var email = document.getElementById('a-email').value.trim();
+            if (!email) { note.textContent = '请先在上面填写邮箱'; note.className = 'form-note err'; return; }
+            note.textContent = '正在发送重置邮件…';
+            note.className = 'form-note sending';
+            try {
+                var r = await withTimeout(sb.auth.resetPasswordForEmail(email, {
+                    redirectTo: 'https://maxmzh666.github.io/community-auth.html?mode=recover'
+                }), 25000, '发送超时，请检查网络后重试');
+                if (r.error) throw r.error;
+                note.textContent = '重置邮件已发送到 ' + email + '，请去邮箱点击链接设置新密码';
+                note.className = 'form-note ok';
+            } catch (err) {
+                note.textContent = '发送失败：' + (err.message || '请稍后再试');
+                note.className = 'form-note err';
+            }
+        });
+
+        /* 从重置密码邮件回来：设置新密码 */
+        function enterRecover() {
+            recoverMode = true;
+            tabLogin.classList.add('active'); tabSignup.classList.remove('active');
+            ['row-username', 'row-email', 'row-email-code', 'row-captcha'].forEach(function (id) {
+                document.getElementById(id).style.display = 'none';
+            });
+            document.getElementById('row-password').style.display = 'block';
+            document.getElementById('forgot-row').style.display = 'none';
+            document.getElementById('row-legal').style.display = 'none';
+            document.querySelector('#row-password label').textContent = '新密码';
+            btn.style.display = 'block';
+            btn.textContent = '设置新密码';
+            note.textContent = '请设置新的登录密码';
+            note.className = 'form-note ok';
+        }
+        var recoverMode = false;
+
         /* 支持 ?mode=signup 直达注册 */
         setMode(urlMode === 'signup' ? 'signup' : 'login');
         if (verified && !me) {
             note.textContent = '验证链接无效或已过期，请重新发送验证邮件';
             note.className = 'form-note err';
         }
+        if (isRecovery && me) { enterRecover(); }
     })();
     </script>
     <script defer src="https://vercount.one/js"></script>

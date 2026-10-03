@@ -492,3 +492,148 @@ async function runCpp(code, inputText, say, append) {
     });
 }
 
+
+/* ===== 全局加载蒙面 ===== */
+function showLoading(text) {
+    var ov = document.getElementById('mmc-loading');
+    if (!ov) {
+        ov = document.createElement('div');
+        ov.id = 'mmc-loading';
+        ov.innerHTML = '<div class="mmc-loading-box"><div class="mmc-spinner"></div><div class="mmc-loading-text"></div></div>' +
+            '<style>#mmc-loading{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(2px)}' +
+            '.mmc-loading-box{display:flex;flex-direction:column;align-items:center;gap:14px;background:#1c1c24;border:1px solid #333;padding:28px 36px;border-radius:14px}' +
+            '.mmc-spinner{width:38px;height:38px;border-radius:50%;border:4px solid #444;border-top-color:#ffcc00;animation:mmcspin 0.8s linear infinite}' +
+            '@keyframes mmcspin{to{transform:rotate(360deg)}}' +
+            '.mmc-loading-text{color:#eee;font-size:15px}</style>';
+        document.body.appendChild(ov);
+    }
+    var t = ov.querySelector('.mmc-loading-text');
+    if (t) t.textContent = text || '加载中…';
+    ov.style.display = 'flex';
+}
+function hideLoading() {
+    var ov = document.getElementById('mmc-loading');
+    if (ov) ov.style.display = 'none';
+}
+/* 内部跳转自动蒙面 */
+document.addEventListener('click', function (e) {
+    var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+    if (!a) return;
+    var href = a.getAttribute('href') || '';
+    if (!href || href.charAt(0) === '#' || href.indexOf('javascript:') === 0) return;
+    if (a.target === '_blank') return;
+    if (/^https?:\/\//i.test(href) && href.indexOf(location.host) === -1) return;
+    showLoading('跳转中…');
+});
+/* 带超时的 Promise，防请求 hanging */
+function withTimeout(promise, ms, msg) {
+    return Promise.race([
+        promise,
+        new Promise(function (_, reject) {
+            setTimeout(function () { reject(new Error(msg || '请求超时，请检查网络后重试')); }, ms || 25000);
+        })
+    ]);
+}
+
+/* ===== 轻量 Markdown 渲染（先转义防 XSS，再解析常用语法） ===== */
+function md(src) {
+    var s = String(src == null ? '' : src);
+    s = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    var codeBlocks = [];
+    s = s.replace(/```([\s\S]*?)```/g, function (m, c) {
+        codeBlocks.push('<pre class="md-pre"><code>' + c.replace(/^\n+|\n+$/g, '') + '</code></pre>');
+        return '\u0000' + (codeBlocks.length - 1) + '\u0000';
+    });
+    var codes = [];
+    s = s.replace(/`([^`\n]+)`/g, function (m, c) {
+        codes.push('<code class="md-code">' + c + '</code>');
+        return '\u0001' + (codes.length - 1) + '\u0001';
+    });
+    s = s.replace(/^######\s?(.*)$/gm, '<h6 class="md-h">$1</h6>')
+         .replace(/^#####\s?(.*)$/gm, '<h5 class="md-h">$1</h5>')
+         .replace(/^####\s?(.*)$/gm, '<h4 class="md-h">$1</h4>')
+         .replace(/^###\s?(.*)$/gm, '<h3 class="md-h">$1</h3>')
+         .replace(/^##\s?(.*)$/gm, '<h2 class="md-h">$1</h2>')
+         .replace(/^#\s?(.*)$/gm, '<h1 class="md-h">$1</h1>');
+    s = s.replace(/^&gt;\s?(.*)$/gm, '<blockquote class="md-quote">$1</blockquote>');
+    s = s.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+         .replace(/__([^_]+)__/g, '<b>$1</b>')
+         .replace(/\*([^*\n]+)\*/g, '<i>$1</i>')
+         .replace(/_([^_\n]+)_/g, '<i>$1</i>')
+         .replace(/~~([^~]+)~~/g, '<del>$1</del>');
+    s = s.replace(/!\[([^\]]*)\]\((https?:[^)\s]+)\)/g, '<img class="md-img" alt="$1" src="$2" loading="lazy">')
+         .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a class="md-link" href="$2" target="_blank" rel="noopener">$1</a>');
+    /* 列表：连续的 - / * / 数字行合并 */
+    s = s.replace(/((?:^|\n)(?:\s*[-*]\s+[^\n]+\n?)+)/g, function (m) {
+        var items = m.trim().split('\n').map(function (l) {
+            return '<li>' + l.replace(/^\s*[-*]\s+/, '') + '</li>';
+        }).join('');
+        return '\n<ul class="md-ul">' + items + '</ul>\n';
+    });
+    s = s.replace(/((?:^|\n)(?:\s*\d+\.\s+[^\n]+\n?)+)/g, function (m) {
+        var items = m.trim().split('\n').map(function (l) {
+            return '<li>' + l.replace(/^\s*\d+\.\s+/, '') + '</li>';
+        }).join('');
+        return '\n<ol class="md-ol">' + items + '</ol>\n';
+    });
+    s = s.split('\n').map(function (l) {
+        var t = l.trim();
+        if (!t) return '';
+        if (/^<(h\d|ul|ol|li|blockquote|pre|img)/.test(t)) return l;
+        return '<p class="md-p">' + l + '</p>';
+    }).join('\n');
+    s = s.replace(/\u0000(\d+)\u0000/g, function (m, i) { return codeBlocks[+i]; })
+         .replace(/\u0001(\d+)\u0001/g, function (m, i) { return codes[+i]; });
+    return s;
+}
+/* Markdown 语法说明弹窗 */
+function mdHelp() {
+    var ov = document.getElementById('mmc-mdhelp');
+    if (ov) { ov.style.display = 'flex'; return; }
+    ov = document.createElement('div');
+    ov.id = 'mmc-mdhelp';
+    ov.innerHTML = '<div class="mmc-mdhelp-box"><h3>📝 Markdown 语法说明</h3>' +
+        '<table class="mmc-mdhelp-tb">' +
+        '<tr><td><code>**粗体**</code></td><td><b>粗体</b></td></tr>' +
+        '<tr><td><code>*斜体*</code></td><td><i>斜体</i></td></tr>' +
+        '<tr><td><code>~~删除线~~</code></td><td><del>删除线</del></td></tr>' +
+        '<tr><td><code>`代码`</code></td><td><code class="md-code">代码</code></td></tr>' +
+        '<tr><td><code>```<br>代码块<br>```</code></td><td>多行代码块</td></tr>' +
+        '<tr><td><code># 标题</code></td><td>大标题（## 更小）</td></tr>' +
+        '<tr><td><code>&gt; 引用</code></td><td>引用块</td></tr>' +
+        '<tr><td><code>- 列表项</code></td><td>无序列表</td></tr>' +
+        '<tr><td><code>1. 列表项</code></td><td>有序列表</td></tr>' +
+        '<tr><td><code>[文字](https://…)</code></td><td>超链接</td></tr>' +
+        '<tr><td><code>![说明](https://….png)</code></td><td>图片</td></tr>' +
+        '</table><button class="btn btn-blue" id="mmc-mdhelp-close">知道了</button></div>' +
+        '<style>#mmc-mdhelp{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6)}' +
+        '.mmc-mdhelp-box{background:#1c1c24;border:1px solid #444;border-radius:14px;padding:22px;max-width:420px;width:92%;max-height:80vh;overflow:auto}' +
+        '.mmc-mdhelp-box h3{margin:0 0 12px}' +
+        '.mmc-mdhelp-tb{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:14px}' +
+        '.mmc-mdhelp-tb td{border-bottom:1px solid #333;padding:7px 6px;vertical-align:top}' +
+        '.mmc-mdhelp-tb code{background:#2a2a35;padding:2px 6px;border-radius:4px}</style>';
+    document.body.appendChild(ov);
+    document.getElementById('mmc-mdhelp-close').addEventListener('click', function () { ov.style.display = 'none'; });
+    ov.addEventListener('click', function (e) { if (e.target === ov) ov.style.display = 'none'; });
+}
+/* 在 textarea 旁插入 “Markdown 说明” 小按钮，传 textarea 的 id */
+function mdHelpBtn(textareaId) {
+    return ' <a href="javascript:void(0)" onclick="mdHelp()" style="font-size:12px;color:#8ab4ff">📝 Markdown 说明</a>';
+}
+
+/* Markdown 输出基础样式（注入一次） */
+(function () {
+    if (document.getElementById('mmc-md-style')) return;
+    var st = document.createElement('style');
+    st.id = 'mmc-md-style';
+    st.textContent = '.md-p{margin:.5em 0;line-height:1.7;word-break:break-word}' +
+        '.md-h{margin:.7em 0 .4em;line-height:1.4}' +
+        '.md-quote{border-left:3px solid #4d7cfe;padding:6px 12px;margin:.6em 0;background:rgba(77,124,254,.08);border-radius:0 8px 8px 0}' +
+        '.md-code{background:#2a2a35;padding:2px 6px;border-radius:4px;font-family:monospace;font-size:.92em}' +
+        '.md-pre{background:#16161d;border:1px solid #333;border-radius:8px;padding:12px;overflow-x:auto;margin:.6em 0}' +
+        '.md-pre code{font-family:monospace;font-size:.9em;line-height:1.6}' +
+        '.md-ul,.md-ol{margin:.5em 0;padding-left:1.6em;line-height:1.7}' +
+        '.md-img{max-width:100%;border-radius:8px;margin:.4em 0}' +
+        '.md-link{color:#8ab4ff}';
+    document.head.appendChild(st);
+})();

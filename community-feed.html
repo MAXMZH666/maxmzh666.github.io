@@ -97,7 +97,7 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003p"></script>
+    <script src="js/community.js?v=20261003q"></script>
     <script src="js/scripts.js"></script>
     <script>
     (async function () {
@@ -278,6 +278,15 @@
             wrap.innerHTML = '<p class="works-note">加载失败：' + esc(e.message) + '</p>';
         }
     }
+    /* 通知 tab 红点：有未读就亮 */
+    (async function () {
+        try {
+            var me = await currentUser();
+            if (!me) return;
+            var c = await sb.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', me.id).eq('is_read', false);
+            if (c.count > 0) document.getElementById('notify-dot').style.display = 'inline';
+        } catch (e) {}
+    })();
     (function () {
         var tabs = document.querySelectorAll('#feed-tabs [data-ftab]');
         var notifyLoaded = false;
