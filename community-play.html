@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="MAXMZH 游戏社区作品试玩。">
+    <meta name="description" content="MAX社区作品试玩。">
     <meta name="theme-color" content="#0b0b0e">
     <meta property="og:title" content="MAXMZH - 社区作品">
     <meta property="og:type" content="website">
@@ -37,20 +37,16 @@
     </header>
     <div class="sub-header">
         <div class="sub-header-inner">
-            <a class="sub-brand" href="community-home.html">🎮 <span>游戏社区</span></a>
+            <a class="sub-brand" href="community-home.html">🎮 <span>MAX社区</span></a>
             <nav class="sub-links" aria-label="社区导航">
                 <a href="community-home.html" data-sub="home">首页</a>
                 <a href="community.html" data-sub="works">作品</a>
-                <a href="community-discover.html" data-sub="discover">🔍 发现</a>
-                <a href="community-tasks.html" data-sub="tasks">📋 任务</a>
-                <a href="community-shop.html" data-sub="shop">🛍️ 商城</a>
+                <a href="community-shop.html" data-sub="shop">🎁 任务商城</a>
                 <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
                 <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
                 <a href="community-studios.html" data-sub="studios">🏢 工作室</a>
-                <a href="community-publish.html" data-sub="publish">发布作品</a>
-                <a href="community-code.html" data-sub="code">💻 在线编程</a>
-                <a href="community-rank.html" data-sub="rank">🏆 排行榜</a>
-                <a href="community-notify.html" data-sub="notify" id="sub-bell" style="display:none">🔔 通知</a>
+                <a href="community-publish.html" data-sub="publish">🚀 发布</a>
+                <a href="community-feed.html" data-sub="feed" id="sub-bell">💬 动态</a>
                 <span id="sub-auth"><a href="community-auth.html">登录</a></span>
             </nav>
         </div>
@@ -81,7 +77,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
-    <script src="js/community.js?v=20261003i"></script>
+    <script src="js/community.js?v=20261003m"></script>
     <script>
     function runnerHtml() {
         return '<div class="runner">' +
@@ -161,6 +157,7 @@
         })();
         var me = await currentUser();
         var isAuthor = me && me.id === w.author_id;
+        if (me) { try { await isAdmin(); } catch (e) {} }
 
         /* ---- 按类型渲染预览区 ---- */
         var previewHtml = '';
@@ -172,10 +169,16 @@
             previewHtml = '<div class="player-wrap player-lazy" data-embed="' + esc(embedUrl) + '">' +
                 '<div class="player-cover">' + coverImg +
                 '<button class="btn btn-blue btn-lg" id="player-start">▶ 点击试玩</button></div></div>' +
+                ((w.is_open_source || isAuthor || (me && isAdminFlag)) && w.sb3_url
+                    ? '<p style="margin-top:8px"><a class="btn btn-ghost btn-sm" href="' + esc(w.sb3_url) + '" download>⬇ 下载源码 .sb3</a></p>'
+                    : '') +
                 (isAuthor && wtype === 'scratch' ? '<p class="form-hint" style="margin-top:10px">💻 <a href="community-code.html?edit=' + id + '">在在线编程里继续编辑这个作品</a></p>' : '');
         } else if (wtype === 'python' || wtype === 'cpp') {
-            previewHtml = '<pre class="code-view"><code id="code-block" class="' + (wtype === 'python' ? 'language-python' : 'language-cpp') + '">' +
-                esc(w.code || '') + '</code></pre>' + runnerHtml();
+            var canSeeCode = w.is_open_source || isAuthor || (me && isAdminFlag);
+            previewHtml = (canSeeCode
+                ? '<pre class="code-view"><code id="code-block" class="' + (wtype === 'python' ? 'language-python' : 'language-cpp') + '">' +
+                  esc(w.code || '') + '</code></pre>'
+                : '<div class="tip-box">🔒 作者未开源此作品，你可以在线运行，但无法查看源代码。</div>') + runnerHtml();
         } else if (wtype === 'website') {
             var siteSrc = w.site_url || '';
             previewHtml = '<div class="apk-card">' +
@@ -294,8 +297,8 @@
         /* 分享：移动端调系统分享面板，桌面端复制链接 */
         document.getElementById('share-btn').addEventListener('click', async function () {
             var shareData = {
-                title: w.title + ' - MAXMZH 游戏社区',
-                text: '我在 MAXMZH 游戏社区发现了《' + w.title + '》，来玩玩看！',
+                title: w.title + ' - MAX社区',
+                text: '我在 MAX社区发现了《' + w.title + '》，来玩玩看！',
                 url: location.href
             };
             function copied(btn) {
@@ -518,7 +521,9 @@
                 if (box.style.display !== 'none') { box.style.display = 'none'; return; }
                 var t = workTypeOf(v), ph = '';
                 if (t === 'python' || t === 'cpp') {
-                    ph = '<pre class="code-view"><code>' + esc(v.code || '') + '</code></pre>';
+                    ph = (w.is_open_source || isAuthor || (me && isAdminFlag))
+                        ? '<pre class="code-view"><code>' + esc(v.code || '') + '</code></pre>'
+                        : '<p class="form-hint">🔒 作者未开源，无法查看此版本源码</p>';
                 } else if (t === 'scratch' && v.sb3_url) {
                     ph = '<button class="btn btn-blue btn-sm" data-vplay="' + v.id + '">在播放器中试玩此版本</button> ';
                 } else if ((t === 'apk' || t === 'windows' || t === 'linux') && v.apk_url) {
