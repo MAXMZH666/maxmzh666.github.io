@@ -324,11 +324,14 @@
         menu.appendChild(makeItem('\uD83D\uDCE4 \u53D1\u5E03\u5230\u793E\u533A', publishToCommunity));
     }
     var HIDE_KEYS = ['查看作品', '作品页面', 'See project page', 'TurboWarp Feedback', 'TurboWarp 反馈'];
+    var SKIP_TAGS = { script: 1, style: 1, meta: 1, link: 1, title: 1, noscript: 1, template: 1, head: 1, html: 1 };
     function hideTopButtons() {
         /* 全量叶子扫描：顶栏按钮可能是无 role 的普通 div；用子串匹配防翻译差异 */
         var all = document.getElementsByTagName('*');
         for (var i = 0; i < all.length; i++) {
             var el = all[i];
+            var tag0 = (el.tagName || '').toLowerCase();
+            if (SKIP_TAGS[tag0]) continue; /* 跳过 script/style 等非渲染元素：脚本自身含关键词，误命中会藏掉整个 body */
             if (el.children.length !== 0) continue;
             var t = (el.textContent || '').trim();
             if (!t) continue;
@@ -346,7 +349,9 @@
                     pc.indexOf('button') !== -1) { target = p; break; }
                 p = p.parentNode;
             }
-            (target || el.parentNode || el).style.display = 'none';
+            var hideEl = target || el;
+            if (hideEl === document.body || hideEl === document.documentElement) continue;
+            hideEl.style.display = 'none';
         }
     }
     /* 防抖：React 启动时有数千次 DOM 变更，全量扫描必须节流，否则页面卡死 */
