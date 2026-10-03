@@ -28,7 +28,9 @@
         .member-chip img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,.08); }
         .role-tag { font-size: .7rem; padding: 2px 8px; border-radius: 10px; background: rgba(77,124,254,.15); color: #8fb0ff; }
         .role-tag.owner { background: rgba(255,212,59,.2); color: #ffd43b; }
+        .role-tag.vice { background: rgba(156,77,254,.2); color: #b197fc; }
         .role-tag.admin { background: rgba(81,207,102,.15); color: #51cf66; }
+        .role-sel { font-size: .75rem; padding: 2px 6px; border-radius: 8px; background: var(--card); color: inherit; border: 1px solid var(--border, rgba(255,255,255,.12)); margin-left: 4px; }
         .work-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-top: 8px; }
         .work-card { border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 12px; overflow: hidden; text-decoration: none; color: inherit; display: block; background: var(--card, rgba(255,255,255,.02)); }
         .work-card .cover { height: 100px; background: rgba(255,255,255,.04); display: flex; align-items: center; justify-content: center; overflow: hidden; }
@@ -97,13 +99,13 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003n"></script>
+    <script src="js/community.js?v=20261003o"></script>
     <script>
     function getId() {
         var m = location.search.match(/[?&]id=([^&]+)/);
         return m ? m[1] : null;
     }
-    var ROLE_TEXT = { owner: '创建者', admin: '管理员', member: '成员' };
+    var ROLE_TEXT = { owner: '市长', vice: '副市长', admin: '管理员', member: '成员' };
 
     async function load() {
         var sid = getId();
@@ -115,7 +117,9 @@
         var s = sr.data;
         var me = await currentUser();
         var myRole = me ? await myStudioRole(sid, me.id) : null;
-        var isManager = myRole === 'owner' || myRole === 'admin';
+        var isManager = myRole === 'owner' || myRole === 'vice' || myRole === 'admin';
+        var canAppoint = myRole === 'owner' || myRole === 'vice';
+        var canEdit = isManager;
         var isMember = !!myRole;
 
         /* 成员 */
@@ -153,7 +157,9 @@
             (s.description ? '<div class="desc">' + esc(s.description) + '</div>' : '') +
             '<div class="case-meta" style="margin-top:6px">👥 ' + members.length + ' 位成员 · 🎮 ' + swList.length + ' 件作品' +
             (myRole ? ' · 我的身份：<span class="role-tag ' + myRole + '">' + ROLE_TEXT[myRole] + '</span>' : '') + '</div>' +
-            '</div></div>';
+            '</div>' +
+            (canEdit ? '<div style="margin-top:8px"><button class="btn btn-ghost btn-sm" id="edit-studio-btn">✏️ 修改工作室信息</button></div>' : '') +
+            '</div>';
 
         /* 成员区 */
         html += '<h2 class="sec-title">👥 成员（' + members.length + '）</h2><div class="member-list">' +
@@ -162,9 +168,25 @@
                 var uav = u.avatar_url ? '<img src="' + esc(u.avatar_url) + '" alt="">' : '<img alt="">';
                 var rm = (isManager && m.role !== 'owner' && m.user_id !== me.id)
                     ? ' <button class="remove-btn" data-rm-member="' + m.user_id + '">移除</button>' : '';
+                var appt = '';
+                if (canAppoint && m.user_id !== me.id && m.role !== 'owner') {
+                    appt = ' <select class="role-sel" data-role-user="' + m.user_id + '" data-cur="' + m.role + '">' +
+                        ['member', 'admin', 'vice'].map(function (r) {
+                            return '<option value="' + r + '"' + (m.role === r ? ' selected' : '') + '>' + ROLE_TEXT[r] + '</option>';
+                        }).join('') + '</select>';
+                }
                 return '<span class="member-chip">' + uav + esc(u.username || '未知') +
-                    ' <span class="role-tag ' + m.role + '">' + ROLE_TEXT[m.role] + '</span>' + rm + '</span>';
+                    ' <span class="role-tag ' + m.role + '">' + ROLE_TEXT[m.role] + '</span>' + appt + rm + '</span>';
             }).join('') + '</div>';
+
+        /* 公告区 */
+        var annHtml = '<h2 class="sec-title">📢 工作室公告</h2><div id="announce-list"><p class="works-note">加载中…</p></div>';
+        if (isManager) {
+            annHtml += '<div class="manage-box"><b>📢 发布公告</b><br>' +
+                '<textarea id="announce-input" rows="3" maxlength="500" placeholder="写点通知大家的事…" style="width:100%"></textarea>' +
+                '<button class="btn btn-blue" id="announce-btn" style="margin-top:8px">发布公告</button></div>';
+        }
+        html += annHtml;
 
         /* 管理：邀请成员 */
         if (isManager) {
@@ -234,6 +256,101 @@
                 if (r.error) alert('移除失败：' + r.error.message);
                 else load();
             });
+        });
+
+        /* 任命职位 */
+        document.querySelectorAll('.role-sel').forEach(function (sel) {
+            sel.addEventListener('change', async function () {
+                var uid = sel.getAttribute('data-role-user');
+                var newRole = sel.value;
+                var cur = sel.getAttribute('data-cur');
+                if (newRole === cur) return;
+                /* 副市长只能有1个，管理员最多3个 */
+                if (newRole === 'vice') {
+                    var hasVice = members.some(function (m) { return m.role === 'vice' && m.user_id !== uid; });
+                    if (hasVice) { alert('副市长只能有1位'); sel.value = cur; return; }
+                    if (myRole !== 'owner') { alert('只有市长可以任命副市长'); sel.value = cur; return; }
+                }
+                if (newRole === 'admin') {
+                    var adminCount = members.filter(function (m) { return m.role === 'admin' && m.user_id !== uid; }).length;
+                    if (adminCount >= 3) { alert('管理员最多3位'); sel.value = cur; return; }
+                }
+                if (!confirm('确认将该成员设为「' + ROLE_TEXT[newRole] + '」吗？')) { sel.value = cur; return; }
+                var r = await sb.from('studio_members').update({ role: newRole }).eq('studio_id', sid).eq('user_id', uid);
+                if (r.error) { alert('任命失败：' + r.error.message); sel.value = cur; }
+                else load();
+            });
+        });
+
+        /* 修改工作室信息 */
+        var editStudioBtn = document.getElementById('edit-studio-btn');
+        if (editStudioBtn) editStudioBtn.addEventListener('click', function () {
+            var mHtml = '<div class="modal-backdrop" id="edit-studio-modal" style="display:flex">' +
+                '<div class="modal" style="max-width:480px"><h3>✏️ 修改工作室信息</h3>' +
+                '<label>工作室名称</label><input type="text" id="es-name" maxlength="30" value="' + esc(s.name || '') + '">' +
+                '<label>简介</label><textarea id="es-desc" rows="4" maxlength="500">' + esc(s.description || '') + '</textarea>' +
+                '<label>封面图（不换请留空）</label><input type="file" id="es-cover" accept="image/*">' +
+                '<p class="form-note" id="es-note"></p>' +
+                '<div class="modal-actions"><button class="btn" id="es-cancel" type="button">取消</button>' +
+                '<button class="btn btn-blue" id="es-save" type="button">保存</button></div></div></div>';
+            document.body.insertAdjacentHTML('beforeend', mHtml);
+            var modal = document.getElementById('edit-studio-modal');
+            document.getElementById('es-cancel').addEventListener('click', function () { modal.remove(); });
+            modal.addEventListener('click', function (e) { if (e.target === modal) modal.remove(); });
+            document.getElementById('es-save').addEventListener('click', async function () {
+                var nm = document.getElementById('es-name').value.trim();
+                var ds = document.getElementById('es-desc').value.trim();
+                var n = document.getElementById('es-note');
+                if (!nm) { n.textContent = '请填写名称'; n.className = 'form-note err'; return; }
+                n.textContent = '保存中…'; n.className = 'form-note sending';
+                var payload = { name: nm, description: ds };
+                var cf = document.getElementById('es-cover').files[0];
+                if (cf) {
+                    var ext = (cf.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+                    payload.cover_url = await uploadWithProgress('covers', 'studio/' + sid + '_' + Date.now() + '.' + ext, cf, cf.type || 'image/jpeg', null);
+                }
+                var r = await sb.from('studios').update(payload).eq('id', sid);
+                if (r.error) { n.textContent = '保存失败：' + r.error.message; n.className = 'form-note err'; return; }
+                modal.remove(); load();
+            });
+        });
+
+        /* 公告：加载 + 发布 + 删除 */
+        async function loadAnnounces() {
+            var box = document.getElementById('announce-list');
+            if (!box) return;
+            try {
+                var r = await sb.from('studio_announcements').select('*').eq('studio_id', sid).order('created_at', { ascending: false }).limit(20);
+                var anns = r.data || [];
+                var auids = anns.map(function (a) { return a.author_id; });
+                var anames = {};
+                if (auids.length) {
+                    var pr = await sb.from('profiles').select('id,username').in('id', auids);
+                    (pr.data || []).forEach(function (p) { anames[p.id] = p.username; });
+                }
+                box.innerHTML = anns.length ? anns.map(function (a) {
+                    return '<div class="comment"><div class="comment-meta">' + esc(anames[a.author_id] || '未知') +
+                        ' · ' + fmtDate(a.created_at) +
+                        (isManager ? ' <button class="remove-btn" data-rm-ann="' + a.id + '">删除</button>' : '') +
+                        '</div><p>' + esc(a.content) + '</p></div>';
+                }).join('') : '<p class="works-note">暂无公告</p>';
+                box.querySelectorAll('[data-rm-ann]').forEach(function (b) {
+                    b.addEventListener('click', async function () {
+                        if (!confirm('删除这条公告？')) return;
+                        await sb.from('studio_announcements').delete().eq('id', b.getAttribute('data-rm-ann'));
+                        loadAnnounces();
+                    });
+                });
+            } catch (e) { box.innerHTML = '<p class="works-note">加载失败</p>'; }
+        }
+        await loadAnnounces();
+        var annBtn = document.getElementById('announce-btn');
+        if (annBtn) annBtn.addEventListener('click', async function () {
+            var tx = document.getElementById('announce-input').value.trim();
+            if (!tx) { alert('请填写公告内容'); return; }
+            var r = await sb.from('studio_announcements').insert({ studio_id: sid, author_id: me.id, content: tx });
+            if (r.error) alert('发布失败：' + r.error.message);
+            else { document.getElementById('announce-input').value = ''; loadAnnounces(); }
         });
 
         /* 退出 */

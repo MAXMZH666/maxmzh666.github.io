@@ -272,36 +272,48 @@
     }
 
     /* ---- 注入文件菜单项 + 隐藏顶部按钮 ---- */
-    var menuDone = false;
-    function menuItemStyle(el) {
-        el.style.cssText = 'padding:8px 16px;cursor:pointer;font-size:14px;color:#fff;' +
-            'border-top:1px solid rgba(255,255,255,.12);white-space:nowrap;';
-        el.onmouseenter = function () { el.style.background = 'rgba(255,255,255,.12)'; };
-        el.onmouseleave = function () { el.style.background = ''; };
-    }
     function tryInjectMenu() {
-        /* TurboWarp 文件下拉菜单：找到包含「保存到电脑」的菜单容器 */
-        var candidates = document.querySelectorAll('[class*="menu"], [role="menu"], ul');
-        for (var i = 0; i < candidates.length; i++) {
-            var m = candidates[i];
-            if (m.getAttribute('data-mmc-injected')) continue;
-            var txt = m.textContent || '';
-            if (txt.indexOf('保存到电脑') === -1 && txt.indexOf('保存到文件') === -1) continue;
-            if (m.querySelector('[data-mmc-item]')) continue;
-            m.setAttribute('data-mmc-injected', '1');
-            var save = document.createElement('div');
-            save.setAttribute('data-mmc-item', '1');
-            save.textContent = '💾 保存草稿到社区';
-            menuItemStyle(save);
-            save.addEventListener('click', function (ev) { ev.stopPropagation(); saveDraft(false); });
-            var pub = document.createElement('div');
-            pub.setAttribute('data-mmc-item', '1');
-            pub.textContent = '📤 发布到社区';
-            menuItemStyle(pub);
-            pub.addEventListener('click', function (ev) { ev.stopPropagation(); publishToCommunity(); });
-            m.appendChild(save);
-            m.appendChild(pub);
+        /* 先清理旧注入（React 重渲染会重建菜单，防止重复） */
+        var olds = document.querySelectorAll('[data-mmc-item]');
+        for (var oi = 0; oi < olds.length; oi++) olds[oi].remove();
+        /* 找到「保存到电脑」叶子菜单项，向上取真正的下拉菜单容器 */
+        var saveItem = null;
+        var all = document.getElementsByTagName('*');
+        for (var i = 0; i < all.length; i++) {
+            var el = all[i];
+            if (el.children.length !== 0) continue;
+            var t = (el.textContent || '').trim();
+            if (t !== '保存到电脑' && t !== '保存到文件') continue;
+            /* 排除顶栏：向上确认不在 menu-bar 内 */
+            var p = el, inBar = false;
+            while (p && p !== document.body) {
+                var cn = (p.className && p.className.baseVal !== undefined) ? p.className.baseVal : (p.className || '');
+                if (typeof cn === 'string' && cn.indexOf('menu-bar') !== -1) { inBar = true; break; }
+                p = p.parentNode;
+            }
+            if (!inBar) { saveItem = el; break; }
         }
+        if (!saveItem) return;
+        var menu = saveItem.parentNode;
+        /* 向上找到菜单容器（排除 menu-bar） */
+        while (menu && menu !== document.body) {
+            var mcn = (menu.className && menu.className.baseVal !== undefined) ? menu.className.baseVal : (menu.className || '');
+            if (typeof mcn === 'string' && mcn.indexOf('menu') !== -1 && mcn.indexOf('menu-bar') === -1) break;
+            menu = menu.parentNode;
+        }
+        if (!menu || menu === document.body) return;
+        function makeItem(label, fn) {
+            var div = document.createElement('div');
+            /* 继承原菜单项样式，保证排版一致 */
+            div.className = saveItem.className;
+            div.setAttribute('data-mmc-item', '1');
+            div.textContent = label;
+            div.style.cursor = 'pointer';
+            div.addEventListener('click', function (ev) { ev.stopPropagation(); fn(); });
+            return div;
+        }
+        menu.appendChild(makeItem('💾 保存草稿到社区', function () { saveDraft(false); }));
+        menu.appendChild(makeItem('📤 发布到社区', publishToCommunity));
     }
     function hideTopButtons() {
         var btns = document.querySelectorAll('button, a');

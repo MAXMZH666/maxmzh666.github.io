@@ -105,7 +105,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003n"></script>
+    <script src="js/community.js?v=20261003o"></script>
     <div class="modal-backdrop" id="vote-modal" style="display:none">
         <div class="modal"><h3>确认投票</h3>
             <p class="form-hint">每人每赛事限投 1 票，投票后不可更改，确认吗？</p>
@@ -171,7 +171,9 @@
             (c.description ? '<div class="contest-desc">' + esc(c.description) + '</div>' : '') +
             '<div class="contest-times">📝 投稿：' + fmtDT(c.submit_start) + ' ~ ' + fmtDT(c.submit_end) +
             '<br>🗳️ 投票截止：' + fmtDT(c.vote_end) +
-            '<br>🏆 奖励：冠军 +100 积分 / 亚军 +50 / 季军 +30</div>' +
+            '<br>🏆 奖励：冠军 +' + (c.reward_1st || 100) + ' 积分 / 亚军 +' + (c.reward_2nd || 50) + ' / 季军 +' + (c.reward_3rd || 30) + '</div>' +
+            (canManage && st !== 'ended'
+                ? '<p style="margin-top:8px"><button class="btn btn-ghost btn-sm" id="edit-contest-btn">✏️ 修改赛事</button></p>' : '') +
             (st === 'ended' && canManage && !c.settled
                 ? '<p style="margin-top:12px"><button class="btn btn-blue" id="settle-btn">🏆 结算并发奖</button></p>' : '') +
             (c.settled ? '<p style="margin-top:8px;color:#51cf66">✅ 已结算，奖金已发放</p>' : '') +
@@ -246,6 +248,32 @@
                 _pendingVoteEntry = b.getAttribute('data-vote');
                 _pendingVoteBtn = b;
                 document.getElementById('vote-modal').style.display = 'flex';
+            });
+        });
+
+        /* 修改赛事 */
+        var editBtn = document.getElementById('edit-contest-btn');
+        if (editBtn) editBtn.addEventListener('click', function () {
+            var mHtml = '<div class="modal-backdrop" id="edit-contest-modal" style="display:flex">' +
+                '<div class="modal" style="max-width:480px"><h3>✏️ 修改赛事</h3>' +
+                '<label>赛事标题</label><input type="text" id="ec-title" maxlength="60" value="' + esc(c.title || '') + '">' +
+                '<label>赛事介绍</label><textarea id="ec-desc" rows="4" maxlength="2000">' + esc(c.description || '') + '</textarea>' +
+                '<p class="form-hint">奖励在发布时已锁定，不可修改</p>' +
+                '<p class="form-note" id="ec-note"></p>' +
+                '<div class="modal-actions"><button class="btn" id="ec-cancel" type="button">取消</button>' +
+                '<button class="btn btn-blue" id="ec-save" type="button">保存</button></div></div></div>';
+            document.body.insertAdjacentHTML('beforeend', mHtml);
+            var modal = document.getElementById('edit-contest-modal');
+            document.getElementById('ec-cancel').addEventListener('click', function () { modal.remove(); });
+            modal.addEventListener('click', function (e) { if (e.target === modal) modal.remove(); });
+            document.getElementById('ec-save').addEventListener('click', async function () {
+                var t = document.getElementById('ec-title').value.trim();
+                var d = document.getElementById('ec-desc').value.trim();
+                var n = document.getElementById('ec-note');
+                if (!t) { n.textContent = '请填写标题'; n.className = 'form-note err'; return; }
+                var r = await sb.from('contests').update({ title: t, description: d }).eq('id', cid);
+                if (r.error) { n.textContent = '保存失败：' + r.error.message; n.className = 'form-note err'; return; }
+                modal.remove(); load();
             });
         });
 

@@ -89,7 +89,7 @@
                         <canvas id="captcha-canvas" width="120" height="44" title="看不清？点我换一张"></canvas>
                         <input type="text" id="a-captcha" maxlength="4" required placeholder="输入图中字符" autocomplete="off">
                     </div>
-                    <div id="row-legal" style="display:none">
+                    <div id="row-legal">
                         <label class="check-row"><input type="checkbox" id="a-legal">
                             我已阅读并同意 <a href="community-legal.html" target="_blank">《用户协议》</a> 和 <a href="community-legal.html" target="_blank">《隐私政策》</a></label>
                     </div>
@@ -117,7 +117,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003n"></script>
+    <script src="js/community.js?v=20261003o"></script>
     <script>
     (async function () {
         await renderSubHeader();
@@ -151,7 +151,7 @@
             tabSignup.classList.toggle('active', m === 'signup');
             rowUser.style.display = m === 'signup' ? 'block' : 'none';
             document.getElementById('row-email-code').style.display = m === 'signup' ? 'block' : 'none';
-            document.getElementById('row-legal').style.display = m === 'signup' ? 'block' : 'none';
+
             btn.textContent = m === 'signup' ? '注册' : '登录';
             note.textContent = '';
             note.className = 'form-note';
@@ -249,7 +249,7 @@
                 return;
             }
             if (mode === 'signup' && !username) { note.textContent = '请填写用户名'; note.className = 'form-note err'; return; }
-            if (mode === 'signup' && !document.getElementById('a-legal').checked) {
+            if (!document.getElementById('a-legal').checked) {
                 note.textContent = '请先阅读并同意《用户协议》和《隐私政策》'; note.className = 'form-note err'; return;
             }
             btn.disabled = true;
