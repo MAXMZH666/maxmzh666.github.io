@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MAX工作室 | 致力于研究单子产品</title>
-<meta name="description" content="MAX工作室官网：MAX科技云、PUBG-PVZ、穿越火线IV PRO、审判行动等作品下载与预约制作。">
+<meta name="description" content="MAX工作室官网：PUBG-PVZ、穿越火线IV PRO、审判行动等作品下载。">
 <link rel="stylesheet" href="style.css?v=20261003">
 </head>
 <body>
@@ -14,7 +14,6 @@
     <nav class="nav">
       <a href="index.html" class="active">首页</a>
       <a href="#products">最新产品</a>
-      <a href="maxgzs.html">预约制作</a>
       <a href="https://maxmzh666.github.io">← 转到MAXMZH主站</a>
     </nav>
   </div>
@@ -22,10 +21,9 @@
 
 <section class="hero">
   <h1>MAX工作室</h1>
-  <p>致力于研究单子产品<br>下载MAX工作室最新作品 — MAX科技云 5.0（密码：1111）</p>
+  <p>致力于研究单子产品<br>下载MAX工作室最新作品</p>
   <div class="cta">
     <a class="btn btn-gold" href="#products">浏览最新产品</a>
-    <a class="btn btn-ghost" href="maxgzs.html">预约制作</a>
   </div>
 </section>
 
@@ -33,16 +31,6 @@
   <h2>最新<span class="em">产品</span></h2>
   <p class="sec-sub">祝您使用愉快！</p>
   <div class="cards">
-
-    <div class="card">
-      <span class="tag">官方APP</span>
-      <h3>MAX科技云 5.0</h3>
-      <p>您可以在这款APP中了解MAX工作室！还可以在这获取MAX工作室的免费产品！</p>
-      <div class="dl">
-        <a href="https://maxmzh666.github.io/community.html" target="_blank" rel="noopener">前往MAX社区了解更多 →</a>
-      </div>
-      <p class="pwd">下载密码：1111</p>
-    </div>
 
     <div class="card">
       <span class="tag">第一人称枪战</span>
@@ -79,6 +67,9 @@
         <a href="https://gitblock.cn/Projects/888472/" target="_blank" rel="noopener">🔗 A营作品页：gitblock.cn/Projects/888472</a>
       </div>
       <p class="pwd">作品类型：模拟器 · 部分素材来源：aefy群主 · 主编：蓝洞公司 &amp; MAX工作室</p>
+      <div class="dl">
+        <a href="https://maxmzh666.github.io/community-play.html?id=eebe7a42-5536-4fe7-b65f-570221e06057" target="_blank" rel="noopener">🎮 在线试玩</a>
+      </div>
     </div>
 
   </div>
@@ -106,55 +97,18 @@
   </div>
 </section>
 
-<section class="section" id="forms">
-  <h2>报名<span class="em">渠道</span></h2>
-  <p class="sec-sub">提交后将打开您的邮件客户端，把信息发送给我们，我们稍后会和您取得联系。</p>
-  <div class="forms">
-    <div class="form-card">
-      <h3>📝 报名</h3>
-      <p class="hint">我们稍后会和你取得联系</p>
-      <form onsubmit="return mailtoSubmit(event,'报名-MAX工作室')">
-        <label>姓名</label><input name="姓名" required maxlength="30">
-        <label>邮箱</label><input name="邮箱" type="email" required maxlength="80">
-        <label style="margin-top:18px"><button class="btn btn-gold" type="submit">提交</button></label>
-      </form>
-      <p class="form-note">提交后将打开邮件客户端发送至 2926357395@qq.com</p>
-    </div>
-    <div class="form-card">
-      <h3>☁️ 注册MAX科技云账号</h3>
-      <p class="hint">我们会尽快为您添加账号</p>
-      <form onsubmit="return mailtoSubmit(event,'注册MAX科技云账号')">
-        <label>注册昵称</label><input name="注册昵称" required maxlength="30">
-        <label>邮箱</label><input name="邮箱" type="email" required maxlength="80">
-        <label>注册电话</label><input name="注册电话" type="tel" maxlength="20">
-        <label>留言</label><textarea name="留言" maxlength="500"></textarea>
-        <label style="margin-top:18px"><button class="btn btn-gold" type="submit">提交</button></label>
-      </form>
-      <p class="form-note">提交后将打开邮件客户端发送至 2926357395@qq.com</p>
-    </div>
-  </div>
-</section>
+
 
 <footer>
   <div class="foot-in">
     <div><h4>关于我们</h4><ul><li>我们的使命</li><li>正在招聘！</li></ul></div>
     <div><h4>资源</h4><ul><li>教程</li><li>品牌资料</li></ul></div>
     <div><h4>联系我们</h4><ul><li><a href="tel:13396613037">13396613037</a></li><li><a href="mailto:2926357395@qq.com">2926357395@qq.com</a></li></ul></div>
-    <div><h4>MAX工作室</h4><ul><li><a href="https://maxmzh666.github.io">MAXMZH主站</a></li><li><a href="maxgzs.html">预约制作</a></li></ul></div>
+    <div><h4>MAX工作室</h4><ul><li><a href="https://maxmzh666.github.io">MAXMZH主站</a></li></ul></div>
   </div>
   <div class="copy">© 2026 MAX工作室 · 让您在信息时代游刃有余</div>
 </footer>
 
-<script>
-function mailtoSubmit(e, subject){
-  e.preventDefault();
-  var f = e.target, lines = [];
-  f.querySelectorAll('input[name],textarea[name],select[name]').forEach(function(el){
-    if(el.value.trim()) lines.push(el.name + '：' + el.value.trim());
-  });
-  location.href = 'mailto:2926357395@qq.com?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(lines.join('\n'));
-  return false;
-}
-</script>
+
 </body>
 </html>
