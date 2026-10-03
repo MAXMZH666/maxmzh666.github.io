@@ -79,7 +79,8 @@
                 </div>
                 <div class="form-row">
                     <label for="f-content">正文</label>
-                    <textarea id="f-content" maxlength="10000" placeholder="详细说说吧…（纯文本，换行保留）"></textarea>
+                    <textarea id="f-content" maxlength="10000" placeholder="详细说说吧…（支持 Markdown）"></textarea>
+                    <p class="form-hint" id="f-mdhelp"></p>
                 </div>
                 <button type="submit" class="btn-submit" id="f-submit">发布</button>
                 <span id="f-msg" class="works-note" style="display:inline"></span>
@@ -102,7 +103,7 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003p"></script>
+    <script src="js/community.js?v=20261003q"></script>
     <script src="js/scripts.js"></script>
     <script>
     (async function () {
@@ -141,6 +142,7 @@
             } catch (err) { msg.textContent = '发布失败：' + err.message; btn.disabled = false; }
         });
     })();
-    </script>
+        try { var fh = document.getElementById('f-mdhelp'); if (fh) fh.innerHTML = mdHelpBtn('f-content'); } catch (e) {}
+</script>
 </body>
 </html>

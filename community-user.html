@@ -75,7 +75,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003p"></script>
+    <script src="js/community.js?v=20261003q"></script>
     <script>
     (async function () {
         await renderSubHeader();
@@ -246,7 +246,8 @@
                             '</div></a>';
                     }).join('') + '</div>'
                     : '<p class="works-note">TA 还没有发布作品。</p>') +
-                draftHtml + favHtml + portfolioHtml;
+                draftHtml + favHtml + portfolioHtml +
+                '<h2 class="feat-title">💬 留言板</h2><div id="gb-list"><p class="works-note">加载中…</p></div><div id="gb-form" style="margin-top:12px"></div>';
             /* 个人背景 */
             function applyBg(bg) {
                 var head = document.getElementById('profile-head');
@@ -370,6 +371,95 @@
                 paintU();
             });
         }
+
+        /* 💬 留言板 */
+        async function loadGuestbook() {
+            var listEl = document.getElementById('gb-list');
+            var formEl = document.getElementById('gb-form');
+            if (!listEl) return;
+            var siteAdmin = me ? await isAdmin() : false;
+            try {
+                var gr = await withTimeout(
+                    sb.from('profile_guestbook').select('id,user_id,content,created_at')
+                        .eq('profile_id', uid).order('created_at', { ascending: false }).limit(50),
+                    25000, '留言加载超时');
+                var msgs = gr.data || [];
+                var amap = {};
+                var authorIds = Array.from(new Set(msgs.map(function (m) { return m.user_id; })));
+                if (authorIds.length) {
+                    var ar = await sb.from('profiles').select('id,username,avatar_url').in('id', authorIds);
+                    (ar.data || []).forEach(function (p) { amap[p.id] = p; });
+                }
+                listEl.innerHTML = msgs.length ? msgs.map(function (m) {
+                    var a = amap[m.user_id] || {};
+                    var canDel = (me && me.id === m.user_id) || isSelf || siteAdmin;
+                    var av = a.avatar_url
+                        ? '<img src="' + esc(a.avatar_url) + '" alt="头像" style="width:36px;height:36px;border-radius:50%;object-fit:cover">'
+                        : '<span style="width:36px;height:36px;border-radius:50%;background:var(--surface-2);display:inline-flex;align-items:center;justify-content:center;font-size:1.1rem">👤</span>';
+                    return '<div class="card" style="margin-bottom:10px"><div class="card-body">' +
+                        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">' +
+                        '<a href="community-user.html?id=' + m.user_id + '" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit">' +
+                        av + '<b>' + esc(a.username || '未知用户') + '</b></a>' +
+                        '<span class="form-hint">' + fmtDate(m.created_at) + '</span>' +
+                        (canDel ? '<button class="btn btn-ghost btn-sm" data-delgb="' + m.id + '" style="margin-left:auto">删除</button>' : '') +
+                        '</div><div>' + md(m.content) + '</div>' +
+                        '</div></div>';
+                }).join('') : '<p class="works-note">还没有留言，来抢沙发吧！</p>';
+            } catch (e) {
+                listEl.innerHTML = '<p class="works-note">留言加载失败：' + esc(e.message) + '</p>';
+            }
+            if (formEl) {
+                if (me) {
+                    formEl.innerHTML = '<div class="card"><div class="card-body">' +
+                        '<b>✍️ 写留言</b>' + mdHelpBtn('gb-text') +
+                        '<textarea id="gb-text" maxlength="2000" rows="3" placeholder="说点什么吧…支持 Markdown 语法" style="width:100%;margin:8px 0;padding:10px;border-radius:10px;border:1px solid var(--border,#333);background:var(--surface-2);color:inherit;box-sizing:border-box"></textarea>' +
+                        '<p class="form-hint">最多 2000 字</p>' +
+                        '<button class="btn btn-blue" id="gb-send">发送留言</button>' +
+                        '</div></div>';
+                    document.getElementById('gb-send').addEventListener('click', async function () {
+                        var ta = document.getElementById('gb-text');
+                        var content = ta.value.trim();
+                        if (!content) { alert('留言内容不能为空'); return; }
+                        if (content.length > 2000) { alert('留言最多 2000 字'); return; }
+                        showLoading('发送中…');
+                        try {
+                            var ir = await withTimeout(
+                                sb.from('profile_guestbook').insert({ profile_id: uid, user_id: me.id, content: content }),
+                                25000, '发送超时，请检查网络后重试');
+                            if (ir.error) throw ir.error;
+                            ta.value = '';
+                            await loadGuestbook();
+                        } catch (e2) {
+                            alert('发送失败：' + e2.message);
+                        } finally {
+                            hideLoading();
+                        }
+                    });
+                } else {
+                    formEl.innerHTML = '<p class="works-note"><a href="community-auth.html">登录后留言</a></p>';
+                }
+            }
+        }
+        loadGuestbook();
+
+        /* 删除留言（作者 / 主页主人 / 站长） */
+        wrap.addEventListener('click', async function (e) {
+            var del = e.target.closest('button[data-delgb]');
+            if (!del) return;
+            if (!confirm('删除这条留言？')) return;
+            showLoading('删除中…');
+            try {
+                var r = await withTimeout(
+                    sb.from('profile_guestbook').delete().eq('id', del.getAttribute('data-delgb')),
+                    25000, '删除超时，请检查网络后重试');
+                if (r.error) throw r.error;
+                await loadGuestbook();
+            } catch (e2) {
+                alert('删除失败：' + e2.message);
+            } finally {
+                hideLoading();
+            }
+        });
     })();
     </script>
     <script defer src="https://vercount.one/js"></script>

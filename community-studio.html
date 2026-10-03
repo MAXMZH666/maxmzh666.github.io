@@ -99,7 +99,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003p"></script>
+    <script src="js/community.js?v=20261003q"></script>
     <script>
     function getId() {
         var m = location.search.match(/[?&]id=([^&]+)/);
@@ -262,6 +262,17 @@
                   '<p class="form-hint">管理员会在消息中审批，同意后你即可加入。</p></div>';
         }
 
+        /* 💬 内部讨论室（仅成员/站长可见） */
+        if (isMember || siteAdmin) {
+            html += '<h2 class="sec-title">💬 内部讨论室</h2>' +
+                '<p class="works-note" style="padding:0 0 8px">仅工作室成员可见，支持 Markdown 语法。</p>' +
+                '<div id="discuss-list"><p class="works-note">加载中…</p></div>' +
+                '<div class="manage-box"><b>💬 发表讨论</b><br>' +
+                '<textarea id="dc-text" rows="4" maxlength="2000" placeholder="说点什么…（支持 Markdown，最多 2000 字）" style="width:100%"></textarea>' +
+                mdHelpBtn('dc-text') +
+                '<div style="margin-top:8px"><button class="btn btn-blue" id="dc-send">发送</button></div></div>';
+        }
+
         wrap.innerHTML = html;
 
         /* 邀请 */
@@ -417,6 +428,64 @@
             var r = await sb.from('studio_announcements').insert({ studio_id: sid, author_id: me.id, content: tx });
             if (r.error) alert('发布失败：' + r.error.message);
             else { document.getElementById('announce-input').value = ''; loadAnnounces(); }
+        });
+
+        /* 💬 内部讨论室：加载 + 发表 + 删除 */
+        async function loadDiscussions() {
+            var box = document.getElementById('discuss-list');
+            if (!box) return;
+            try {
+                var r = await withTimeout(
+                    sb.from('studio_discussions').select('*').eq('studio_id', sid).order('created_at', { ascending: false }).limit(100),
+                    25000, '讨论加载超时，请检查网络后重试');
+                var list = r.data || [];
+                var duids = list.map(function (d) { return d.user_id; });
+                var dusers = {};
+                if (duids.length) {
+                    var pr = await sb.from('profiles').select('id,username,avatar_url').in('id', duids);
+                    (pr.data || []).forEach(function (p) { dusers[p.id] = p; });
+                }
+                var droles = {};
+                members.forEach(function (m) { droles[m.user_id] = m.role; });
+                box.innerHTML = list.length ? list.map(function (d) {
+                    var u = dusers[d.user_id] || {};
+                    var uav = u.avatar_url ? '<img src="' + esc(u.avatar_url) + '" alt="">' : '<img alt="">';
+                    var role = droles[d.user_id] || 'member';
+                    var canDel = (me && d.user_id === me.id) || isManager;
+                    return '<div class="comment"><div class="comment-meta">' +
+                        '<span class="member-chip" style="border:none;padding:0;background:none">' + uav + esc(u.username || '未知') + '</span>' +
+                        ' <span class="role-tag ' + role + '">' + ROLE_TEXT[role] + '</span>' +
+                        ' · ' + fmtDate(d.created_at) +
+                        (canDel ? ' <button class="remove-btn" data-rm-dc="' + d.id + '">删除</button>' : '') +
+                        '</div><div>' + md(d.content) + '</div></div>';
+                }).join('') : '<p class="works-note">还没有讨论，来发第一条吧！</p>';
+                box.querySelectorAll('[data-rm-dc]').forEach(function (b) {
+                    b.addEventListener('click', async function () {
+                        if (!confirm('删除这条讨论？')) return;
+                        showLoading('删除中…');
+                        try {
+                            var dr = await withTimeout(sb.from('studio_discussions').delete().eq('id', b.getAttribute('data-rm-dc')), 25000, '删除超时，请重试');
+                            if (dr.error) alert('删除失败：' + dr.error.message);
+                            else loadDiscussions();
+                        } catch (e) { alert(e.message || '删除失败'); }
+                        finally { hideLoading(); }
+                    });
+                });
+            } catch (e) { box.innerHTML = '<p class="works-note">加载失败</p>'; }
+        }
+        await loadDiscussions();
+        var dcBtn = document.getElementById('dc-send');
+        if (dcBtn) dcBtn.addEventListener('click', async function () {
+            var tx = document.getElementById('dc-text').value.trim();
+            if (!tx) { alert('请填写讨论内容'); return; }
+            if (tx.length > 2000) { alert('内容最多 2000 字'); return; }
+            showLoading('发送中…');
+            try {
+                var r = await withTimeout(sb.from('studio_discussions').insert({ studio_id: sid, user_id: me.id, content: tx }), 25000, '发送超时，请检查网络后重试');
+                if (r.error) alert('发送失败：' + r.error.message);
+                else { document.getElementById('dc-text').value = ''; loadDiscussions(); }
+            } catch (e) { alert(e.message || '发送失败'); }
+            finally { hideLoading(); }
         });
 
         /* 退出 */

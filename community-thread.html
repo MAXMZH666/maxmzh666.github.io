@@ -78,7 +78,8 @@
                 <div id="reply-need-login" class="works-note" style="display:none">请先<a href="community-auth.html">登录</a>后再回帖。</div>
                 <div id="reply-locked" class="works-note" style="display:none">🔒 该帖已锁定，不能回帖。</div>
                 <div id="reply-form" style="display:none">
-                    <textarea id="reply-content" maxlength="5000" placeholder="说点什么…"></textarea>
+                    <textarea id="reply-content" maxlength="5000" placeholder="说点什么…（支持 Markdown）"></textarea>
+                    <p class="form-hint" id="reply-mdhelp"></p>
                     <p><button class="btn-submit" id="reply-submit" style="padding:10px 28px;border-radius:10px;border:none;background:var(--accent,#4d7cfe);color:#fff;cursor:pointer">发表回帖</button>
                     <span id="reply-msg" class="works-note" style="display:inline"></span></p>
                 </div>
@@ -101,7 +102,7 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003p"></script>
+    <script src="js/community.js?v=20261003q"></script>
     <script src="js/scripts.js"></script>
     <script>
     (async function () {
@@ -174,7 +175,7 @@
                         '<span class="floor">' + (i + 1) + '楼</span>' +
                         '<span class="uname">' + esc(unames[p.author_id] || '未知') + '</span>' +
                         '<span>' + fmtDate(p.created_at) + '</span></div>' +
-                        '<div class="post-body">' + esc(p.content) + '</div>' +
+                        '<div class="post-body">' + md(p.content) + '</div>' +
                         (canDel ? '<div class="post-actions"><a data-del="' + p.id + '">删除</a></div>' : '') + '</div>';
                 }).join('');
                 list.querySelectorAll('[data-del]').forEach(function (a) {
@@ -209,6 +210,7 @@
             });
         }
     })();
-    </script>
+        try { var rh = document.getElementById('reply-mdhelp'); if (rh) rh.innerHTML = mdHelpBtn('reply-content'); } catch (e) {}
+</script>
 </body>
 </html>
