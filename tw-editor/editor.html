@@ -349,10 +349,17 @@
             (target || el.parentNode || el).style.display = 'none';
         }
     }
-    var obs = new MutationObserver(function () {
-        tryInjectMenu();
-        hideTopButtons();
-    });
+    /* 防抖：React 启动时有数千次 DOM 变更，全量扫描必须节流，否则页面卡死 */
+    var _scanTimer = null;
+    function scheduleScan() {
+        if (_scanTimer) return;
+        _scanTimer = setTimeout(function () {
+            _scanTimer = null;
+            try { tryInjectMenu(); } catch (e) {}
+            try { hideTopButtons(); } catch (e) {}
+        }, 400);
+    }
+    var obs = new MutationObserver(scheduleScan);
 
     function build() {
         if (document.getElementById('mmc-autosave')) return;
@@ -365,13 +372,13 @@
             'pointer-events:none;';
         document.body.appendChild(pill);
         if (document.body) obs.observe(document.body, { childList: true, subtree: true });
-        tryInjectMenu();
-        hideTopButtons();
+        try { tryInjectMenu(); } catch (e) {}
+        try { hideTopButtons(); } catch (e) {}
         /* 兜底：React 懒渲染，30 秒内多次重试 */
         var retryN = 0;
         var retryTimer = setInterval(function () {
-            tryInjectMenu();
-            hideTopButtons();
+            try { tryInjectMenu(); } catch (e) {}
+            try { hideTopButtons(); } catch (e) {}
             if (++retryN >= 15) clearInterval(retryTimer);
         }, 2000);
         /* 自动保存（仅新标签页独立模式；内嵌时由父页面负责）

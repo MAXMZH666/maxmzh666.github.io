@@ -117,8 +117,9 @@
         var s = sr.data;
         var me = await currentUser();
         var myRole = me ? await myStudioRole(sid, me.id) : null;
-        var isManager = myRole === 'owner' || myRole === 'vice' || myRole === 'admin';
-        var canAppoint = myRole === 'owner' || myRole === 'vice';
+        var siteAdmin = me ? await isAdmin() : false;
+        var isManager = myRole === 'owner' || myRole === 'vice' || myRole === 'admin' || siteAdmin;
+        var canAppoint = myRole === 'owner' || myRole === 'vice' || siteAdmin;
         var canEdit = isManager;
         var isMember = !!myRole;
 
@@ -176,7 +177,8 @@
                             return '<option value="' + r + '"' + (m.role === r ? ' selected' : '') + '>' + ROLE_TEXT[r] + '</option>';
                         }).join('') + '</select>';
                 }
-                return '<span class="member-chip">' + uav + esc(u.username || '未知') +
+                return '<span class="member-chip"><a href="community-user.html?id=' + m.user_id + '" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:inherit">' +
+                    uav + esc(u.username || '未知') + '</a>' +
                     ' <span class="role-tag ' + m.role + '">' + ROLE_TEXT[m.role] + '</span>' + appt + rm + '</span>';
             }).join('') + '</div>';
 
@@ -333,7 +335,7 @@
                 if (newRole === 'vice') {
                     var hasVice = members.some(function (m) { return m.role === 'vice' && m.user_id !== uid; });
                     if (hasVice) { alert('副室长只能有1位'); sel.value = cur; return; }
-                    if (myRole !== 'owner') { alert('只有室长可以任命副室长'); sel.value = cur; return; }
+                    if (myRole !== 'owner' && !siteAdmin) { alert('只有室长可以任命副室长'); sel.value = cur; return; }
                 }
                 if (newRole === 'admin') {
                     var adminCount = members.filter(function (m) { return m.role === 'admin' && m.user_id !== uid; }).length;
