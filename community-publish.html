@@ -441,6 +441,12 @@
                 });
             }
         } else {
+            /* 应用个人设置的默认分类 */
+            try {
+                var _pr = await sb.from('profiles').select('settings').eq('id', me.id).single();
+                var _dc = _pr.data && _pr.data.settings && _pr.data.settings.default_category;
+                if (_dc) document.getElementById('f-cat').value = _dc;
+            } catch (e) {}
             var qs2 = new URLSearchParams(location.search);
             var preType = qs2.get('type');
             if (preType === 'python' || preType === 'cpp') {
