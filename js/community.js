@@ -49,7 +49,9 @@ async function renderSubHeader() {
     var bellEl = document.getElementById('sub-bell');
     var page = location.pathname.split('/').pop();
     var map = {
-        'community.html': 'home',
+        'community-home.html': 'home',
+        'community.html': 'works',
+        'community-discover.html': 'discover',
         'community-publish.html': 'publish',
         'community-code.html': 'code',
         'community-rank.html': 'rank',
