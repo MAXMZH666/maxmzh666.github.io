@@ -141,7 +141,7 @@ function authRequiredRedirect() {
 /* 确保登录用户在 profiles 表里有一行（注册触发器已移除，由前端保证） */
 async function ensureProfile() {
     var u = await currentUser();
-    function dbg(m) { try { document.title = 'DBG:' + m + ' | ' + document.title; } catch (e) {} }
+    function dbg(m) { try { var k='dbglog'; var v=(localStorage.getItem(k)||''); localStorage.setItem(k, new Date().toISOString().slice(11,19)+' '+m+'\n'+v); } catch (e) {} }
     if (!u) { dbg('no-user'); return null; }
     dbg('uid=' + u.id.slice(0, 8));
     /* 已有档案直接返回，绝不覆盖用户改过的昵称 */
