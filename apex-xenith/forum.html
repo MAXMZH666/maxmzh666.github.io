@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <link rel="preload" href="css/style.css" as="style">
+  <link rel="preload" href="images/logo.svg" as="image">
+  <link rel="preload" href="images/logo.svg" as="image" type="image/svg+xml">
+  <link rel="icon" type="image/svg+xml" href="images/logo.svg">
+  <link rel="alternate icon" href="images/favicon.ico">
+  <link rel="apple-touch-icon" href="images/logo.svg">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>星云论坛 | MAX Apex Xenith</title>
+  <link rel="stylesheet" href="css/style.css">
+  <nav class="navbar">
+    <a href="index.html" class="brand">
+      <img src="images/logo.svg" alt="MAX Apex Xenith Logo" class="logo">
+      <span class="brand-text">MAX Apex Xenith</span>
+    </a>
+    <!-- 其他导航项保持不变 -->
+  </nav>
+</head>
+<body>
+  <div class="loading-screen">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" data-i18n="loading">加载中...</div>
+  </div>
+  <nav class="navbar">
+    <a href="index.html" class="brand">
+      <img src="images/logo.svg" alt="MAX Apex Xenith Logo" class="logo">
+      <span class="brand-text">MAX Apex Xenith</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">星域</a></li>
+      <li><a href="about.html">星渊</a></li>
+      <li><a href="works.html">星辉</a></li>
+      <li><a href="blog.html">星迹</a></li>
+      <li><a href="forum.html">星云</a></li>
+      <li><a href="contact.html">星桥</a></li>
+    <li><a href="../index.html">← 主站</a></li>
+      <div class="search-container">
+        <input type="text" class="search-input" placeholder="搜索星域..." data-i18n-placeholder="searchPlaceholder">
+        <button class="search-button"></button>
+        <div class="search-results"></div>
+      </div>
+      <button class="theme-toggle">
+        <span class="light-icon">☀️</span>
+        <span class="dark-icon"></span>
+      </button>
+    </ul>
+    <div class="hamburger">☰</div>
+  </nav>
+  <main class="page-content">
+    <div class="centered-container">
+      <h1>星云论坛</h1>
+      
+      <!-- 论坛注意事项 -->
+      <div class="forum-rules">
+        <h2>论坛注意事项</h2>
+        <ul>
+          <li>遵守基本的社交礼仪，尊重他人。</li>
+          <li>禁止恶意攻击、辱骂、歧视等行为。</li>
+          <li>不得发布非法或违规内容，包括但不限于盗版、诈骗等。</li>
+          <li>讨论时保持理性，禁止无意义的灌水或恶意刷屏。</li>
+          <li>任何违规行为可能导致帖子删除或封禁账号。</li>
+        </ul>
+      </div>
+      
+      <!-- 论坛分类列表（固定分类） -->      
+      <div id="category-list" class="forum-categories">
+        <div class="category-card" data-category="普通交流">
+          <h2>📌 普通交流</h2>
+          <p>讨论任何话题，结交朋友，畅所欲言！</p>
+        </div>
+        <div class="category-card" data-category="技术讨论">
+          <h2>技术讨论</h2>
+          <p>分享编程、硬件、软件等技术相关内容。</p>
+        </div>
+        <div class="category-card" data-category="学术交流">
+          <h2>学术交流</h2>
+          <p>探讨科学、数学、历史等学术内容。</p>
+        </div>
+        <div class="category-card" data-category="游戏讨论">
+          <h2>游戏讨论</h2>
+          <p>讨论游戏开发、体验和攻略。</p>
+        </div>
+        <div class="category-card" data-category="创意分享">
+          <h2>创意分享</h2>
+          <p>展示你的创作，如绘画、音乐、写作等。</p>
+        </div>
+        <div class="category-card" data-category="建议与反馈">
+          <h2>建议与反馈</h2>
+          <p>提供对论坛或产品的建议和反馈。</p>
+        </div>
+      </div>
+      
+      <!-- 论坛分类详情区域（初始隐藏） -->      
+      <div id="category-detail" class="hidden">
+        <button id="back-to-categories" class="back-to-list">返回分类列表</button>
+        <h2 id="category-title"></h2>
+        <!-- 这里用 Utterances 创建不同的讨论空间 --> 
+        <div id="category-discussion"></div>
+      </div>
+      
+    </div>
+  </main>
+  <button class="back-to-top">⬆ 返回顶部</button>
+  
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const categoryList = document.getElementById("category-list");
+      const categoryDetail = document.getElementById("category-detail");
+      const categoryTitle = document.getElementById("category-title");
+      const categoryDiscussion = document.getElementById("category-discussion");
+      const backToCategories = document.getElementById("back-to-categories");
+
+      // 当点击某个分类卡片时，加载该分类的讨论空间
+      document.querySelectorAll(".category-card").forEach(card => {
+        card.addEventListener("click", () => {
+          const cat = card.dataset.category;
+          // 隐藏分类列表，显示详情区域
+          categoryList.classList.add("hidden");
+          categoryDetail.classList.remove("hidden");
+          categoryTitle.textContent = cat;
+          // 清空旧讨论内容
+          categoryDiscussion.innerHTML = "";
+          // 动态加载 Utterances 评论组件，issue-term 为分类名称
+          let script = document.createElement("script");
+          script.src = "https://utteranc.es/client.js";
+          script.setAttribute("repo", "MAX-A-X/max-a-x.github.io");
+          script.setAttribute("issue-term", cat);
+          script.setAttribute("label", "论坛-" + cat);
+          script.setAttribute("theme", "github-dark");
+          script.setAttribute("crossorigin", "anonymous");
+          script.async = true;
+          categoryDiscussion.appendChild(script);
+        });
+      });
+
+      // 返回分类列表按钮事件
+      backToCategories.addEventListener("click", () => {
+        categoryDetail.classList.add("hidden");
+        categoryList.classList.remove("hidden");
+      });
+
+      window.addEventListener("load", () => {
+        document.querySelector(".loading-screen").style.display = "none";
+      });
+    });
+  </script>
+  
+  <style>
+    /* 论坛分类卡片样式 */
+    .forum-categories {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .category-card {
+      background: #1a1a1a;
+      padding: 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .category-card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 10px 20px rgba(255, 255, 255, 0.2);
+    }
+    .category-card h2 {
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    .category-card p {
+      color: #ccc;
+      font-size: 14px;
+    }
+    /* 论坛分类详情区域样式 */
+    #category-detail {\n  background: #1a1a1a;\n  padding: 20px;\n  border-radius: 10px;\n}\n\n#category-title {\n  color: #fff;\n  margin-bottom: 20px;\n}\n\n.back-to-list {\n  background: #ff4757;\n  color: #fff;\n  padding: 10px 15px;\n  border: none;\n  border-radius: 5px;\n  cursor: pointer;\n  margin-bottom: 20px;\n}\n\n.back-to-list:hover {\n  background: #e84118;\n}\n  </style>
+  
+  <script src="js/script.js"></script>
+</body>
+</html>

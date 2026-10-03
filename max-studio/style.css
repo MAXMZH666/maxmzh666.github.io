@@ -1,0 +1,111 @@
+/* MAX工作室官网 · 深色科技风 · 与MAX主站视觉协调 */
+:root{
+    --bg:#0b0b0e;--bg-soft:#101015;--surface:#16161c;--surface-2:#1d1d25;
+    --text:#f4f4f6;--muted:#9a9aa5;--border:#2a2a34;
+    --gold:#ffcc00;--gold-deep:#d9a800;--blue:#4da3ff;--green:#3ddc84;
+    --radius:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.7;-webkit-text-size-adjust:100%}
+a{color:var(--gold);text-decoration:none}
+a:hover{text-decoration:underline}
+img{max-width:100%;height:auto;display:block}
+
+/* 顶栏 */
+.topbar{position:sticky;top:0;z-index:50;background:rgba(11,11,14,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+.topbar-in{max-width:1140px;margin:0 auto;padding:0 20px;height:60px;display:flex;align-items:center;gap:14px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.15rem;color:var(--text)}
+.logo:hover{text-decoration:none}
+.logo img{width:36px;height:36px;border-radius:10px;object-fit:cover;background:var(--surface-2)}
+.nav{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap}
+.nav a{color:var(--muted);padding:8px 14px;border-radius:999px;font-size:.92rem;white-space:nowrap}
+.nav a:hover{color:var(--text);background:rgba(255,255,255,.06);text-decoration:none}
+.nav a.active{color:var(--gold);background:rgba(255,204,0,.1);font-weight:700}
+
+/* 首屏 */
+.hero{position:relative;overflow:hidden;text-align:center;padding:96px 20px 72px;
+    background:radial-gradient(800px 400px at 50% -80px,rgba(255,204,0,.14),transparent),
+               linear-gradient(180deg,#14141c,#0b0b0e)}
+.hero h1{font-size:clamp(2rem,5vw,3.2rem);font-weight:800;letter-spacing:.02em;
+    background:linear-gradient(90deg,#fff,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--muted);margin:14px auto 0;max-width:640px;font-size:1.02rem}
+.hero .cta{margin-top:28px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-block;padding:12px 28px;border-radius:999px;font-weight:700;font-size:.95rem;cursor:pointer;border:none;min-height:44px}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-deep));color:#111}
+.btn-gold:hover{text-decoration:none;filter:brightness(1.08)}
+.btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover{text-decoration:none;border-color:var(--gold);color:var(--gold)}
+.btn-blue{background:linear-gradient(135deg,#3a7bd5,#2b5cb8);color:#fff}
+
+/* 通用区块 */
+.section{max-width:1140px;margin:0 auto;padding:56px 20px}
+.section h2{text-align:center;font-size:1.7rem;margin-bottom:8px}
+.section h2 .em{color:var(--gold)}
+.sec-sub{text-align:center;color:var(--muted);margin-bottom:32px}
+
+/* 产品卡片 */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;transition:transform .2s,box-shadow .2s,border-color .2s}
+.card:hover{transform:translateY(-4px);border-color:var(--gold);box-shadow:0 12px 32px rgba(255,204,0,.08)}
+.card h3{font-size:1.25rem;margin-bottom:4px}
+.card .tag{display:inline-block;font-size:.75rem;color:var(--gold);border:1px solid var(--gold);border-radius:999px;padding:2px 10px;margin-bottom:10px}
+.card p{color:var(--muted);font-size:.92rem}
+.card .dl{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.card .dl a{display:block;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:.88rem;word-break:break-all}
+.card .dl a:hover{border-color:var(--gold);text-decoration:none}
+.card .pwd{font-size:.82rem;color:var(--muted);margin-top:6px}
+.ops{margin-top:14px;font-size:.85rem;color:var(--muted);background:var(--bg-soft);border-radius:10px;padding:12px 14px}
+.ops b{color:var(--text)}
+.log{margin-top:14px;font-size:.82rem;color:var(--muted)}
+.log summary{cursor:pointer;color:var(--gold);font-size:.88rem}
+
+/* 介绍 */
+.about{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:center}
+.about .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px}
+.about h3{font-size:1.2rem;margin-bottom:10px;color:var(--gold)}
+.about p{color:var(--muted);font-size:.94rem}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:16px}
+.kv .k{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:.9rem}
+.kv .k b{display:block;color:var(--gold);margin-bottom:4px}
+
+/* 表单 */
+.forms{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px}
+.form-card h3{margin-bottom:6px}
+.form-card .hint{font-size:.85rem;color:var(--muted);margin-bottom:18px}
+label{display:block;font-size:.88rem;margin:14px 0 6px;color:var(--text)}
+input,textarea,select{width:100%;max-width:100%;background:var(--bg-soft);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:12px 14px;font-size:1rem;min-height:44px}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--gold)}
+textarea{resize:vertical;min-height:110px}
+.form-note{font-size:.82rem;color:var(--muted);margin-top:12px}
+
+/* 预约页 */
+.book-wrap{max-width:680px;margin:0 auto}
+.tz{font-size:.88rem;color:var(--muted);margin-bottom:8px}
+.book-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+/* 页脚 */
+footer{border-top:1px solid var(--border);background:var(--bg-soft);margin-top:40px}
+.foot-in{max-width:1140px;margin:0 auto;padding:36px 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:24px;font-size:.88rem;color:var(--muted)}
+.foot-in h4{color:var(--text);margin-bottom:10px;font-size:.95rem}
+.foot-in ul{list-style:none}
+.foot-in li{margin-bottom:6px}
+.copy{text-align:center;padding:18px;color:var(--muted);font-size:.8rem;border-top:1px solid var(--border)}
+
+/* 三端自适应 */
+@media (max-width:1024px){
+    .cards{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+    .hero{padding:72px 20px 56px}
+}
+@media (max-width:640px){
+    .about,.forms{grid-template-columns:1fr}
+    .book-grid{grid-template-columns:1fr}
+    .section{padding:40px 16px}
+    .nav a{padding:8px 10px;font-size:.85rem}
+    .topbar-in{padding:0 12px}
+    .hero{padding:56px 16px 44px}
+    .btn{width:100%;text-align:center}
+    .hero .cta .btn{width:auto;min-width:180px}
+    .form-card{padding:20px 16px}
+}

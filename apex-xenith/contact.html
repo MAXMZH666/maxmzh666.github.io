@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <link rel="preload" href="css/style.css" as="style">
+  <link rel="preload" href="images/logo.svg" as="image">
+  <link rel="preload" href="images/logo.svg" as="image" type="image/svg+xml">
+  <link rel="icon" type="image/svg+xml" href="images/logo.svg">
+  <link rel="alternate icon" href="images/favicon.ico">
+  <link rel="apple-touch-icon" href="images/logo.svg">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>星桥联系 | MAX Apex Xenith</title>
+  <link rel="stylesheet" href="css/style.css">
+  <nav class="navbar">
+    <a href="index.html" class="brand">
+      <img src="images/logo.svg" alt="MAX Apex Xenith Logo" class="logo">
+      <span class="brand-text">MAX Apex Xenith</span>
+    </a>
+  </nav>
+  <!-- 引入 Google reCAPTCHA -->
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+</head>
+<body>
+  <!-- 加载屏幕 -->
+  <div class="loading-screen">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" data-i18n="loading">加载中...</div>
+  </div>
+  <nav class="navbar">
+    <a href="index.html" class="brand">
+      <img src="images/logo.svg" alt="MAX Apex Xenith Logo" class="logo">
+      <span class="brand-text">MAX Apex Xenith</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">星域</a></li>
+      <li><a href="about.html">星渊</a></li>
+      <li><a href="works.html">星辉</a></li>
+      <li><a href="blog.html">星迹</a></li>
+      <li><a href="forum.html">星云</a></li>
+      <li><a href="contact.html">星桥</a></li>
+    <li><a href="../index.html">← 主站</a></li>
+      <div class="search-container">
+        <input type="text" class="search-input" placeholder="搜索星域..." data-i18n-placeholder="searchPlaceholder">
+        <button class="search-button"></button>
+        <div class="search-results"></div>
+      </div>
+      <button class="theme-toggle">
+        <span class="light-icon">☀️</span>
+        <span class="dark-icon"></span>
+      </button>
+    </ul>
+    <div class="hamburger">☰</div>
+  </nav>
+  <main class="contact-section">
+    <div class="contact-container">
+      <h2>星际通讯</h2>
+      <div class="contact-info">
+        <div class="info-item">
+          <i class="icon-location"></i>
+          <p>星域坐标：<br>银河</p>
+        </div>
+        <div class="info-item">
+          <i class="icon-email"></i>
+          <p>量子通讯：<br>9675036@qq.com</p>
+        </div>
+        <div class="info-item">
+          <i class="icon-phone"></i>
+          <p>星际热线：<br>+86 000 0000 0000</p>
+        </div>
+      </div>
+      <form id="contactForm" action="https://formspree.io/f/mnnjrvdz" method="POST">
+    <div class="form-group">
+        <input type="text" name="name" placeholder="您的称呼" required>
+    </div>
+    <div class="form-group">
+        <input type="email" name="email" placeholder="量子通讯地址" required>
+    </div>
+    <div class="form-group">
+        <textarea name="message" placeholder="您的星际讯息..." rows="5" required></textarea>
+    </div>
+    
+    <!-- 随机计算题 -->
+    <div class="form-group">
+        <label id="captcha-label"></label>
+        <input type="text" id="security" name="security" required>
+    </div>
+  <button type="submit" class="neon-button">
+          发送讯息
+          <span class="send-icon">➤</span>
+        </button>
+    <!--<button type="submit">发送讯息</button>-->
+</form>
+
+<script>
+    // 生成随机加法题
+    function generateCaptcha() {
+        let num1 = Math.floor(Math.random() * 10) + 1; // 1-10
+        let num2 = Math.floor(Math.random() * 10) + 1; // 1-10
+        let correctAnswer = num1 + num2;
+
+        document.getElementById("captcha-label").textContent = `请输入 ${num1} + ${num2} 的结果：`;
+        
+        // 存储答案
+        document.getElementById("contactForm").dataset.answer = correctAnswer;
+    }
+
+    // 页面加载时生成验证码
+    generateCaptcha();
+
+    // 表单提交前检查答案
+    document.getElementById("contactForm").addEventListener("submit", function(event) {
+        let userAnswer = document.getElementById("security").value;
+        let correctAnswer = this.dataset.answer;
+
+        if (parseInt(userAnswer) !== parseInt(correctAnswer)) {
+            alert(" 提交已阻止！计算结果错误，请重新输入！");
+            event.preventDefault(); // 阻止提交
+        }
+    });
+  window.addEventListener("load", function() {
+      var loadingScreen = document.querySelector(".loading-screen");
+      if (loadingScreen) {
+        loadingScreen.style.display = "none";
+      }
+    });
+</script>
+
+
+
+    </div>
+    <div class="star-map"></div>
+  </main>
+  <button class="back-to-top">⬆ 返回顶部</button>
+  <!-- 加载完成后隐藏 loading-screen -->
+  
+  <script src="js/script.js"></script>
+</body>
+</html>

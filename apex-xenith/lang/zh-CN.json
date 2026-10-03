@@ -1,0 +1,14 @@
+{
+  "siteTitle": "MAX至臻星域",
+  "nav": {
+    "home": "星域",
+    "about": "星渊", 
+    "works": "星辉",
+    "blog": "星迹",
+    "forum": "星云",
+    "contact": "星桥"
+  },
+  "heroTitle": "探索数字宇宙的终极边界",
+  "aboutTitle": "关于星渊",
+  // 其他中文翻译...
+}
