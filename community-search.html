@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAX社区全站搜索：搜作品、搜用户、搜帖子。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="MAXMZH - 社区搜索">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>搜索 - MAXMZH 社区</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="css/styles.css">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+    <style>
+        .search-box { display: flex; gap: 10px; margin: 18px 0 8px; }
+        .search-box input { flex: 1; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border, #333); background: var(--surface-2); color: inherit; font-size: 1rem; box-sizing: border-box; }
+        .search-box button { padding: 12px 28px; border-radius: 12px; border: none; background: var(--accent, #4d7cfe); color: #fff; font-size: 1rem; cursor: pointer; min-height: 44px; }
+        .search-sec { margin-top: 28px; }
+        .search-sec h2 { font-size: 1.15rem; margin-bottom: 12px; }
+        .user-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 12px; margin-bottom: 8px; text-decoration: none; color: inherit; background: var(--card, rgba(255,255,255,.02)); }
+        .user-row:hover { border-color: var(--accent, #4d7cfe); }
+        .user-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: var(--surface-2); flex-shrink: 0; }
+        .user-avatar.fb { display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 700; color: var(--gold, #ffcc00); }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">主页</a></li>
+                <li><a href="about.html">个人简介</a></li>
+                <li><a href="blog.html">博客</a></li>
+                <li><a href="community-home.html" class="active">社区</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="sub-header">
+        <div class="sub-header-inner">
+            <a class="sub-brand" href="community-home.html">🎮 <span>MAX社区</span></a>
+            <nav class="sub-links" aria-label="社区导航">
+                <a href="community-home.html" data-sub="home">首页</a>
+                <a href="community.html" data-sub="works">🔍 发现</a>
+                <a href="community-search.html" data-sub="search">🔎 搜索</a>
+                <a href="community-forum.html" data-sub="forum">💬 论坛</a>
+                <a href="community-shop.html" data-sub="shop">🎁 任务商城</a>
+                <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
+                <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
+                <a href="community-studios.html" data-sub="studios">🏢 工作室</a>
+                <a href="community-publish.html" data-sub="publish">🚀 发布</a>
+                <a href="community-stats.html" data-sub="stats">📊 数据</a>
+                <a href="community-collections.html" data-sub="collections">📚 合集</a>
+                <a href="community-feed.html" data-sub="feed" id="sub-bell">💬 动态</a>
+                <span id="sub-auth"><a href="community-auth.html">登录</a></span>
+            </nav>
+        </div>
+    </div>
+
+    <main>
+        <section class="portfolio">
+            <h1 class="section-title">🔎 全站搜索</h1>
+            <p class="section-sub">搜作品、搜用户、搜论坛帖子。</p>
+            <form class="search-box" id="search-form">
+                <input type="text" id="q" maxlength="50" placeholder="输入关键词…" autocomplete="off">
+                <button type="submit">搜索</button>
+            </form>
+            <div id="hot-wrap" class="search-sec">
+                <h2>🔥 热门推荐</h2>
+                <p class="works-note">最新发布的作品</p>
+                <div class="card-grid" id="hot-grid"></div>
+            </div>
+            <div id="result-wrap" style="display:none">
+                <div class="search-sec"><h2>🎮 作品</h2><div class="card-grid" id="r-works"></div></div>
+                <div class="search-sec"><h2>👤 用户</h2><div id="r-users"></div></div>
+                <div class="search-sec"><h2>💬 帖子</h2><div id="r-threads"></div></div>
+            </div>
+        </section>
+    </main>
+    <footer>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="community-home.html">社区</a>
+            <a href="contact.html">联系方式</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/community.js?v=20261004a"></script>
+    <script>
+    (function () {
+        /* 从 URL 参数预填 */
+        var params = new URLSearchParams(location.search);
+        var initQ = (params.get('q') || '').trim();
+        if (initQ) document.getElementById('q').value = initQ;
+
+        function workCard(w, nameMap) {
+            var cover = w.cover_url
+                ? '<img src="' + esc(w.cover_url) + '" alt="' + esc(w.title) + '" loading="lazy" decoding="async">'
+                : '<span class="monogram">' + esc((w.title || '游').charAt(0)) + '</span>';
+            return '<a class="card" href="community-play.html?id=' + w.id + '">' +
+                '<div class="card-cover">' + cover + '</div>' +
+                '<div class="card-body"><h3>' + esc(w.title) + '</h3>' +
+                '<p>' + esc(nameMap[w.author_id] || '未知') + ' · 👁 ' + (w.views || 0) + '</p></div></a>';
+        }
+        async function fillNames(ids) {
+            var map = {};
+            if (!ids.length) return map;
+            try {
+                var r = await sb.from('profiles').select('id,username').in('id', ids);
+                (r.data || []).forEach(function (p) { map[p.id] = p.username; });
+            } catch (e) {}
+            return map;
+        }
+        async function loadHot() {
+            try {
+                var r = await sb.from('works').select('id,title,cover_url,author_id,views')
+                    .order('created_at', { ascending: false }).limit(6);
+                var ws = r.data || [];
+                var nm = await fillNames(ws.map(function (w) { return w.author_id; }));
+                document.getElementById('hot-grid').innerHTML = ws.length
+                    ? ws.map(function (w) { return workCard(w, nm); }).join('')
+                    : '<p class="works-note">暂无作品</p>';
+            } catch (e) {
+                document.getElementById('hot-grid').innerHTML = '<p class="works-note">加载失败</p>';
+            }
+        }
+        async function doSearch(q) {
+            q = q.trim();
+            if (!q) { document.getElementById('result-wrap').style.display = 'none'; document.getElementById('hot-wrap').style.display = ''; return; }
+            document.getElementById('hot-wrap').style.display = 'none';
+            document.getElementById('result-wrap').style.display = '';
+            showLoading('搜索中…');
+            try {
+                var like = '%' + q.replace(/[%_]/g, '') + '%';
+                var wr = await sb.from('works').select('id,title,cover_url,author_id,views')
+                    .or('title.ilike.' + like + ',description.ilike.' + like).limit(12);
+                var ur = await sb.from('profiles').select('id,username,avatar_url,bio')
+                    .ilike('username', like).limit(12);
+                var tr = await sb.from('forum_threads').select('id,title,author_id,created_at')
+                    .ilike('title', like).limit(12);
+                var ws = wr.data || [], us = ur.data || [], ts = tr.data || [];
+                var nm = await fillNames(
+                    ws.map(function (w) { return w.author_id; })
+                        .concat(ts.map(function (t) { return t.author_id; }))
+                );
+                document.getElementById('r-works').innerHTML = ws.length
+                    ? ws.map(function (w) { return workCard(w, nm); }).join('')
+                    : '<p class="works-note">没有找到相关作品</p>';
+                document.getElementById('r-users').innerHTML = us.length
+                    ? us.map(function (u) {
+                        var av = u.avatar_url
+                            ? '<img class="user-avatar" src="' + esc(u.avatar_url) + '" alt="' + esc(u.username) + '" loading="lazy">'
+                            : '<span class="user-avatar fb">' + esc((u.username || '?').charAt(0)) + '</span>';
+                        return '<a class="user-row" href="community-user.html?id=' + u.id + '">' + av +
+                            '<div><b>' + esc(u.username) + '</b>' +
+                            (u.bio ? '<div style="font-size:.85rem;color:var(--muted)">' + esc(u.bio.slice(0, 60)) + '</div>' : '') +
+                            '</div></a>';
+                    }).join('')
+                    : '<p class="works-note">没有找到相关用户</p>';
+                document.getElementById('r-threads').innerHTML = ts.length
+                    ? ts.map(function (t) {
+                        return '<a class="user-row" href="community-thread.html?id=' + t.id + '">' +
+                            '<div><b>' + esc(t.title) + '</b>' +
+                            '<div style="font-size:.85rem;color:var(--muted)">' + esc(nm[t.author_id] || '') + ' · ' + fmtDate(t.created_at) + '</div></div></a>';
+                    }).join('')
+                    : '<p class="works-note">没有找到相关帖子</p>';
+            } catch (e) {
+                document.getElementById('r-works').innerHTML = '<p class="works-note">搜索失败：' + esc(e.message) + '</p>';
+            } finally {
+                hideLoading();
+            }
+        }
+        document.getElementById('search-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            doSearch(document.getElementById('q').value);
+        });
+        renderSubHeader();
+        loadHot();
+        if (initQ) doSearch(initQ);
+    })();
+    </script>
+</body>
+</html>

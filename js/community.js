@@ -66,7 +66,12 @@ async function renderSubHeader() {
         'community-forum.html': 'forum',
         'community-thread.html': 'forum',
         'community-forum-new.html': 'forum',
-        'community-feed.html': 'feed'
+        'community-dm.html': 'dm',
+        'community-search.html': 'search',
+        'community-feed.html': 'feed',
+        'community-stats.html': 'stats',
+        'community-collections.html': 'collections',
+        'community-collection.html': 'collections'
     };
     document.querySelectorAll('.sub-links a[data-sub]').forEach(function (a) {
         a.classList.toggle('active', a.getAttribute('data-sub') === map[page]);
@@ -85,6 +90,10 @@ async function renderSubHeader() {
         }
     } catch (e) {}
     var p = await currentProfile();
+    if (!p) {
+        document.querySelectorAll('.sub-links a[data-sub="stats"],.sub-links a[data-sub="collections"]')
+            .forEach(function (a) { a.style.display = 'none'; });
+    }
     if (authEl) {
         if (p) {
             authEl.innerHTML = '<a href="community-user.html?id=' + p.id + '">' + esc(p.username) + '</a>' +
@@ -110,6 +119,21 @@ async function renderSubHeader() {
                 bellEl.innerHTML = '💬 动态' + (n > 0 ? '<span class="bell-badge">' + (n > 99 ? '99+' : n) + '</span>' : '');
                 bellEl.style.display = '';
             } catch (e) { bellEl.innerHTML = '💬 动态'; bellEl.style.display = ''; }
+        }
+    }
+    /* 私信未读红点 */
+    var dmLink = document.querySelector('.sub-links a[data-sub="dm"]');
+    if (dmLink) {
+        if (!p) { dmLink.style.display = 'none'; }
+        else {
+            try {
+                var dr = await window.sb.from('direct_messages')
+                    .select('id', { count: 'exact', head: true })
+                    .eq('receiver_id', p.id).is('read_at', null);
+                var dn = dr.count || 0;
+                dmLink.innerHTML = '✉️ 私信' + (dn > 0 ? '<span class="bell-badge">' + (dn > 99 ? '99+' : dn) + '</span>' : '');
+                dmLink.style.display = '';
+            } catch (e) { dmLink.innerHTML = '✉️ 私信'; dmLink.style.display = ''; }
         }
     }
 }
@@ -637,3 +661,36 @@ function mdHelpBtn(textareaId) {
         '.md-link{color:#8ab4ff}';
     document.head.appendChild(st);
 })();
+
+/* ===== @提及通知 ===== */
+/* 提取文本中的 @用户名 */
+function parseMentions(text) {
+    var names = [];
+    var re = /@([\u4e00-\u9fa5\w-]+)/g, m;
+    while ((m = re.exec(text)) !== null) {
+        if (names.indexOf(m[1]) < 0) names.push(m[1]);
+    }
+    return names;
+}
+/* 提交成功后调用：按用户名批量查用户，给被@者发通知（跳过自己，SQL 亦有 guard） */
+async function sendMentions(text, actorId, refId, refType) {
+    var names = parseMentions(text);
+    if (!names.length || !actorId) return;
+    try {
+        var r = await sb.from('profiles').select('id,username').in('username', names);
+        var users = r.data || [];
+        for (var i = 0; i < users.length; i++) {
+            var u = users[i];
+            if (u.id === actorId) continue;
+            try {
+                await sb.rpc('send_mention', {
+                    p_user_id: u.id,
+                    p_actor_id: actorId,
+                    p_content: String(text).slice(0, 200),
+                    p_ref_id: refId || null,
+                    p_ref_type: refType || null
+                });
+            } catch (e) { /* 单个失败不影响其他 */ }
+        }
+    } catch (e) {}
+}

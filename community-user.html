@@ -40,13 +40,17 @@
             <nav class="sub-links" aria-label="社区导航">
                 <a href="community-home.html" data-sub="home">首页</a>
                 <a href="community.html" data-sub="works">🔍 发现</a>
+                <a href="community-search.html" data-sub="search">🔎 搜索</a>
                 <a href="community-forum.html" data-sub="forum">💬 论坛</a>
                 <a href="community-shop.html" data-sub="shop">🎁 任务商城</a>
                 <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
                 <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
                 <a href="community-studios.html" data-sub="studios">🏢 工作室</a>
                 <a href="community-publish.html" data-sub="publish">🚀 发布</a>
+                <a href="community-stats.html" data-sub="stats">📊 数据</a>
+                <a href="community-collections.html" data-sub="collections">📚 合集</a>
                 <a href="community-feed.html" data-sub="feed" id="sub-bell">💬 动态</a>
+                <a href="community-dm.html" data-sub="dm">✉️ 私信<span id="dm-dot" style="display:none;color:#ff6b6b"> ●</span></a>
                 <span id="sub-auth"><a href="community-auth.html">登录</a></span>
             </nav>
         </div>
@@ -75,7 +79,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003q"></script>
+    <script src="js/community.js?v=20261004a"></script>
     <script>
     (async function () {
         await renderSubHeader();
@@ -210,6 +214,31 @@
                             : '<p class="works-note">还没有收藏，去社区逛逛吧。</p>');
                 } catch (e) {}
             }
+            /* 📚 合集 */
+            var colHtml = '';
+            try {
+                var colR = await sb.from('collections').select('id,title,description,cover_url,created_at')
+                    .eq('owner_id', uid).order('created_at', { ascending: false }).limit(12);
+                var cols = colR.data || [];
+                var colCounts = {};
+                if (cols.length) {
+                    var cwr = await sb.from('collection_works').select('collection_id')
+                        .in('collection_id', cols.map(function (c) { return c.id; }));
+                    (cwr.data || []).forEach(function (x) { colCounts[x.collection_id] = (colCounts[x.collection_id] || 0) + 1; });
+                }
+                colHtml = '<h2 class="feat-title">📚 合集</h2>' +
+                    (cols.length
+                        ? '<div class="card-grid">' + cols.map(function (c) {
+                            var ccover = c.cover_url
+                                ? '<img src="' + esc(c.cover_url) + '" alt="' + esc(c.title) + '" loading="lazy">'
+                                : '<span class="monogram">📚</span>';
+                            return '<a class="card" href="community-collection.html?id=' + c.id + '">' +
+                                '<div class="card-cover">' + ccover + '</div>' +
+                                '<div class="card-body"><h3>' + esc(c.title) + '</h3>' +
+                                '<p>' + (colCounts[c.id] || 0) + ' 件作品</p></div></a>';
+                        }).join('') + '</div>'
+                        : '<p class="works-note">' + (isSelf ? '还没有合集，<a href="community-collections.html">去创建一个</a>吧。' : 'TA 还没有创建合集。') + '</p>');
+            } catch (e) {}
             wrap.innerHTML =
                 '<p class="article-back"><a href="community.html">← 返回社区</a></p>' +
                 '<div class="profile-bg-wrap" id="profile-head">' +
@@ -227,6 +256,7 @@
                 '<span class="stat"><b>' + followerCount + '</b>粉丝</span></div>' +
                 '<div class="work-actions">' +
                 (!isSelf && me ? '<button class="follow-btn" id="u-follow-btn">＋ 关注</button>' : '') +
+                (!isSelf && me ? ' <a class="btn btn-ghost" href="community-dm.html?to=' + uid + '">💬 私信</a>' : '') +
                 (!isSelf && !me ? '<a class="btn btn-blue" href="community-auth.html">登录后关注</a>' : '') +
                 '</div>' +
                 '<h2 class="feat-title">关注的人</h2>' + userListHtml(followingList) +
@@ -246,7 +276,7 @@
                             '</div></a>';
                     }).join('') + '</div>'
                     : '<p class="works-note">TA 还没有发布作品。</p>') +
-                draftHtml + favHtml + portfolioHtml +
+                draftHtml + favHtml + colHtml + portfolioHtml +
                 '<h2 class="feat-title">💬 留言板</h2><div id="gb-list"><p class="works-note">加载中…</p></div><div id="gb-form" style="margin-top:12px"></div>';
             /* 个人背景 */
             function applyBg(bg) {
@@ -428,6 +458,7 @@
                                 25000, '发送超时，请检查网络后重试');
                             if (ir.error) throw ir.error;
                             ta.value = '';
+                            try { await sendMentions(content, me.id, uid, 'profile'); } catch (e) {}
                             await loadGuestbook();
                         } catch (e2) {
                             alert('发送失败：' + e2.message);

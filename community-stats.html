@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAX社区作者数据看板：查看作品播放量、点赞、收藏与发布趋势。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="数据看板 - MAXMZH 社区">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>数据看板 - MAXMZH 社区</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="css/styles.css">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+    <style>
+        .stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; }
+        .stat-card { border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 12px; padding: 18px 12px; text-align: center; background: var(--card, rgba(255,255,255,.02)); }
+        .stat-card .sc-num { font-size: 1.8rem; font-weight: 800; color: #ffd43b; }
+        .stat-card .sc-label { color: var(--muted); margin-top: 4px; font-size: .85rem; }
+        .stat-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border, rgba(255,255,255,.06)); }
+        .stat-row img { width: 64px; height: 40px; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
+        .stat-row .sr-title { flex: 1; min-width: 0; font-weight: 600; }
+        .stat-row .sr-title a { color: inherit; }
+        .stat-row .sr-title .sr-date { display: block; font-weight: 400; font-size: .78rem; color: var(--muted); }
+        .stat-row .sr-nums { display: flex; gap: 12px; font-size: .85rem; color: var(--muted); white-space: nowrap; }
+        .stat-row .sr-nums b { color: var(--text); }
+        #trend-wrap { margin: 8px 0 28px; min-height: 220px; }
+        #trend-chart { width: 100%; max-height: 260px; }
+        .sort-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+        .sort-row .form-hint { margin: 0; }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">主页</a></li>
+                <li><a href="about.html">个人简介</a></li>
+                <li><a href="blog.html">博客</a></li>
+                <li><a href="community-home.html" class="active">社区</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="sub-header">
+        <div class="sub-header-inner">
+            <a class="sub-brand" href="community-home.html">🎮 <span>MAX社区</span></a>
+            <nav class="sub-links" aria-label="社区导航">
+                <a href="community-home.html" data-sub="home">首页</a>
+                <a href="community.html" data-sub="works">🔍 发现</a>
+                <a href="community-search.html" data-sub="search">🔎 搜索</a>
+                <a href="community-forum.html" data-sub="forum">💬 论坛</a>
+                <a href="community-shop.html" data-sub="shop">🎁 任务商城</a>
+                <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
+                <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
+                <a href="community-studios.html" data-sub="studios">🏢 工作室</a>
+                <a href="community-publish.html" data-sub="publish">🚀 发布</a>
+                <a href="community-stats.html" data-sub="stats">📊 数据</a>
+                <a href="community-collections.html" data-sub="collections">📚 合集</a>
+                <a href="community-feed.html" data-sub="feed" id="sub-bell">💬 动态</a>
+                <a href="community-dm.html" data-sub="dm">✉️ 私信<span id="dm-dot" style="display:none;color:#ff6b6b"> ●</span></a>
+                <span id="sub-auth"><a href="community-auth.html">登录</a></span>
+            </nav>
+        </div>
+    </div>
+
+    <main>
+        <section class="portfolio" style="max-width:860px">
+            <h1 class="section-title">📊 数据看板</h1>
+            <p class="section-sub">看看你的作品表现如何。</p>
+            <div id="need-login" class="works-note" style="display:none">请先<a href="community-auth.html">登录</a>后查看数据看板。</div>
+            <div id="stats-wrap" style="display:none">
+                <div class="stat-cards">
+                    <div class="stat-card"><div class="sc-num" id="st-works">0</div><div class="sc-label">作品总数</div></div>
+                    <div class="stat-card"><div class="sc-num" id="st-views">0</div><div class="sc-label">总播放量</div></div>
+                    <div class="stat-card"><div class="sc-num" id="st-likes">0</div><div class="sc-label">总点赞</div></div>
+                    <div class="stat-card"><div class="sc-num" id="st-favs">0</div><div class="sc-label">总收藏</div></div>
+                </div>
+                <h2 class="feat-title">📈 近 7 天发布趋势</h2>
+                <div id="trend-wrap"><canvas id="trend-chart"></canvas><p class="works-note" id="trend-fallback" style="display:none"></p></div>
+                <div class="sort-row">
+                    <span class="form-hint">排序：</span>
+                    <button class="filter-chip active" data-sort="views">👁 播放量</button>
+                    <button class="filter-chip" data-sort="likes">❤ 点赞</button>
+                    <button class="filter-chip" data-sort="created_at">🕐 最新</button>
+                </div>
+                <div id="work-list"><p class="works-note">加载中…</p></div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="blog.html">博客</a>
+            <a href="community-home.html">社区</a>
+            <a href="community-forum.html">论坛</a>
+            <a href="contact.html">联系方式</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
+    </footer>
+
+    <script src="js/scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/community.js?v=20261004a"></script>
+    <script>
+    var sortKey = 'views';
+    var workStats = [];
+
+    function renderRows() {
+        var box = document.getElementById('work-list');
+        var arr = workStats.slice().sort(function (a, b) {
+            if (sortKey === 'created_at') return new Date(b.created_at) - new Date(a.created_at);
+            return (b[sortKey] || 0) - (a[sortKey] || 0);
+        });
+        box.innerHTML = arr.length ? arr.map(function (w) {
+            var cover = w.cover_url
+                ? '<img src="' + esc(w.cover_url) + '" alt="' + esc(w.title) + '" loading="lazy">'
+                : '<span class="monogram">' + esc((w.title || '游').charAt(0)) + '</span>';
+            return '<div class="stat-row">' + cover +
+                '<div class="sr-title"><a href="community-play.html?id=' + w.id + '">' + esc(w.title) + '</a>' +
+                '<span class="sr-date">' + fmtDate(w.created_at) + '</span></div>' +
+                '<div class="sr-nums"><span>👁 <b>' + (w.views || 0) + '</b></span>' +
+                '<span>❤ <b>' + (w.likes || 0) + '</b></span>' +
+                '<span>⭐ <b>' + (w.favs || 0) + '</b></span>' +
+                '<span>💬 <b>' + (w.comments || 0) + '</b></span></div></div>';
+        }).join('') : '<p class="works-note">还没有作品，去<a href="community-publish.html">发布</a>第一件吧。</p>';
+    }
+
+    function renderTrend(works) {
+        var labels = [], counts = [];
+        for (var i = 6; i >= 0; i--) {
+            var d = new Date(); d.setDate(d.getDate() - i);
+            var key = d.toISOString().slice(0, 10);
+            labels.push((d.getMonth() + 1) + '/' + d.getDate());
+            counts.push(works.filter(function (w) { return (w.created_at || '').slice(0, 10) === key; }).length);
+        }
+        if (typeof Chart === 'undefined') {
+            var fb = document.getElementById('trend-fallback');
+            fb.style.display = '';
+            fb.textContent = '图表组件加载失败。近 7 天发布数：' + labels.map(function (l, i) { return l + '（' + counts[i] + '）'; }).join('、');
+            document.getElementById('trend-chart').style.display = 'none';
+            return;
+        }
+        new Chart(document.getElementById('trend-chart'), {
+            type: 'bar',
+            data: { labels: labels, datasets: [{ label: '发布作品数', data: counts, backgroundColor: 'rgba(255,204,0,.6)', borderColor: '#ffcc00', borderWidth: 1 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, color: '#888' } }, x: { ticks: { color: '#888' } } } }
+        });
+    }
+
+    function loadScriptOnce(src) {
+        return new Promise(function (resolve, reject) {
+            if (document.querySelector('script[src="' + src + '"]')) return resolve();
+            var s = document.createElement('script');
+            s.src = src; s.onload = resolve; s.onerror = reject;
+            document.head.appendChild(s);
+        });
+    }
+
+    async function load() {
+        var me = await currentUser();
+        if (!me) { document.getElementById('need-login').style.display = ''; return; }
+        document.getElementById('stats-wrap').style.display = '';
+        try {
+            var r = await sb.from('works').select('id,title,cover_url,views,created_at')
+                .eq('author_id', me.id).order('created_at', { ascending: false });
+            var works = r.data || [];
+            var ids = works.map(function (w) { return w.id; });
+            var likeMap = {}, favMap = {}, cmtMap = {};
+            if (ids.length) {
+                var lr = await sb.from('likes').select('work_id').in('work_id', ids);
+                (lr.data || []).forEach(function (x) { likeMap[x.work_id] = (likeMap[x.work_id] || 0) + 1; });
+                var fr = await sb.from('favorites').select('work_id').in('work_id', ids);
+                (fr.data || []).forEach(function (x) { favMap[x.work_id] = (favMap[x.work_id] || 0) + 1; });
+                var cr = await sb.from('comments').select('work_id').in('work_id', ids);
+                (cr.data || []).forEach(function (x) { cmtMap[x.work_id] = (cmtMap[x.work_id] || 0) + 1; });
+            }
+            workStats = works.map(function (w) {
+                w.likes = likeMap[w.id] || 0; w.favs = favMap[w.id] || 0; w.comments = cmtMap[w.id] || 0;
+                return w;
+            });
+            document.getElementById('st-works').textContent = works.length;
+            document.getElementById('st-views').textContent = works.reduce(function (s, w) { return s + (w.views || 0); }, 0);
+            document.getElementById('st-likes').textContent = works.reduce(function (s, w) { return s + w.likes; }, 0);
+            document.getElementById('st-favs').textContent = works.reduce(function (s, w) { return s + w.favs; }, 0);
+            renderRows();
+            try { await loadScriptOnce('https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js'); } catch (e) {}
+            renderTrend(works);
+        } catch (e) {
+            document.getElementById('work-list').innerHTML = '<p class="works-note">加载失败：' + esc(e.message || '') + '</p>';
+        }
+        document.querySelectorAll('[data-sort]').forEach(function (b) {
+            b.addEventListener('click', function () {
+                document.querySelectorAll('[data-sort]').forEach(function (x) { x.classList.remove('active'); });
+                b.classList.add('active');
+                sortKey = b.getAttribute('data-sort');
+                renderRows();
+            });
+        });
+    }
+    load();
+    </script>
+</body>
+</html>
