@@ -28,4 +28,16 @@
   <url><loc>https://maxmzh666.github.io/community-user.html</loc><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://maxmzh666.github.io/community-notify.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://maxmzh666.github.io/community-auth.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://maxmzh666.github.io/community-forum.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://maxmzh666.github.io/community-forum-new.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://maxmzh666.github.io/community-thread.html</loc><changefreq>daily</changefreq><priority>0.6</priority></url>
+  <url><loc>https://maxmzh666.github.io/community-feed.html</loc><changefreq>daily</changefreq><priority>0.6</priority></url>
+  <url><loc>https://maxmzh666.github.io/community-home.html</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+  <url><loc>https://maxmzh666.github.io/community-discover.html</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://maxmzh666.github.io/community-tasks.html</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://maxmzh666.github.io/community-shop.html</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://maxmzh666.github.io/community-contests.html</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://maxmzh666.github.io/community-contest.html</loc><changefreq>daily</changefreq><priority>0.6</priority></url>
+  <url><loc>https://maxmzh666.github.io/community-contest-new.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://maxmzh666.github.io/community-profile-edit.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
 </urlset>
