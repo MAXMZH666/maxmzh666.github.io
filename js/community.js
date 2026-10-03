@@ -54,6 +54,9 @@ async function renderSubHeader() {
         'community-discover.html': 'discover',
         'community-tasks.html': 'tasks',
         'community-shop.html': 'shop',
+        'community-contests.html': 'contests',
+        'community-contest.html': 'contests',
+        'community-contest-new.html': 'contests',
         'community-publish.html': 'publish',
         'community-code.html': 'code',
         'community-rank.html': 'rank',
@@ -218,6 +221,29 @@ async function claimTaskReward(userTaskId) {
         var r = await window.sb.rpc('claim_task_reward', { p_user_task_id: userTaskId });
         if (r.error) return { ok: false, error: r.error.message };
         return { ok: true, points: r.data };
+    } catch (e) { return { ok: false }; }
+}
+/* ===== 第七期：赛事中心 ===== */
+/* 赛事状态：upcoming/submitting/voting/ended */
+function contestStatus(c) {
+    var now = Date.now();
+    var ss = new Date(c.submit_start).getTime();
+    var se = new Date(c.submit_end).getTime();
+    var ve = new Date(c.vote_end).getTime();
+    if (now < ss) return 'upcoming';
+    if (now < se) return 'submitting';
+    if (now < ve) return 'voting';
+    return 'ended';
+}
+var CONTEST_STATUS_TEXT = {
+    upcoming: '⏳ 即将开始', submitting: '📝 投稿中',
+    voting: '🗳️ 投票中', ended: '🏁 已结束'
+};
+async function settleContest(contestId) {
+    try {
+        var r = await window.sb.rpc('settle_contest', { p_contest_id: contestId });
+        if (r.error) return { ok: false, error: r.error.message };
+        return { ok: true };
     } catch (e) { return { ok: false }; }
 }
 /* ===== 第六期：积分商城 ===== */

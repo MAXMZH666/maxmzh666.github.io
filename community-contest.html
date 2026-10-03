@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAXMZH 游戏社区赛事详情：投稿、投票、排名。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="赛事详情 - MAXMZH 社区">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>赛事详情 - MAXMZH 社区</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="css/styles.css">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+    <style>
+        .contest-hero { border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 14px; padding: 24px; margin-bottom: 20px; background: linear-gradient(135deg, rgba(77,124,254,.08), rgba(156,77,254,.05)); }
+        .contest-hero h1 { margin: 0 0 8px; }
+        .contest-desc { color: var(--muted); margin: 8px 0 12px; white-space: pre-wrap; }
+        .contest-times { font-size: .85rem; color: var(--muted); }
+        .status-tag { display: inline-block; font-size: .78rem; padding: 4px 12px; border-radius: 12px; background: rgba(77,124,254,.15); color: #8fb0ff; margin-bottom: 10px; }
+        .status-tag.submitting { background: rgba(81,207,102,.15); color: #51cf66; }
+        .status-tag.voting { background: rgba(255,212,59,.15); color: #ffd43b; }
+        .status-tag.ended { background: rgba(255,255,255,.08); color: var(--muted); }
+        .entry-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 12px; }
+        .entry-card { border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 12px; overflow: hidden; background: var(--card, rgba(255,255,255,.02)); }
+        .entry-card.rank1 { border-color: #ffd43b; box-shadow: 0 0 0 1px #ffd43b; }
+        .entry-card.rank2 { border-color: #c0c0c0; }
+        .entry-card.rank3 { border-color: #cd7f32; }
+        .entry-cover { height: 110px; background: rgba(255,255,255,.04); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .entry-cover img { width: 100%; height: 100%; object-fit: cover; }
+        .entry-body { padding: 10px 12px; }
+        .entry-title { font-weight: 700; font-size: .92rem; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .entry-meta { font-size: .78rem; color: var(--muted); margin-bottom: 8px; }
+        .vote-count { font-weight: 800; color: #ffd43b; }
+        .entry-actions { display: flex; gap: 6px; }
+        .entry-actions .btn { flex: 1; padding: 6px 0; font-size: .82rem; }
+        .rank-badge { display: inline-block; font-size: .75rem; font-weight: 800; padding: 2px 8px; border-radius: 10px; margin-right: 6px; }
+        .rank1 .rank-badge { background: #ffd43b; color: #333; }
+        .rank2 .rank-badge { background: #c0c0c0; color: #333; }
+        .rank3 .rank-badge { background: #cd7f32; color: #fff; }
+        .sec-title { font-size: 1.15rem; margin: 24px 0 4px; }
+        .submit-box { border: 1px dashed var(--border, rgba(255,255,255,.15)); border-radius: 12px; padding: 16px; margin-top: 12px; }
+        .submit-box select { width: 100%; padding: 8px; border-radius: 8px; margin-bottom: 10px; background: var(--card); color: inherit; border: 1px solid var(--border, rgba(255,255,255,.12)); }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">主页</a></li>
+                <li><a href="about.html">个人简介</a></li>
+                <li><a href="blog.html">博客</a></li>
+                <li><a href="community-home.html" class="active">社区</a></li>
+                <li><a href="forum.html">论坛</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="sub-header">
+        <div class="sub-header-inner">
+            <a class="sub-brand" href="community-home.html">🎮 <span>游戏社区</span></a>
+            <nav class="sub-links" aria-label="社区导航">
+                <a href="community-home.html" data-sub="home">首页</a>
+                <a href="community.html" data-sub="works">作品</a>
+                <a href="community-discover.html" data-sub="discover">🔍 发现</a>
+                <a href="community-tasks.html" data-sub="tasks">📋 任务</a>
+                <a href="community-shop.html" data-sub="shop">🛍️ 商城</a>
+                <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
+                <a href="community-publish.html" data-sub="publish">发布作品</a>
+                <a href="community-code.html" data-sub="code">💻 在线编程</a>
+                <a href="community-rank.html" data-sub="rank">🏆 排行榜</a>
+                <a href="community-notify.html" data-sub="notify" id="sub-bell" style="display:none">🔔 通知</a>
+                <span id="sub-auth"><a href="community-auth.html">登录</a></span>
+            </nav>
+        </div>
+    </div>
+
+    <main>
+        <section class="portfolio" style="max-width:960px">
+            <p class="article-back"><a href="community-contests.html">← 返回赛事中心</a></p>
+            <div id="contest-wrap"><p class="works-note">加载中…</p></div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="blog.html">博客</a>
+            <a href="community-home.html">社区</a>
+            <a href="forum.html">论坛</a>
+            <a href="contact.html">联系方式</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
+    </footer>
+
+    <script src="js/scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/community.js?v=20261003j"></script>
+    <div class="modal-backdrop" id="vote-modal" style="display:none">
+        <div class="modal"><h3>确认投票</h3>
+            <p class="form-hint">每人每赛事限投 1 票，投票后不可更改，确认吗？</p>
+            <div class="modal-actions"><button class="btn" id="vote-cancel" type="button">取消</button>
+            <button class="btn btn-blue" id="vote-confirm" type="button">确认投票</button></div></div>
+    </div>
+    <script>
+    function fmtDT(s) {
+        if (!s) return '';
+        var d = new Date(s);
+        return (d.getMonth() + 1) + '月' + d.getDate() + '日 ' +
+            String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    }
+    function getId() {
+        var m = location.search.match(/[?&]id=([^&]+)/);
+        return m ? m[1] : null;
+    }
+
+    async function load() {
+        var cid = getId();
+        var wrap = document.getElementById('contest-wrap');
+        if (!cid) { wrap.innerHTML = '<p class="works-note">赛事不存在。</p>'; return; }
+
+        var cr = await sb.from('contests').select('*').eq('id', cid).single();
+        if (cr.error || !cr.data) { wrap.innerHTML = '<p class="works-note">赛事不存在。</p>'; return; }
+        var c = cr.data;
+        var st = contestStatus(c);
+        var me = await currentUser();
+        var admin = me ? await isAdmin() : false;
+        var canManage = me && (me.id === c.created_by || admin);
+
+        /* 参赛作品 + 票数 */
+        var er = await sb.from('contest_entries').select('id,work_id,user_id,submitted_at').eq('contest_id', cid).order('submitted_at');
+        var entries = er.data || [];
+        var workIds = entries.map(function (e) { return e.work_id; });
+        var works = {};
+        if (workIds.length) {
+            var wr = await sb.from('works').select('id,title,cover_url,author_id').in('id', workIds);
+            (wr.data || []).forEach(function (w) { works[w.id] = w; });
+        }
+        var vr = await sb.from('contest_votes').select('entry_id').eq('contest_id', cid);
+        var voteCount = {};
+        (vr.data || []).forEach(function (v) { voteCount[v.entry_id] = (voteCount[v.entry_id] || 0) + 1; });
+        entries.forEach(function (e) { e.votes = voteCount[e.id] || 0; });
+        entries.sort(function (a, b) { return b.votes - a.votes; });
+
+        /* 我是否已投票 */
+        var myVote = null;
+        if (me) {
+            var mvr = await sb.from('contest_votes').select('entry_id').eq('contest_id', cid).eq('voter_id', me.id).limit(1);
+            if (mvr.data && mvr.data.length) myVote = mvr.data[0].entry_id;
+        }
+        /* 我的作品（用于投稿） */
+        var myWorks = [];
+        if (me && st === 'submitting') {
+            var mwr = await sb.from('works').select('id,title').eq('author_id', me.id).order('created_at', { ascending: false }).limit(50);
+            myWorks = mwr.data || [];
+        }
+
+        var html = '<div class="contest-hero">' +
+            '<span class="status-tag ' + st + '">' + CONTEST_STATUS_TEXT[st] + '</span>' +
+            '<h1>' + esc(c.title) + '</h1>' +
+            (c.description ? '<div class="contest-desc">' + esc(c.description) + '</div>' : '') +
+            '<div class="contest-times">📝 投稿：' + fmtDT(c.submit_start) + ' ~ ' + fmtDT(c.submit_end) +
+            '<br>🗳️ 投票截止：' + fmtDT(c.vote_end) +
+            '<br>🏆 奖励：冠军 +100 积分 / 亚军 +50 / 季军 +30</div>' +
+            (st === 'ended' && canManage && !c.settled
+                ? '<p style="margin-top:12px"><button class="btn btn-blue" id="settle-btn">🏆 结算并发奖</button></p>' : '') +
+            (c.settled ? '<p style="margin-top:8px;color:#51cf66">✅ 已结算，奖金已发放</p>' : '') +
+            '</div>';
+
+        /* 投稿区 */
+        if (st === 'submitting') {
+            html += '<h2 class="sec-title">📝 投稿参赛</h2>';
+            if (!me) html += '<p class="works-note"><a href="community-auth.html">登录</a>后可投稿。</p>';
+            else if (!myWorks.length) html += '<p class="works-note">你还没有发布作品，先去<a href="community-publish.html">发布作品</a>吧。</p>';
+            else {
+                var enteredWorkIds = {};
+                entries.forEach(function (e) { enteredWorkIds[e.work_id] = 1; });
+                var options = myWorks.filter(function (w) { return !enteredWorkIds[w.id]; })
+                    .map(function (w) { return '<option value="' + w.id + '">' + esc(w.title) + '</option>'; }).join('');
+                html += '<div class="submit-box">' +
+                    (options ? '<select id="entry-work"><option value="">选择你的作品…</option>' + options + '</select>' +
+                    '<button class="btn btn-blue" id="submit-entry-btn">提交参赛</button>'
+                    : '<p class="works-note">你的作品都已参赛。</p>') + '</div>';
+            }
+        }
+
+        /* 投票提示 */
+        if (st === 'voting') {
+            html += '<p class="works-note">' +
+                (!me ? '登录后可投票，每人限投 1 票。' :
+                    myVote ? '你已投票，感谢参与！' : '🗳️ 投票进行中，每人限投 1 票，选出你最喜欢的作品吧！') + '</p>';
+        }
+
+        /* 参赛作品列表 */
+        html += '<h2 class="sec-title">🎮 参赛作品（' + entries.length + '）</h2>';
+        if (!entries.length) {
+            html += '<p class="works-note">还没有人投稿。</p>';
+        } else {
+            html += '<div class="entry-grid">' + entries.map(function (e, idx) {
+                var w = works[e.work_id] || {};
+                var rankCls = st === 'ended' && idx < 3 ? ' rank' + (idx + 1) : '';
+                var rankBadge = st === 'ended' && idx < 3
+                    ? '<span class="rank-badge">' + ['🥇', '🥈', '🥉'][idx] + '</span>' : '';
+                var cover = w.cover_url ? '<img src="' + esc(w.cover_url) + '" alt="">' : '🎮';
+                var voted = myVote === e.id;
+                var canVote = me && st === 'voting' && !myVote && e.user_id !== me.id;
+                return '<div class="entry-card' + rankCls + '">' +
+                    '<div class="entry-cover">' + cover + '</div>' +
+                    '<div class="entry-body">' + rankBadge +
+                    '<div class="entry-title">' + esc(w.title || '（已删除）') + '</div>' +
+                    '<div class="entry-meta"><span class="vote-count">🗳️ ' + e.votes + ' 票</span></div>' +
+                    '<div class="entry-actions">' +
+                    (w.id ? '<a class="btn" href="community-play.html?id=' + w.id + '">试玩</a>' : '') +
+                    (voted ? '<button class="btn" disabled>已投票 ✓</button>'
+                        : canVote ? '<button class="btn btn-blue" data-vote="' + e.id + '">投票</button>' : '') +
+                    '</div></div></div>';
+            }).join('') + '</div>';
+        }
+
+        wrap.innerHTML = html;
+
+        /* 投稿 */
+        var seBtn = document.getElementById('submit-entry-btn');
+        if (seBtn) seBtn.addEventListener('click', async function () {
+            var wid = document.getElementById('entry-work').value;
+            if (!wid) { alert('请先选择作品'); return; }
+            seBtn.disabled = true;
+            var r = await sb.from('contest_entries').insert({ contest_id: cid, work_id: wid, user_id: me.id });
+            if (r.error) { alert('投稿失败：' + r.error.message); seBtn.disabled = false; }
+            else { alert('投稿成功！'); load(); }
+        });
+
+        /* 投票 */
+        document.querySelectorAll('[data-vote]').forEach(function (b) {
+            b.addEventListener('click', function () {
+                _pendingVoteEntry = b.getAttribute('data-vote');
+                _pendingVoteBtn = b;
+                document.getElementById('vote-modal').style.display = 'flex';
+            });
+        });
+
+        /* 结算 */
+        var stBtn = document.getElementById('settle-btn');
+        if (stBtn) stBtn.addEventListener('click', async function () {
+            stBtn.disabled = true; stBtn.textContent = '结算中…';
+            var r = await settleContest(cid);
+            if (r.ok) { alert('结算完成，奖金已发放！'); load(); }
+            else { alert('结算失败：' + (r.error || '未知错误')); stBtn.disabled = false; stBtn.textContent = '🏆 结算并发奖'; }
+        });
+    }
+
+    /* 投票确认弹窗（只绑定一次） */
+    var _pendingVoteEntry = null, _pendingVoteBtn = null;
+    function bindVoteModalOnce() {
+        if (bindVoteModalOnce.done) return;
+        bindVoteModalOnce.done = true;
+        document.getElementById('vote-cancel').addEventListener('click', function () {
+            document.getElementById('vote-modal').style.display = 'none';
+        });
+        document.getElementById('vote-modal').addEventListener('click', function (e) {
+            if (e.target.id === 'vote-modal') e.target.style.display = 'none';
+        });
+        document.getElementById('vote-confirm').addEventListener('click', async function () {
+            var btn = _pendingVoteBtn, entryId = _pendingVoteEntry;
+            if (!entryId || !btn) return;
+            var cid = getId();
+            var me = await currentUser();
+            btn.disabled = true; btn.textContent = '投票中…';
+            this.disabled = true; this.textContent = '投票中…';
+            var r = await sb.from('contest_votes').insert({ contest_id: cid, entry_id: entryId, voter_id: me.id });
+            document.getElementById('vote-modal').style.display = 'none';
+            this.disabled = false; this.textContent = '确认投票';
+            _pendingVoteEntry = null; _pendingVoteBtn = null;
+            if (r.error) { alert('投票失败：' + r.error.message); }
+            else { alert('投票成功！'); load(); }
+        });
+    }
+
+    (async function () {
+        await renderSubHeader();
+        bindVoteModalOnce();
+        await load();
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAXMZH 游戏社区赛事中心：参加比赛、投稿作品、投票评选。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="赛事中心 - MAXMZH 社区">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>赛事中心 - MAXMZH 社区</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="css/styles.css">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+    <style>
+        .contest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-top: 16px; }
+        .contest-card { border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 12px; overflow: hidden; background: var(--card, rgba(255,255,255,.02)); text-decoration: none; color: inherit; display: block; }
+        .contest-card:hover { border-color: #4d7cfe; }
+        .contest-cover { height: 120px; background: linear-gradient(135deg, #4d7cfe, #9c4dfe); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; }
+        .contest-cover img { width: 100%; height: 100%; object-fit: cover; }
+        .contest-body { padding: 14px; }
+        .contest-title { font-weight: 700; font-size: 1.05rem; margin-bottom: 6px; }
+        .contest-meta { font-size: .8rem; color: var(--muted); margin-bottom: 8px; }
+        .status-tag { display: inline-block; font-size: .75rem; padding: 3px 10px; border-radius: 12px; background: rgba(77,124,254,.15); color: #8fb0ff; margin-bottom: 8px; }
+        .status-tag.submitting { background: rgba(81,207,102,.15); color: #51cf66; }
+        .status-tag.voting { background: rgba(255,212,59,.15); color: #ffd43b; }
+        .status-tag.ended { background: rgba(255,255,255,.08); color: var(--muted); }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">主页</a></li>
+                <li><a href="about.html">个人简介</a></li>
+                <li><a href="blog.html">博客</a></li>
+                <li><a href="community-home.html" class="active">社区</a></li>
+                <li><a href="forum.html">论坛</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="sub-header">
+        <div class="sub-header-inner">
+            <a class="sub-brand" href="community-home.html">🎮 <span>游戏社区</span></a>
+            <nav class="sub-links" aria-label="社区导航">
+                <a href="community-home.html" data-sub="home">首页</a>
+                <a href="community.html" data-sub="works">作品</a>
+                <a href="community-discover.html" data-sub="discover">🔍 发现</a>
+                <a href="community-tasks.html" data-sub="tasks">📋 任务</a>
+                <a href="community-shop.html" data-sub="shop">🛍️ 商城</a>
+                <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
+                <a href="community-publish.html" data-sub="publish">发布作品</a>
+                <a href="community-code.html" data-sub="code">💻 在线编程</a>
+                <a href="community-rank.html" data-sub="rank">🏆 排行榜</a>
+                <a href="community-notify.html" data-sub="notify" id="sub-bell" style="display:none">🔔 通知</a>
+                <span id="sub-auth"><a href="community-auth.html">登录</a></span>
+            </nav>
+        </div>
+    </div>
+
+    <main>
+        <section class="portfolio" style="max-width:960px">
+            <h1 class="section-title">🏁 赛事中心</h1>
+            <p class="section-sub">参加社区比赛，投稿作品、投票评选，前三名获得积分奖励（100/50/30）。</p>
+            <p><a class="btn btn-blue" href="community-contest-new.html">＋ 发起赛事</a></p>
+            <div id="contest-list"><p class="works-note">加载中…</p></div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="blog.html">博客</a>
+            <a href="community-home.html">社区</a>
+            <a href="forum.html">论坛</a>
+            <a href="contact.html">联系方式</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
+    </footer>
+
+    <script src="js/scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/community.js?v=20261003j"></script>
+    <script>
+    function fmtDT(s) {
+        if (!s) return '';
+        var d = new Date(s);
+        return (d.getMonth() + 1) + '月' + d.getDate() + '日 ' +
+            String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    }
+
+    async function load() {
+        var r = await sb.from('contests').select('*').order('created_at', { ascending: false }).limit(50);
+        var list = r.data || [];
+        if (!list.length) {
+            document.getElementById('contest-list').innerHTML = '<p class="works-note">还没有赛事，来发起第一个吧！</p>';
+            return;
+        }
+        /* 按状态分组：进行中优先 */
+        var order = { submitting: 0, voting: 1, upcoming: 2, ended: 3 };
+        list.sort(function (a, b) { return order[contestStatus(a)] - order[contestStatus(b)]; });
+        document.getElementById('contest-list').innerHTML = '<div class="contest-grid">' +
+            list.map(function (c) {
+                var st = contestStatus(c);
+                var cover = c.cover_url
+                    ? '<div class="contest-cover"><img src="' + esc(c.cover_url) + '" alt=""></div>'
+                    : '<div class="contest-cover">🏁</div>';
+                return '<a class="contest-card" href="community-contest.html?id=' + c.id + '">' + cover +
+                    '<div class="contest-body"><span class="status-tag ' + st + '">' + CONTEST_STATUS_TEXT[st] + '</span>' +
+                    '<div class="contest-title">' + esc(c.title) + '</div>' +
+                    '<div class="contest-meta">投稿 ' + fmtDT(c.submit_start) + ' ~ ' + fmtDT(c.submit_end) +
+                    '<br>投票截止 ' + fmtDT(c.vote_end) + '</div></div></a>';
+            }).join('') + '</div>';
+    }
+
+    (async function () {
+        await renderSubHeader();
+        await load();
+    })();
+    </script>
+</body>
+</html>
