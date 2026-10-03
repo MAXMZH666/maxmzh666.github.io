@@ -57,6 +57,7 @@ async function renderSubHeader() {
         'community-contests.html': 'contests',
         'community-contest.html': 'contests',
         'community-contest-new.html': 'contests',
+        'community-moderation.html': 'moderation',
         'community-publish.html': 'publish',
         'community-code.html': 'code',
         'community-rank.html': 'rank',
@@ -221,6 +222,14 @@ async function claimTaskReward(userTaskId) {
         var r = await window.sb.rpc('claim_task_reward', { p_user_task_id: userTaskId });
         if (r.error) return { ok: false, error: r.error.message };
         return { ok: true, points: r.data };
+    } catch (e) { return { ok: false }; }
+}
+/* ===== 第八期：社区共建 ===== */
+async function executeReportVerdict(caseId, verdict) {
+    try {
+        var r = await window.sb.rpc('execute_report_verdict', { p_case_id: caseId, p_verdict: verdict });
+        if (r.error) return { ok: false, error: r.error.message };
+        return { ok: true };
     } catch (e) { return { ok: false }; }
 }
 /* ===== 第七期：赛事中心 ===== */
