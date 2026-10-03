@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>关于 | 审判行动：致命瞄准官网</title>
+  <link rel="stylesheet" href="assets/main.css">
+  <!-- 网站图标（favicon），请确保 favicon.ico 已上传至根目录 -->
+  <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+  <!-- 引入 AOS 样式 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.1/dist/aos.css">
+</head>
+<body class="fade-in">
+  <header>
+    <div class="container header-container" data-aos="fade-down">
+      <!-- 网站 Logo -->
+      <a href="index.html" class="logo-link">
+        <img src="images/logo.svg" alt="网站 Logo" class="site-logo">
+      </a>
+      <h1 class="site-title"><a href="index.html">审判行动：致命瞄准官网</a></h1>
+      <nav>
+        <ul>
+          <li><a href="index.html">首页</a></li>
+          <li><a href="intro.html">游戏介绍</a></li>
+          <li><a href="changelog.html">更新日志</a></li>
+          <li><a href="play.html">开始游玩</a></li>
+          <li><a href="download.html">软件下载</a></li>
+          <li><a href="leaderboard.html">排行榜</a></li>
+          <li><a href="gallery.html">媒体库</a></li>
+          <li><a href="forum.html">论坛</a></li>
+          <li><a href="about.html">关于</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container" data-aos="fade-up">
+    <h1>制作团队</h1>
+<p>本游戏由 <strong>MAX至臻星域 (MAX Apex Xenith)</strong> 精心打造。</p>
+<p>如需了解更多团队资讯及作品，请访问我们的官方网站：</p>
+<a class="button" href="../apex-xenith/index.html" target="_blank">MAX至臻星域 官方网站</a>
+<h2>反馈与建议</h2>
+<p>如果您有任何问题或建议，请填写下方反馈表单，我们会认真阅读并改进！</p>
+<form id="feedback-form" action="https://formspree.io/f/xzzdlyyv" method="POST">
+  <label for="name">您的姓名</label>
+  <input type="text" id="name" name="name" placeholder="请输入您的姓名" required>
+  <label for="email">您的邮箱</label>
+  <input type="email" id="email" name="_replyto" placeholder="请输入您的邮箱" required>
+  <label for="message">反馈内容</label>
+  <textarea id="message" name="message" placeholder="请输入您的反馈内容" required></textarea>
+  <!-- 自定义验证码 -->
+  <div id="custom-captcha">
+    <p id="captcha-question"></p>
+    <input type="text" id="captcha-answer" name="captcha_answer" placeholder="请输入答案" required>
+  </div>
+  <button type="submit" class="button">提交反馈</button>
+</form>
+<script>
+<p>// 自定义验证码生成与验证 document.addEventListener("DOMContentLoaded", function() { var a = Math.floor(Math.random() * 10) + 1; var b = Math.floor(Math.random() * 10) + 1; var answer = a + b; document.getElementById("captcha-question").innerText = "请回答: " + a + " + " + b + " = ?";</p>
+<p>document.getElementById("feedback-form").addEventListener("submit", function(e) { var userAnswer = document.getElementById("captcha-answer").value; if (parseInt(userAnswer) !== answer) { e.preventDefault(); alert("验证码答案错误，请重新尝试。"); } }); });</p>
+</script>
+  </main>
+
+  <hr>
+
+  <!-- Utterances 评论系统（如页面需要） -->
+  <section id="comments">
+    <script src="https://utteranc.es/client.js"
+            repo="Tactgame/tactgam.github.io"
+            issue-term="pathname"
+            label="comment"
+            theme="github-dark"
+            crossorigin="anonymous"
+            async>
+    </script>
+  </section>
+
+  <footer data-aos="fade-up">
+    <p>&copy; 2026 审判行动：致命瞄准. 保留所有权利.</p>
+  </footer>
+
+  <!-- 引入 AOS 脚本 -->
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.1/dist/aos.js"></script>
+  <script>
+    AOS.init({
+      duration: 800,
+      easing: 'slide'
+    });
+  </script>
+</body>
+</html>
