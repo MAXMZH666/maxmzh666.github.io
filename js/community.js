@@ -141,32 +141,26 @@ function authRequiredRedirect() {
 /* 确保登录用户在 profiles 表里有一行（注册触发器已移除，由前端保证） */
 async function ensureProfile() {
     var u = await currentUser();
-    function dbg(m) { try { var k='dbglog'; var v=(localStorage.getItem(k)||''); localStorage.setItem(k, new Date().toISOString().slice(11,19)+' '+m+'\n'+v); } catch (e) {} }
-    if (!u) { dbg('no-user'); return null; }
-    dbg('uid=' + u.id.slice(0, 8));
+    if (!u) return null;
     /* 已有档案直接返回，绝不覆盖用户改过的昵称 */
     try {
         var ex = await window.sb.from('profiles').select('id,username').eq('id', u.id).maybeSingle();
-        dbg('select1 err=' + (ex.error ? ex.error.code : 'none') + ' hasData=' + !!ex.data);
-        if (ex.data) { dbg('early-return username=' + ex.data.username); return ex.data; }
-    } catch (e) { dbg('select1 throw'); }
+        if (ex.data) return ex.data;
+    } catch (e) {}
     var base = String((u.user_metadata && u.user_metadata.username) || u.email.split('@')[0] || 'user').slice(0, 20);
     var candidates = [base, base + '_' + u.id.slice(0, 4)];
     for (var i = 0; i < candidates.length; i++) {
         try {
             /* 只用 INSERT：已存在行会报错而不会覆盖，杜绝任何覆盖昵称的可能 */
             var r = await window.sb.from('profiles').insert({ id: u.id, username: candidates[i] });
-            dbg('insert err=' + (r.error ? (r.error.code + '/' + r.error.message.slice(0, 40)) : 'none'));
-            if (!r.error) { dbg('inserted ' + candidates[i]); return { id: u.id, username: candidates[i] }; }
-        } catch (e2) { dbg('insert throw'); }
+            if (!r.error) return { id: u.id, username: candidates[i] };
+        } catch (e2) {}
         /* 插入失败（并发已建或昵称占用）→ 读已有档案返回 */
         try {
             var g = await window.sb.from('profiles').select('id,username').eq('id', u.id).maybeSingle();
-            dbg('select2 hasData=' + !!g.data);
-            if (g.data) { dbg('return-existing ' + g.data.username); return g.data; }
-        } catch (e3) { dbg('select2 throw'); }
+            if (g.data) return g.data;
+        } catch (e3) {}
     }
-    dbg('fallback ' + base);
     return { id: u.id, username: base };
 }
 
