@@ -49,6 +49,10 @@ begin
   if v_price is null then raise exception 'item not found'; end if;
   select points into v_pts from profiles where id = v_uid;
   if v_pts is null or v_pts < v_price then raise exception 'not enough points'; end if;
+  -- 已拥有则直接返回成功，不重复扣费
+  if exists (select 1 from user_items where user_id = v_uid and item_id = p_item_id) then
+    return true;
+  end if;
   update profiles set points = points - v_price where id = v_uid;
   insert into user_items (user_id, item_id) values (v_uid, p_item_id)
   on conflict (user_id, item_id) do nothing;
