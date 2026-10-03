@@ -369,10 +369,26 @@
                 '<label>封面图（不换请留空）</label><input type="file" id="es-cover" accept="image/*">' +
                 '<p class="form-note" id="es-note"></p>' +
                 '<div class="modal-actions"><button class="btn" id="es-cancel" type="button">取消</button>' +
-                '<button class="btn btn-blue" id="es-save" type="button">保存</button></div></div></div>';
+                '<button class="btn btn-blue" id="es-save" type="button">保存</button></div>' +
+                ((myRole === 'owner' || siteAdmin) ? '<div style="margin-top:14px;border-top:1px solid #444;padding-top:12px"><button class="btn btn-ghost btn-sm" id="es-dissolve" type="button" style="color:#ff6b6b">🗑️ 解散工作室</button><p class="form-hint">解散后所有成员、公告、讨论将被移除，不可恢复。</p></div>' : '') + '</div></div>';
             document.body.insertAdjacentHTML('beforeend', mHtml);
             var modal = document.getElementById('edit-studio-modal');
             document.getElementById('es-cancel').addEventListener('click', function () { modal.remove(); });
+            var disBtn = document.getElementById('es-dissolve');
+            if (disBtn) disBtn.addEventListener('click', async function () {
+                if (!confirm('确定解散工作室「' + (s.name || '') + '」吗？所有成员、公告、讨论将被移除，不可恢复！')) return;
+                if (!confirm('再次确认：真的要解散吗？')) return;
+                showLoading('解散中…');
+                try {
+                    var r = await withTimeout(sb.from('studios').delete().eq('id', sid), 20000, '解散超时，请重试');
+                    if (r.error) throw r.error;
+                    showLoading('已解散，跳转中…');
+                    location.href = 'community-studios.html';
+                } catch (e) {
+                    hideLoading();
+                    alert('解散失败：' + (e.message || ''));
+                }
+            });
             modal.addEventListener('click', function (e) { if (e.target === modal) modal.remove(); });
             document.getElementById('es-save').addEventListener('click', async function () {
                 var nm = document.getElementById('es-name').value.trim();
