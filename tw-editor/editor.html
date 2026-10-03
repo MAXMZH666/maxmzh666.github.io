@@ -272,40 +272,47 @@
     }
 
     /* ---- 注入文件菜单项 + 隐藏顶部按钮 ---- */
+    function cls(el) {
+        var c = el.className;
+        if (c && c.baseVal !== undefined) c = c.baseVal;
+        return typeof c === 'string' ? c : '';
+    }
+    var SAVE_TEXTS = ['保存到电脑', '保存到文件', 'Save to your computer'];
     function tryInjectMenu() {
         /* 先清理旧注入（React 重渲染会重建菜单，防止重复） */
         var olds = document.querySelectorAll('[data-mmc-item]');
         for (var oi = 0; oi < olds.length; oi++) olds[oi].remove();
-        /* 找到「保存到电脑」叶子菜单项，向上取真正的下拉菜单容器 */
+        /* 找到「保存到电脑/文件」叶子菜单项 */
         var saveItem = null;
         var all = document.getElementsByTagName('*');
         for (var i = 0; i < all.length; i++) {
             var el = all[i];
             if (el.children.length !== 0) continue;
             var t = (el.textContent || '').trim();
-            if (t !== '保存到电脑' && t !== '保存到文件') continue;
-            /* 排除顶栏：向上确认不在 menu-bar 内 */
+            if (SAVE_TEXTS.indexOf(t) === -1) continue;
+            /* 排除顶栏 */
             var p = el, inBar = false;
             while (p && p !== document.body) {
-                var cn = (p.className && p.className.baseVal !== undefined) ? p.className.baseVal : (p.className || '');
-                if (typeof cn === 'string' && cn.indexOf('menu-bar') !== -1) { inBar = true; break; }
+                if (cls(p).indexOf('menu-bar') !== -1) { inBar = true; break; }
                 p = p.parentNode;
             }
             if (!inBar) { saveItem = el; break; }
         }
         if (!saveItem) return;
+        /* 向上找真正的下拉菜单容器：class 含 menu，但排除 menu-item 和 menu-bar */
         var menu = saveItem.parentNode;
-        /* 向上找到菜单容器（排除 menu-bar） */
         while (menu && menu !== document.body) {
-            var mcn = (menu.className && menu.className.baseVal !== undefined) ? menu.className.baseVal : (menu.className || '');
-            if (typeof mcn === 'string' && mcn.indexOf('menu') !== -1 && mcn.indexOf('menu-bar') === -1) break;
+            var mcn = cls(menu);
+            if (mcn.indexOf('menu') !== -1 && mcn.indexOf('menu-item') === -1 && mcn.indexOf('menu-bar') === -1) break;
             menu = menu.parentNode;
         }
         if (!menu || menu === document.body) return;
+        /* 找到菜单项的直接子元素作为样式模板（可能是 span 包裹） */
+        var styleSrc = saveItem;
+        if (cls(saveItem.parentNode).indexOf('menu-item') !== -1) styleSrc = saveItem.parentNode;
         function makeItem(label, fn) {
             var div = document.createElement('div');
-            /* 继承原菜单项样式，保证排版一致 */
-            div.className = saveItem.className;
+            div.className = styleSrc.className;
             div.setAttribute('data-mmc-item', '1');
             div.textContent = label;
             div.style.cursor = 'pointer';
@@ -315,12 +322,13 @@
         menu.appendChild(makeItem('💾 保存草稿到社区', function () { saveDraft(false); }));
         menu.appendChild(makeItem('📤 发布到社区', publishToCommunity));
     }
+    var HIDE_TEXTS = ['查看作品页面', 'TurboWarp 反馈', 'See project page', 'TurboWarp Feedback'];
     function hideTopButtons() {
-        var btns = document.querySelectorAll('button, a');
+        var btns = document.querySelectorAll('button, a, div[role="button"]');
         for (var i = 0; i < btns.length; i++) {
             var t = (btns[i].textContent || '').trim();
-            if (t === '查看作品页面' || t === 'TurboWarp 反馈' || t.indexOf('TurboWarp 反馈') === 0) {
-                btns[i].style.display = 'none';
+            for (var k = 0; k < HIDE_TEXTS.length; k++) {
+                if (t.indexOf(HIDE_TEXTS[k]) !== -1) { btns[i].style.display = 'none'; break; }
             }
         }
     }
