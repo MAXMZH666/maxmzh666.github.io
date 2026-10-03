@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAX社区作品合集详情。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="作品合集 - MAXMZH 社区">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>作品合集 - MAXMZH 社区</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="css/styles.css">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">主页</a></li>
+                <li><a href="about.html">个人简介</a></li>
+                <li><a href="blog.html">博客</a></li>
+                <li><a href="community-home.html" class="active">社区</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="sub-header">
+        <div class="sub-header-inner">
+            <a class="sub-brand" href="community-home.html">🎮 <span>MAX社区</span></a>
+            <nav class="sub-links" aria-label="社区导航">
+                <a href="community-home.html" data-sub="home">首页</a>
+                <a href="community.html" data-sub="works">🔍 发现</a>
+                <a href="community-search.html" data-sub="search">🔎 搜索</a>
+                <a href="community-forum.html" data-sub="forum">💬 论坛</a>
+                <a href="community-shop.html" data-sub="shop">🎁 任务商城</a>
+                <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
+                <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
+                <a href="community-studios.html" data-sub="studios">🏢 工作室</a>
+                <a href="community-publish.html" data-sub="publish">🚀 发布</a>
+                <a href="community-stats.html" data-sub="stats">📊 数据</a>
+                <a href="community-collections.html" data-sub="collections">📚 合集</a>
+                <a href="community-feed.html" data-sub="feed" id="sub-bell">💬 动态</a>
+                <a href="community-dm.html" data-sub="dm">✉️ 私信<span id="dm-dot" style="display:none;color:#ff6b6b"> ●</span></a>
+                <span id="sub-auth"><a href="community-auth.html">登录</a></span>
+            </nav>
+        </div>
+    </div>
+
+    <main>
+        <section class="portfolio" style="max-width:860px" id="col-wrap">
+            <p class="works-note">加载中…</p>
+        </section>
+    </main>
+
+    <footer>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="blog.html">博客</a>
+            <a href="community-home.html">社区</a>
+            <a href="community-forum.html">论坛</a>
+            <a href="contact.html">联系方式</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
+    </footer>
+
+    <script src="js/scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/community.js?v=20261004a"></script>
+    <div class="modal-backdrop" id="edit-modal" style="display:none">
+        <div class="modal" style="max-width:480px"><h3>✏️ 编辑合集</h3>
+            <label>合集标题</label><input type="text" id="ec-title" maxlength="40">
+            <label>简介</label><textarea id="ec-desc" rows="3" maxlength="300"></textarea>
+            <label>封面图（不换请留空）</label><input type="file" id="ec-cover" accept="image/*">
+            <p class="form-note" id="ec-note"></p>
+            <div class="modal-actions"><button class="btn" id="ec-cancel" type="button">取消</button>
+            <button class="btn btn-blue" id="ec-save" type="button">保存</button></div></div>
+    </div>
+    <script>
+    var cid = new URLSearchParams(location.search).get('id');
+
+    async function load() {
+        var wrap = document.getElementById('col-wrap');
+        if (!cid) { wrap.innerHTML = '<p class="works-note">缺少合集 ID。</p>'; return; }
+        var me = await currentUser();
+        try {
+            var r = await sb.from('collections').select('*').eq('id', cid).single();
+            if (r.error || !r.data) throw new Error('合集不存在');
+            var c = r.data;
+            var isOwner = me && me.id === c.owner_id;
+            var siteAdmin = await isAdmin();
+            var canManage = isOwner || siteAdmin;
+            var wr = await sb.from('collection_works').select('work_id,position,added_at')
+                .eq('collection_id', cid).order('position', { ascending: true });
+            var wids = (wr.data || []).map(function (x) { return x.work_id; });
+            var wMap = {};
+            if (wids.length) {
+                var wq = await sb.from('works').select('id,title,cover_url,views,created_at').in('id', wids);
+                (wq.data || []).forEach(function (w) { wMap[w.id] = w; });
+            }
+            var works = (wr.data || []).map(function (x) { return wMap[x.work_id]; }).filter(Boolean);
+            var cover = c.cover_url
+                ? '<img src="' + esc(c.cover_url) + '" alt="' + esc(c.title) + '" style="width:100%;max-height:220px;object-fit:cover;border-radius:12px">'
+                : '';
+            wrap.innerHTML =
+                '<p class="article-back"><a href="community-collections.html">← 我的合集</a></p>' +
+                cover +
+                '<h1 class="section-title" style="margin-top:12px">📚 ' + esc(c.title) + '</h1>' +
+                (c.description ? '<p class="section-sub">' + esc(c.description) + '</p>' : '') +
+                '<p class="works-note" style="padding:8px 0">' + works.length + ' 件作品 · ' + fmtDate(c.created_at) + '</p>' +
+                (canManage ? '<p><button class="btn btn-ghost btn-sm" id="edit-col-btn">✏️ 编辑</button> ' +
+                    '<button class="btn btn-ghost btn-sm" id="del-col-btn" style="color:#ff6b6b">🗑️ 删除合集</button></p>' : '') +
+                '<div class="card-grid" style="margin-top:16px">' + (works.length ? works.map(function (w) {
+                    var wcover = w.cover_url
+                        ? '<img src="' + esc(w.cover_url) + '" alt="' + esc(w.title) + '" loading="lazy">'
+                        : '<span class="monogram">' + esc((w.title || '游').charAt(0)) + '</span>';
+                    return '<div class="card"><a href="community-play.html?id=' + w.id + '">' +
+                        '<div class="card-cover">' + wcover + '</div>' +
+                        '<div class="card-body"><h3>' + esc(w.title) + '</h3>' +
+                        '<p>' + fmtDate(w.created_at) + ' · 👁 ' + (w.views || 0) + '</p></div></a>' +
+                        (canManage ? '<div style="padding:0 12px 12px"><button class="remove-btn" data-rm="' + w.id + '">移除</button></div>' : '') +
+                        '</div>';
+                }).join('') : '<p class="works-note">合集还是空的，去作品页点「➕ 加入合集」添加吧。</p>') + '</div>';
+
+            if (canManage) {
+                wrap.querySelectorAll('[data-rm]').forEach(function (b) {
+                    b.addEventListener('click', async function () {
+                        if (!confirm('从合集中移除这件作品？')) return;
+                        showLoading('移除中…');
+                        try {
+                            var dr = await withTimeout(
+                                sb.from('collection_works').delete().eq('collection_id', cid).eq('work_id', b.getAttribute('data-rm')),
+                                15000, '操作超时');
+                            if (dr.error) throw dr.error;
+                        } catch (e) { alert('移除失败：' + (e.message || '')); }
+                        hideLoading();
+                        load();
+                    });
+                });
+                document.getElementById('edit-col-btn').addEventListener('click', function () {
+                    document.getElementById('ec-title').value = c.title || '';
+                    document.getElementById('ec-desc').value = c.description || '';
+                    document.getElementById('ec-note').textContent = '';
+                    document.getElementById('edit-modal').style.display = 'flex';
+                });
+                document.getElementById('ec-cancel').addEventListener('click', function () {
+                    document.getElementById('edit-modal').style.display = 'none';
+                });
+                document.getElementById('edit-modal').addEventListener('click', function (e) {
+                    if (e.target.id === 'edit-modal') e.target.style.display = 'none';
+                });
+                document.getElementById('ec-save').addEventListener('click', async function () {
+                    var t = document.getElementById('ec-title').value.trim();
+                    var d = document.getElementById('ec-desc').value.trim();
+                    var n = document.getElementById('ec-note');
+                    if (!t) { n.textContent = '请填写标题'; n.className = 'form-note err'; return; }
+                    n.textContent = '保存中…'; n.className = 'form-note sending';
+                    var payload = { title: t, description: d || null };
+                    try {
+                        var cf = document.getElementById('ec-cover').files[0];
+                        if (cf) {
+                            var ext = (cf.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+                            payload.cover_url = await uploadWithProgress('covers', 'collection/' + c.owner_id + '_' + Date.now() + '.' + ext, cf, cf.type || 'image/jpeg', null);
+                        }
+                        var ur = await sb.from('collections').update(payload).eq('id', cid);
+                        if (ur.error) throw ur.error;
+                        document.getElementById('edit-modal').style.display = 'none';
+                        load();
+                    } catch (e) {
+                        n.textContent = '保存失败：' + (e.message || '');
+                        n.className = 'form-note err';
+                    }
+                });
+                document.getElementById('del-col-btn').addEventListener('click', async function () {
+                    if (!confirm('删除合集「' + c.title + '」？其中的作品不会被删除。')) return;
+                    if (!confirm('再次确认：真的要删除吗？')) return;
+                    showLoading('删除中…');
+                    try {
+                        var dr = await withTimeout(sb.from('collections').delete().eq('id', cid), 20000, '删除超时');
+                        if (dr.error) throw dr.error;
+                        location.href = 'community-collections.html';
+                    } catch (e) {
+                        hideLoading();
+                        alert('删除失败：' + (e.message || ''));
+                    }
+                });
+            }
+        } catch (e) {
+            wrap.innerHTML = '<p class="works-note">' + esc(e.message || '加载失败') + '</p>';
+        }
+    }
+    load();
+    </script>
+</body>
+</html>

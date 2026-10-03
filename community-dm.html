@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAX社区私信：与其他用户一对一聊天。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="MAXMZH - 私信">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>MAXMZH - 私信</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="css/styles.css">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+    <style>
+        .dm-wrap { display: flex; gap: 16px; margin-top: 20px; min-height: 60vh; }
+        .dm-list { width: 300px; flex-shrink: 0; border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+        .dm-list-head { padding: 12px 14px; font-weight: 700; border-bottom: 1px solid var(--border, rgba(255,255,255,.08)); }
+        .dm-convs { overflow-y: auto; flex: 1; }
+        .dm-conv { display: flex; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--border, rgba(255,255,255,.06)); cursor: pointer; align-items: center; }
+        .dm-conv:hover { background: rgba(255,255,255,.03); }
+        .dm-conv.active { background: rgba(77,124,254,.08); }
+        .dm-avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg,#4d7cfe,#9b59ff); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; color: #fff; flex-shrink: 0; }
+        .dm-conv-main { flex: 1; min-width: 0; }
+        .dm-conv-name { font-weight: 600; font-size: .92rem; display: flex; justify-content: space-between; align-items: center; }
+        .dm-conv-time { font-size: .72rem; color: var(--muted); font-weight: 400; }
+        .dm-conv-last { font-size: .82rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }
+        .dm-unread { background: #ff6b6b; color: #fff; font-size: .7rem; min-width: 20px; height: 20px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; padding: 0 6px; flex-shrink: 0; }
+        .dm-chat { flex: 1; border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+        .dm-chat-head { padding: 12px 16px; font-weight: 700; border-bottom: 1px solid var(--border, rgba(255,255,255,.08)); }
+        .dm-chat-head a { color: inherit; text-decoration: none; }
+        .dm-chat-head a:hover { color: var(--gold, #ffcc00); }
+        .dm-msgs { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; min-height: 300px; max-height: 55vh; }
+        .dm-msg { max-width: 75%; padding: 10px 14px; border-radius: 14px; font-size: .92rem; line-height: 1.5; word-break: break-word; }
+        .dm-msg.mine { align-self: flex-end; background: #4d7cfe; color: #fff; border-bottom-right-radius: 4px; }
+        .dm-msg.theirs { align-self: flex-start; background: var(--surface-2, rgba(255,255,255,.06)); border-bottom-left-radius: 4px; }
+        .dm-msg-time { font-size: .7rem; color: var(--muted); margin-top: 4px; }
+        .dm-msg.mine .dm-msg-time { color: rgba(255,255,255,.7); text-align: right; }
+        .dm-input-bar { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--border, rgba(255,255,255,.08)); }
+        .dm-input-bar input { flex: 1; min-height: 44px; }
+        .dm-empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--muted); padding: 40px 20px; text-align: center; }
+        @media (max-width: 760px) {
+            .dm-wrap { flex-direction: column; }
+            .dm-list { width: 100%; max-height: 40vh; }
+            .dm-list.hide-mobile { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">主页</a></li>
+                <li><a href="about.html">个人简介</a></li>
+                <li><a href="blog.html">博客</a></li>
+                <li><a href="community-home.html" class="active">社区</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="sub-header">
+        <div class="sub-header-inner">
+            <a class="sub-brand" href="community-home.html">🎮 <span>MAX社区</span></a>
+            <nav class="sub-links" aria-label="社区导航">
+                <a href="community-home.html" data-sub="home">首页</a>
+                <a href="community.html" data-sub="works">🔍 发现</a>
+                <a href="community-search.html" data-sub="search">🔎 搜索</a>
+                <a href="community-forum.html" data-sub="forum">💬 论坛</a>
+                <a href="community-shop.html" data-sub="shop">🎁 任务商城</a>
+                <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
+                <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
+                <a href="community-studios.html" data-sub="studios">🏢 工作室</a>
+                <a href="community-publish.html" data-sub="publish">🚀 发布</a>
+                <a href="community-stats.html" data-sub="stats">📊 数据</a>
+                <a href="community-collections.html" data-sub="collections">📚 合集</a>
+                <a href="community-feed.html" data-sub="feed" id="sub-bell">💬 动态</a>
+                <a href="community-dm.html" data-sub="dm">✉️ 私信<span id="dm-dot" style="display:none;color:#ff6b6b"> ●</span></a>
+                <span id="sub-auth"><a href="community-auth.html">登录</a></span>
+            </nav>
+        </div>
+    </div>
+
+    <main>
+        <section class="portfolio">
+            <h1 class="section-title">✉️ 私信</h1>
+            <div class="dm-wrap" id="dm-wrap" style="display:none">
+                <div class="dm-list" id="dm-list">
+                    <div class="dm-list-head">会话</div>
+                    <div class="dm-convs" id="dm-convs"></div>
+                </div>
+                <div class="dm-chat" id="dm-chat">
+                    <div class="dm-empty" id="dm-empty">👈 选择一个会话开始聊天</div>
+                    <div id="dm-active" style="display:none;flex-direction:column;height:100%">
+                        <div class="dm-chat-head" id="dm-chat-head"></div>
+                        <div class="dm-msgs" id="dm-msgs"></div>
+                        <div class="dm-input-bar">
+                            <input type="text" id="dm-input" maxlength="500" placeholder="输入消息，Enter 发送…" autocomplete="off">
+                            <button class="btn btn-blue" id="dm-send">发送</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p class="works-note" id="dm-login-tip" style="display:none">请先<a href="community-auth.html">登录</a>后使用私信。</p>
+        </section>
+    </main>
+
+    <footer>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="blog.html">博客</a>
+            <a href="community-home.html">社区</a>
+            <a href="community-forum.html">论坛</a>
+            <a href="contact.html">联系方式</a>
+            <a href="max-studio/index.html">MAX工作室</a>
+            <a href="apex-xenith/index.html">Apex Xenith</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/community.js?v=20261004a"></script>
+    <script>
+    (function () {
+        var me = null, convs = [], activeUid = null, nameMap = {}, pollTimer = null, sending = false;
+
+        function qp(name) {
+            try { return new URLSearchParams(location.search).get(name); } catch (e) { return null; }
+        }
+
+        async function loadConvs() {
+            var r = await withTimeout(sb.from('direct_messages')
+                .select('id,sender_id,receiver_id,content,created_at,read_at')
+                .or('sender_id.eq.' + me.id + ',receiver_id.eq.' + me.id)
+                .order('created_at', { ascending: false })
+                .limit(200), 15000, '加载超时');
+            if (r.error) throw r.error;
+            var msgs = r.data || [];
+            var map = {};
+            msgs.forEach(function (m) {
+                var other = m.sender_id === me.id ? m.receiver_id : m.sender_id;
+                if (!map[other]) map[other] = { uid: other, last: m, unread: 0 };
+                if (m.receiver_id === me.id && !m.read_at) map[other].unread++;
+            });
+            convs = Object.keys(map).map(function (k) { return map[k]; })
+                .sort(function (a, b) { return new Date(b.last.created_at) - new Date(a.last.created_at); });
+            /* 用户名 */
+            var uids = convs.map(function (c) { return c.uid; });
+            if (uids.length) {
+                try {
+                    var pr = await sb.from('profiles').select('id,username').in('id', uids);
+                    (pr.data || []).forEach(function (p) { nameMap[p.id] = p.username; });
+                } catch (e) {}
+            }
+            renderConvs();
+            updateDmDot();
+        }
+
+        function renderConvs() {
+            var box = document.getElementById('dm-convs');
+            if (!convs.length) {
+                box.innerHTML = '<div class="dm-empty">暂无会话<br>去用户主页点「💬 私信」开始聊天吧</div>';
+                return;
+            }
+            box.innerHTML = convs.map(function (c) {
+                var nm = esc(nameMap[c.uid] || '未知用户');
+                var last = c.last.sender_id === me.id ? '我：' + c.last.content : c.last.content;
+                return '<div class="dm-conv' + (c.uid === activeUid ? ' active' : '') + '" data-uid="' + c.uid + '">' +
+                    '<div class="dm-avatar">' + esc(nm.charAt(0)) + '</div>' +
+                    '<div class="dm-conv-main"><div class="dm-conv-name"><span>' + nm + '</span>' +
+                    '<span class="dm-conv-time">' + fmtDate(c.last.created_at) + '</span></div>' +
+                    '<div class="dm-conv-last">' + esc(last) + '</div></div>' +
+                    (c.unread ? '<span class="dm-unread">' + c.unread + '</span>' : '') +
+                    '</div>';
+            }).join('');
+            box.querySelectorAll('.dm-conv').forEach(function (el) {
+                el.addEventListener('click', function () { openConv(el.getAttribute('data-uid')); });
+            });
+        }
+
+        function updateDmDot() {
+            var total = convs.reduce(function (s, c) { return s + c.unread; }, 0);
+            var dot = document.getElementById('dm-dot');
+            if (dot) dot.style.display = total > 0 ? 'inline' : 'none';
+        }
+
+        async function openConv(uid) {
+            activeUid = uid;
+            document.getElementById('dm-empty').style.display = 'none';
+            var act = document.getElementById('dm-active');
+            act.style.display = 'flex';
+            document.getElementById('dm-list').classList.add('hide-mobile');
+            var nm = esc(nameMap[uid] || '未知用户');
+            document.getElementById('dm-chat-head').innerHTML =
+                '<a href="community-user.html?id=' + uid + '">' + nm + '</a>';
+            renderConvs();
+            await loadMsgs();
+            /* 标为已读 */
+            try {
+                await sb.from('direct_messages').update({ read_at: new Date().toISOString() })
+                    .eq('receiver_id', me.id).eq('sender_id', uid).is('read_at', null);
+            } catch (e) {}
+            var c = convs.find(function (x) { return x.uid === uid; });
+            if (c) { c.unread = 0; renderConvs(); updateDmDot(); }
+            if (window.innerWidth <= 760) document.getElementById('dm-chat').scrollIntoView();
+        }
+
+        async function loadMsgs() {
+            if (!activeUid) return;
+            var r = await withTimeout(sb.from('direct_messages')
+                .select('id,sender_id,content,created_at')
+                .or('and(sender_id.eq.' + me.id + ',receiver_id.eq.' + activeUid + '),and(sender_id.eq.' + activeUid + ',receiver_id.eq.' + me.id + ')')
+                .order('created_at', { ascending: true })
+                .limit(200), 15000, '加载超时');
+            if (r.error) return;
+            var box = document.getElementById('dm-msgs');
+            box.innerHTML = (r.data || []).map(function (m) {
+                var mine = m.sender_id === me.id;
+                return '<div class="dm-msg ' + (mine ? 'mine' : 'theirs') + '">' +
+                    esc(m.content) +
+                    '<div class="dm-msg-time">' + fmtDate(m.created_at) + '</div></div>';
+            }).join('') || '<div class="dm-empty">还没有消息，打个招呼吧 👋</div>';
+            box.scrollTop = box.scrollHeight;
+        }
+
+        async function sendMsg() {
+            if (sending || !activeUid) return;
+            var input = document.getElementById('dm-input');
+            var text = input.value.trim();
+            if (!text) return;
+            sending = true;
+            showLoading('发送中…');
+            try {
+                var r = await withTimeout(sb.from('direct_messages').insert({
+                    sender_id: me.id, receiver_id: activeUid, content: text
+                }), 15000, '发送超时');
+                if (r.error) throw r.error;
+                input.value = '';
+                await loadMsgs();
+                await loadConvs();
+            } catch (e) {
+                alert('发送失败：' + (e.message || ''));
+            }
+            hideLoading();
+            sending = false;
+            input.focus();
+        }
+
+        function startPoll() {
+            stopPoll();
+            pollTimer = setInterval(function () {
+                if (document.hidden) return;
+                if (activeUid) loadMsgs();
+                loadConvs();
+            }, 10000);
+        }
+        function stopPoll() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            try { me = await currentUser(); } catch (e) {}
+            if (!me) {
+                document.getElementById('dm-login-tip').style.display = '';
+                return;
+            }
+            document.getElementById('dm-wrap').style.display = '';
+            document.getElementById('dm-send').addEventListener('click', sendMsg);
+            document.getElementById('dm-input').addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') { e.preventDefault(); sendMsg(); }
+            });
+            await loadConvs();
+            var to = qp('to');
+            if (to && to !== me.id) {
+                /* ?to= 直接打开会话（对方可能不在列表中，先查用户名） */
+                if (!nameMap[to]) {
+                    try {
+                        var pr = await sb.from('profiles').select('id,username').eq('id', to).single();
+                        if (pr.data) nameMap[to] = pr.data.username;
+                    } catch (e) {}
+                }
+                if (nameMap[to]) {
+                    if (!convs.find(function (c) { return c.uid === to; })) {
+                        convs.unshift({ uid: to, last: { sender_id: to, content: '', created_at: new Date().toISOString() }, unread: 0 });
+                        renderConvs();
+                    }
+                    openConv(to);
+                }
+            }
+            startPoll();
+        });
+        window.addEventListener('beforeunload', stopPoll);
+    })();
+    </script>
+</body>
+</html>

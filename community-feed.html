@@ -50,13 +50,17 @@
             <nav class="sub-links" aria-label="社区导航">
                 <a href="community-home.html" data-sub="home">首页</a>
                 <a href="community.html" data-sub="works">🔍 发现</a>
+                <a href="community-search.html" data-sub="search">🔎 搜索</a>
                 <a href="community-forum.html" data-sub="forum">💬 论坛</a>
                 <a href="community-shop.html" data-sub="shop">🎁 任务商城</a>
                 <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
                 <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
                 <a href="community-studios.html" data-sub="studios">🏢 工作室</a>
                 <a href="community-publish.html" data-sub="publish">🚀 发布</a>
+                <a href="community-stats.html" data-sub="stats">📊 数据</a>
+                <a href="community-collections.html" data-sub="collections">📚 合集</a>
                 <a href="community-feed.html" data-sub="feed" id="sub-bell">💬 动态</a>
+                <a href="community-dm.html" data-sub="dm">✉️ 私信<span id="dm-dot" style="display:none;color:#ff6b6b"> ●</span></a>
                 <span id="sub-auth"><a href="community-auth.html">登录</a></span>
             </nav>
         </div>
@@ -97,7 +101,7 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003q"></script>
+    <script src="js/community.js?v=20261004a"></script>
     <script src="js/scripts.js"></script>
     <script>
     (async function () {
@@ -237,6 +241,23 @@
                     var vname = esc(studioNames[n.studio_id] || '工作室');
                     return '<a class="' + cls + '" href="community-studio.html?id=' + n.studio_id + '"><div>🎉 ' + who +
                         ' 接受了你的邀请，加入了「' + vname + '」</div>' + tm + '</a>';
+                }
+                /* 私信通知 */
+                if (n.type === 'dm') {
+                    return '<a class="' + cls + '" href="community-dm.html?to=' + n.from_user_id + '"><div>✉️ <b>' + who +
+                        '</b> 发来一条私信</div>' + tm + '</a>';
+                }
+                /* @提及 */
+                if (n.type === 'mention') {
+                    var mlink = 'community-feed.html';
+                    if (n.ref_type === 'work') mlink = 'community-play.html?id=' + n.ref_id;
+                    else if (n.ref_type === 'thread') mlink = 'community-thread.html?id=' + n.ref_id;
+                    else if (n.ref_type === 'profile') mlink = 'community-user.html?id=' + n.ref_id;
+                    else if (n.ref_type === 'studio') mlink = 'community-studio.html?id=' + n.ref_id;
+                    var mtxt = esc(n.content || '').slice(0, 60);
+                    return '<a class="' + cls + '" href="' + mlink + '"><div>📣 <b>' + who + '</b> @了你' +
+                        (mtxt ? '：「' + mtxt + (n.content && n.content.length > 60 ? '…' : '') + '」' : '') +
+                        '</div>' + tm + '</a>';
                 }
                 var text, link;
                 if (n.type === 'like') { text = who + ' 点赞了你的作品《' + wt + '》'; link = 'community-play.html?id=' + n.work_id; }

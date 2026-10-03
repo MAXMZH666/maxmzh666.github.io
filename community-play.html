@@ -40,13 +40,17 @@
             <nav class="sub-links" aria-label="社区导航">
                 <a href="community-home.html" data-sub="home">首页</a>
                 <a href="community.html" data-sub="works">🔍 发现</a>
+                <a href="community-search.html" data-sub="search">🔎 搜索</a>
                 <a href="community-forum.html" data-sub="forum">💬 论坛</a>
                 <a href="community-shop.html" data-sub="shop">🎁 任务商城</a>
                 <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
                 <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
                 <a href="community-studios.html" data-sub="studios">🏢 工作室</a>
                 <a href="community-publish.html" data-sub="publish">🚀 发布</a>
+                <a href="community-stats.html" data-sub="stats">📊 数据</a>
+                <a href="community-collections.html" data-sub="collections">📚 合集</a>
                 <a href="community-feed.html" data-sub="feed" id="sub-bell">💬 动态</a>
+                <a href="community-dm.html" data-sub="dm">✉️ 私信<span id="dm-dot" style="display:none;color:#ff6b6b"> ●</span></a>
                 <span id="sub-auth"><a href="community-auth.html">登录</a></span>
             </nav>
         </div>
@@ -77,7 +81,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
-    <script src="js/community.js?v=20261003q"></script>
+    <script src="js/community.js?v=20261004a"></script>
     <script>
     function runnerHtml() {
         return '<div class="runner">' +
@@ -232,6 +236,7 @@
             '<div class="work-actions">' +
                 '<button class="like-btn" id="like-btn">❤ <span id="like-count">…</span></button>' +
                 '<button class="fav-btn" id="fav-btn">⭐ <span id="fav-text">收藏</span> <span id="fav-count"></span></button>' +
+                '<button class="fav-btn" id="addcol-btn">➕ 加入合集</button>' +
                 '<button class="share-btn" id="share-btn">🔗 分享</button>' +
                 (!isAuthor ? '<button class="follow-btn" id="follow-btn">＋ 关注作者</button>' : '') +
                 (isAuthor
@@ -249,7 +254,12 @@
             '<div class="versions" id="versions-wrap" style="display:none"><h2>版本历史</h2>' +
             '<div id="version-list"></div>' +
             '<p class="form-hint">每次编辑都会自动保存一个历史版本；回溯前也会先保存当前版本，不会丢数据。</p></div>' +
-            '<div class="more-works"><h2>更多作品</h2><div id="more-list"><p class="works-note">加载中…</p></div></div>';
+            '<div class="more-works"><h2>更多作品</h2><div id="more-list"><p class="works-note">加载中…</p></div></div>' +
+            '<div class="modal-backdrop" id="addcol-modal" style="display:none">' +
+            '<div class="modal" style="max-width:420px"><h3>➕ 加入合集</h3>' +
+            '<div id="addcol-list"><p class="works-note">加载中…</p></div>' +
+            '<p class="form-hint">没有合集？<a href="community-collections.html">去创建一个 →</a></p>' +
+            '<div class="modal-actions"><button class="btn" id="addcol-cancel" type="button">关闭</button></div></div></div>';
 
         /* 代码高亮（python/cpp） */
         if ((wtype === 'python' || wtype === 'cpp') && w.code) {
@@ -345,6 +355,50 @@
             /* 历史版本试玩：若还没点"试玩"，先加载再换版本 */
             lazy._loadVersion = function (src) { loadPlayer(src); };
         })();
+        /* 加入合集 */
+        var addColBtn = document.getElementById('addcol-btn');
+        var addColModal = document.getElementById('addcol-modal');
+        async function loadMyCols() {
+            var box = document.getElementById('addcol-list');
+            try {
+                var r = await sb.from('collections').select('id,title').eq('owner_id', me.id).order('created_at', { ascending: false });
+                var cols = r.data || [];
+                if (!cols.length) { box.innerHTML = '<p class="works-note">还没有合集，先创建一个吧。</p>'; return; }
+                var cr = await sb.from('collection_works').select('collection_id').eq('work_id', id);
+                var inSet = {};
+                (cr.data || []).forEach(function (x) { inSet[x.collection_id] = 1; });
+                box.innerHTML = cols.map(function (c) {
+                    return '<div class="stat-row"><div class="sr-title">' + esc(c.title) + '</div>' +
+                        (inSet[c.id]
+                            ? '<span class="form-hint">已在合集中</span>'
+                            : '<button class="btn btn-blue btn-sm" data-addcol="' + c.id + '">加入</button>') + '</div>';
+                }).join('');
+                box.querySelectorAll('[data-addcol]').forEach(function (b) {
+                    b.addEventListener('click', async function () {
+                        b.disabled = true;
+                        try {
+                            var pr = await sb.from('collection_works').select('collection_id').eq('collection_id', b.getAttribute('data-addcol'));
+                            var pos = (pr.data || []).length;
+                            var ir = await withTimeout(sb.from('collection_works').insert({
+                                collection_id: b.getAttribute('data-addcol'), work_id: id, position: pos
+                            }), 15000, '加入超时');
+                            if (ir.error) throw ir.error;
+                            b.outerHTML = '<span class="form-hint">已加入 ✓</span>';
+                        } catch (e) {
+                            b.disabled = false;
+                            alert('加入失败：' + (e.message || ''));
+                        }
+                    });
+                });
+            } catch (e) { box.innerHTML = '<p class="works-note">加载失败：' + esc(e.message || '') + '</p>'; }
+        }
+        addColBtn.addEventListener('click', async function () {
+            if (!me) { authRequiredRedirect(); return; }
+            addColModal.style.display = 'flex';
+            await loadMyCols();
+        });
+        document.getElementById('addcol-cancel').addEventListener('click', function () { addColModal.style.display = 'none'; });
+        addColModal.addEventListener('click', function (e) { if (e.target === addColModal) addColModal.style.display = 'none'; });
         var favBtn = document.getElementById('fav-btn');
         var favText = document.getElementById('fav-text');
         var favCountEl = document.getElementById('fav-count');
@@ -638,6 +692,7 @@
             if (r.error) { note.textContent = '发表失败：' + r.error.message; note.className = 'form-note err'; return; }
             ta.value = '';
             note.textContent = '发表成功'; note.className = 'form-note ok';
+            try { await sendMentions(text, me.id, id, 'work'); } catch (e) {}
             await loadComments();
         });
     })();
