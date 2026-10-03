@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAXMZH 游戏社区工作室详情：成员、团队作品。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="工作室 - MAXMZH 社区">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>工作室 - MAXMZH 社区</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="css/styles.css">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+    <style>
+        .studio-hero { border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 14px; padding: 24px; margin-bottom: 20px; display: flex; gap: 18px; align-items: center; background: linear-gradient(135deg, rgba(77,124,254,.08), rgba(156,77,254,.05)); }
+        .studio-hero .avatar { width: 80px; height: 80px; border-radius: 18px; background: linear-gradient(135deg, #4d7cfe, #9c4dfe); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; overflow: hidden; flex-shrink: 0; }
+        .studio-hero .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .studio-hero h1 { margin: 0 0 6px; }
+        .studio-hero .desc { color: var(--muted); font-size: .9rem; }
+        .sec-title { font-size: 1.15rem; margin: 24px 0 8px; }
+        .member-list { display: flex; flex-wrap: wrap; gap: 10px; }
+        .member-chip { border: 1px solid var(--border, rgba(255,255,255,.1)); border-radius: 20px; padding: 6px 12px 6px 6px; display: flex; align-items: center; gap: 8px; font-size: .85rem; text-decoration: none; color: inherit; }
+        .member-chip img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,.08); }
+        .role-tag { font-size: .7rem; padding: 2px 8px; border-radius: 10px; background: rgba(77,124,254,.15); color: #8fb0ff; }
+        .role-tag.owner { background: rgba(255,212,59,.2); color: #ffd43b; }
+        .role-tag.admin { background: rgba(81,207,102,.15); color: #51cf66; }
+        .work-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-top: 8px; }
+        .work-card { border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 12px; overflow: hidden; text-decoration: none; color: inherit; display: block; background: var(--card, rgba(255,255,255,.02)); }
+        .work-card .cover { height: 100px; background: rgba(255,255,255,.04); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .work-card .cover img { width: 100%; height: 100%; object-fit: cover; }
+        .work-card .t { padding: 8px 10px; font-size: .85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .manage-box { border: 1px dashed var(--border, rgba(255,255,255,.15)); border-radius: 12px; padding: 16px; margin-top: 12px; }
+        .manage-box input, .manage-box select { padding: 8px; border-radius: 8px; border: 1px solid var(--border, rgba(255,255,255,.12)); background: var(--card); color: inherit; margin-right: 8px; margin-bottom: 8px; }
+        .remove-btn { font-size: .75rem; color: #ff6b6b; background: none; border: none; cursor: pointer; padding: 2px 4px; }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">主页</a></li>
+                <li><a href="about.html">个人简介</a></li>
+                <li><a href="blog.html">博客</a></li>
+                <li><a href="community-home.html" class="active">社区</a></li>
+                <li><a href="forum.html">论坛</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="sub-header">
+        <div class="sub-header-inner">
+            <a class="sub-brand" href="community-home.html">🎮 <span>游戏社区</span></a>
+            <nav class="sub-links" aria-label="社区导航">
+                <a href="community-home.html" data-sub="home">首页</a>
+                <a href="community.html" data-sub="works">作品</a>
+                <a href="community-discover.html" data-sub="discover">🔍 发现</a>
+                <a href="community-tasks.html" data-sub="tasks">📋 任务</a>
+                <a href="community-shop.html" data-sub="shop">🛍️ 商城</a>
+                <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
+                <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
+                <a href="community-studios.html" data-sub="studios">🏢 工作室</a>
+                <a href="community-publish.html" data-sub="publish">发布作品</a>
+                <a href="community-code.html" data-sub="code">💻 在线编程</a>
+                <a href="community-rank.html" data-sub="rank">🏆 排行榜</a>
+                <a href="community-notify.html" data-sub="notify" id="sub-bell" style="display:none">🔔 通知</a>
+                <span id="sub-auth"><a href="community-auth.html">登录</a></span>
+            </nav>
+        </div>
+    </div>
+
+    <main>
+        <section class="portfolio" style="max-width:960px">
+            <p class="article-back"><a href="community-studios.html">← 返回工作室列表</a></p>
+            <div id="studio-wrap"><p class="works-note">加载中…</p></div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="blog.html">博客</a>
+            <a href="community-home.html">社区</a>
+            <a href="forum.html">论坛</a>
+            <a href="contact.html">联系方式</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
+    </footer>
+
+    <script src="js/scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/community.js?v=20261003l"></script>
+    <script>
+    function getId() {
+        var m = location.search.match(/[?&]id=([^&]+)/);
+        return m ? m[1] : null;
+    }
+    var ROLE_TEXT = { owner: '创建者', admin: '管理员', member: '成员' };
+
+    async function load() {
+        var sid = getId();
+        var wrap = document.getElementById('studio-wrap');
+        if (!sid) { wrap.innerHTML = '<p class="works-note">工作室不存在。</p>'; return; }
+
+        var sr = await sb.from('studios').select('*').eq('id', sid).single();
+        if (sr.error || !sr.data) { wrap.innerHTML = '<p class="works-note">工作室不存在。</p>'; return; }
+        var s = sr.data;
+        var me = await currentUser();
+        var myRole = me ? await myStudioRole(sid, me.id) : null;
+        var isManager = myRole === 'owner' || myRole === 'admin';
+        var isMember = !!myRole;
+
+        /* 成员 */
+        var mr = await sb.from('studio_members').select('user_id,role,joined_at').eq('studio_id', sid).order('joined_at');
+        var members = mr.data || [];
+        var uids = members.map(function (m) { return m.user_id; });
+        var users = {};
+        if (uids.length) {
+            var ur = await sb.from('profiles').select('id,username,avatar_url').in('id', uids);
+            (ur.data || []).forEach(function (u) { users[u.id] = u; });
+        }
+
+        /* 作品 */
+        var wr = await sb.from('studio_works').select('work_id,added_by').eq('studio_id', sid).order('added_at', { ascending: false });
+        var swList = wr.data || [];
+        var workIds = swList.map(function (x) { return x.work_id; });
+        var works = {};
+        if (workIds.length) {
+            var wr2 = await sb.from('works').select('id,title,cover_url').in('id', workIds);
+            (wr2.data || []).forEach(function (w) { works[w.id] = w; });
+        }
+        /* 我的作品（用于添加） */
+        var myWorks = [];
+        if (me && isMember) {
+            var mwr = await sb.from('works').select('id,title').eq('author_id', me.id).order('created_at', { ascending: false }).limit(50);
+            myWorks = (mwr.data || []).filter(function (w) {
+                return !workIds.includes(w.id);
+            });
+        }
+
+        var av = s.avatar_url ? '<img src="' + esc(s.avatar_url) + '" alt="">' : '🏢';
+        var html = '<div class="studio-hero"><div class="avatar">' + av + '</div><div>' +
+            '<h1>' + esc(s.name) + '</h1>' +
+            (s.description ? '<div class="desc">' + esc(s.description) + '</div>' : '') +
+            '<div class="case-meta" style="margin-top:6px">👥 ' + members.length + ' 位成员 · 🎮 ' + swList.length + ' 件作品' +
+            (myRole ? ' · 我的身份：<span class="role-tag ' + myRole + '">' + ROLE_TEXT[myRole] + '</span>' : '') + '</div>' +
+            '</div></div>';
+
+        /* 成员区 */
+        html += '<h2 class="sec-title">👥 成员（' + members.length + '）</h2><div class="member-list">' +
+            members.map(function (m) {
+                var u = users[m.user_id] || {};
+                var uav = u.avatar_url ? '<img src="' + esc(u.avatar_url) + '" alt="">' : '<img alt="">';
+                var rm = (isManager && m.role !== 'owner' && m.user_id !== me.id)
+                    ? ' <button class="remove-btn" data-rm-member="' + m.user_id + '">移除</button>' : '';
+                return '<span class="member-chip">' + uav + esc(u.username || '未知') +
+                    ' <span class="role-tag ' + m.role + '">' + ROLE_TEXT[m.role] + '</span>' + rm + '</span>';
+            }).join('') + '</div>';
+
+        /* 管理：邀请成员 */
+        if (isManager) {
+            html += '<div class="manage-box"><b>✉️ 邀请成员</b><br>' +
+                '<input type="text" id="invite-username" placeholder="输入用户名">' +
+                '<button class="btn btn-blue" id="invite-btn">邀请加入</button>' +
+                '<p class="form-hint">输入对方的用户名即可将其加入工作室。</p></div>';
+        }
+        if (me && isMember && myRole !== 'owner') {
+            html += '<p style="margin-top:10px"><button class="btn" id="leave-btn">退出工作室</button></p>';
+        }
+
+        /* 作品区 */
+        html += '<h2 class="sec-title">🎮 团队作品（' + swList.length + '）</h2>';
+        if (!swList.length) html += '<p class="works-note">还没有团队作品。</p>';
+        else {
+            html += '<div class="work-grid">' + swList.map(function (x) {
+                var w = works[x.work_id] || {};
+                var cover = w.cover_url ? '<img src="' + esc(w.cover_url) + '" alt="">' : '🎮';
+                var rm = (isManager || (me && x.added_by === me.id))
+                    ? '<button class="remove-btn" data-rm-work="' + x.work_id + '">移除</button>' : '';
+                return '<div><a class="work-card" href="community-play.html?id=' + x.work_id + '">' +
+                    '<div class="cover">' + cover + '</div><div class="t">' + esc(w.title || '（已删除）') + '</div></a>' +
+                    (rm ? '<div style="text-align:center">' + rm + '</div>' : '') + '</div>';
+            }).join('') + '</div>';
+        }
+
+        /* 添加作品 */
+        if (me && isMember) {
+            if (myWorks.length) {
+                html += '<div class="manage-box"><b>＋ 添加我的作品到工作室</b><br>' +
+                    '<select id="add-work-sel"><option value="">选择作品…</option>' +
+                    myWorks.map(function (w) { return '<option value="' + w.id + '">' + esc(w.title) + '</option>'; }).join('') +
+                    '</select> <button class="btn btn-blue" id="add-work-btn">添加</button></div>';
+            } else if (!swList.length) {
+                html += '<p class="works-note">你还没有可添加的作品，先去<a href="community-publish.html">发布作品</a>吧。</p>';
+            }
+        } else if (!me) {
+            html += '<p class="works-note"><a href="community-auth.html">登录</a>后可加入工作室。</p>';
+        }
+
+        wrap.innerHTML = html;
+
+        /* 邀请 */
+        var invBtn = document.getElementById('invite-btn');
+        if (invBtn) invBtn.addEventListener('click', async function () {
+            var uname = document.getElementById('invite-username').value.trim();
+            if (!uname) { alert('请输入用户名'); return; }
+            var ur = await sb.from('profiles').select('id').eq('username', uname).limit(1);
+            if (!ur.data || !ur.data.length) { alert('找不到该用户'); return; }
+            var uid = ur.data[0].id;
+            var r = await sb.from('studio_members').insert({ studio_id: sid, user_id: uid, role: 'member' });
+            if (r.error) { alert('邀请失败：' + r.error.message); return; }
+            alert('已邀请 ' + uname + ' 加入！');
+            load();
+        });
+
+        /* 移除成员 */
+        document.querySelectorAll('[data-rm-member]').forEach(function (b) {
+            b.addEventListener('click', async function () {
+                if (!confirm('确认移除该成员吗？')) return;
+                var r = await sb.from('studio_members').delete().eq('studio_id', sid).eq('user_id', b.getAttribute('data-rm-member'));
+                if (r.error) alert('移除失败：' + r.error.message);
+                else load();
+            });
+        });
+
+        /* 退出 */
+        var leaveBtn = document.getElementById('leave-btn');
+        if (leaveBtn) leaveBtn.addEventListener('click', async function () {
+            if (!confirm('确认退出工作室吗？')) return;
+            var r = await sb.from('studio_members').delete().eq('studio_id', sid).eq('user_id', me.id);
+            if (r.error) alert('退出失败：' + r.error.message);
+            else { alert('已退出'); load(); }
+        });
+
+        /* 添加作品 */
+        var addBtn = document.getElementById('add-work-btn');
+        if (addBtn) addBtn.addEventListener('click', async function () {
+            var wid = document.getElementById('add-work-sel').value;
+            if (!wid) { alert('请选择作品'); return; }
+            var r = await sb.from('studio_works').insert({ studio_id: sid, work_id: wid, added_by: me.id });
+            if (r.error) alert('添加失败：' + r.error.message);
+            else load();
+        });
+
+        /* 移除作品 */
+        document.querySelectorAll('[data-rm-work]').forEach(function (b) {
+            b.addEventListener('click', async function () {
+                if (!confirm('确认从工作室移除该作品吗？')) return;
+                var r = await sb.from('studio_works').delete().eq('studio_id', sid).eq('work_id', b.getAttribute('data-rm-work'));
+                if (r.error) alert('移除失败：' + r.error.message);
+                else load();
+            });
+        });
+    }
+
+    (async function () {
+        await renderSubHeader();
+        await load();
+    })();
+    </script>
+</body>
+</html>

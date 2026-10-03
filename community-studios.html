@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAXMZH 游戏社区工作室：创建团队、邀请成员、展示团队作品。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="工作室 - MAXMZH 社区">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>工作室 - MAXMZH 社区</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="css/styles.css">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+    <style>
+        .studio-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; margin-top: 16px; }
+        .studio-card { border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 12px; padding: 18px; background: var(--card, rgba(255,255,255,.02)); text-decoration: none; color: inherit; display: block; }
+        .studio-card:hover { border-color: #4d7cfe; }
+        .studio-avatar { width: 56px; height: 56px; border-radius: 14px; background: linear-gradient(135deg, #4d7cfe, #9c4dfe); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 10px; overflow: hidden; }
+        .studio-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .studio-name { font-weight: 700; font-size: 1.05rem; margin-bottom: 4px; }
+        .studio-desc { font-size: .82rem; color: var(--muted); margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .studio-meta { font-size: .78rem; color: var(--muted); }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">主页</a></li>
+                <li><a href="about.html">个人简介</a></li>
+                <li><a href="blog.html">博客</a></li>
+                <li><a href="community-home.html" class="active">社区</a></li>
+                <li><a href="forum.html">论坛</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="sub-header">
+        <div class="sub-header-inner">
+            <a class="sub-brand" href="community-home.html">🎮 <span>游戏社区</span></a>
+            <nav class="sub-links" aria-label="社区导航">
+                <a href="community-home.html" data-sub="home">首页</a>
+                <a href="community.html" data-sub="works">作品</a>
+                <a href="community-discover.html" data-sub="discover">🔍 发现</a>
+                <a href="community-tasks.html" data-sub="tasks">📋 任务</a>
+                <a href="community-shop.html" data-sub="shop">🛍️ 商城</a>
+                <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
+                <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
+                <a href="community-studios.html" data-sub="studios">🏢 工作室</a>
+                <a href="community-publish.html" data-sub="publish">发布作品</a>
+                <a href="community-code.html" data-sub="code">💻 在线编程</a>
+                <a href="community-rank.html" data-sub="rank">🏆 排行榜</a>
+                <a href="community-notify.html" data-sub="notify" id="sub-bell" style="display:none">🔔 通知</a>
+                <span id="sub-auth"><a href="community-auth.html">登录</a></span>
+            </nav>
+        </div>
+    </div>
+
+    <main>
+        <section class="portfolio" style="max-width:960px">
+            <h1 class="section-title">🏢 工作室</h1>
+            <p class="section-sub">创建你的创作团队，邀请成员加入，展示团队作品。</p>
+            <p><a class="btn btn-blue" href="community-studio-new.html">＋ 创建工作室</a></p>
+            <div id="studio-list"><p class="works-note">加载中…</p></div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="blog.html">博客</a>
+            <a href="community-home.html">社区</a>
+            <a href="forum.html">论坛</a>
+            <a href="contact.html">联系方式</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
+    </footer>
+
+    <script src="js/scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/community.js?v=20261003l"></script>
+    <script>
+    async function load() {
+        var r = await sb.from('studios').select('id,name,description,avatar_url,created_at').order('created_at', { ascending: false }).limit(50);
+        var list = r.data || [];
+        if (!list.length) {
+            document.getElementById('studio-list').innerHTML = '<p class="works-note">还没有工作室，来创建第一个吧！</p>';
+            return;
+        }
+        /* 成员数 */
+        var ids = list.map(function (s) { return s.id; });
+        var mr = await sb.from('studio_members').select('studio_id').in('studio_id', ids);
+        var counts = {};
+        (mr.data || []).forEach(function (m) { counts[m.studio_id] = (counts[m.studio_id] || 0) + 1; });
+
+        document.getElementById('studio-list').innerHTML = '<div class="studio-grid">' +
+            list.map(function (s) {
+                var av = s.avatar_url ? '<img src="' + esc(s.avatar_url) + '" alt="">' : '🏢';
+                return '<a class="studio-card" href="community-studio.html?id=' + s.id + '">' +
+                    '<div class="studio-avatar">' + av + '</div>' +
+                    '<div class="studio-name">' + esc(s.name) + '</div>' +
+                    (s.description ? '<div class="studio-desc">' + esc(s.description) + '</div>' : '') +
+                    '<div class="studio-meta">👥 ' + (counts[s.id] || 0) + ' 位成员</div></a>';
+            }).join('') + '</div>';
+    }
+    (async function () {
+        await renderSubHeader();
+        await load();
+    })();
+    </script>
+</body>
+</html>

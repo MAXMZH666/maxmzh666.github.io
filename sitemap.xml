@@ -41,4 +41,7 @@
   <url><loc>https://maxmzh666.github.io/community-contest-new.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://maxmzh666.github.io/community-profile-edit.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://maxmzh666.github.io/community-moderation.html</loc><changefreq>daily</changefreq><priority>0.6</priority></url>
+  <url><loc>https://maxmzh666.github.io/community-studios.html</loc><changefreq>daily</changefreq><priority>0.6</priority></url>
+  <url><loc>https://maxmzh666.github.io/community-studio.html</loc><changefreq>daily</changefreq><priority>0.6</priority></url>
+  <url><loc>https://maxmzh666.github.io/community-studio-new.html</loc><changefreq>daily</changefreq><priority>0.6</priority></url>
 </urlset>
