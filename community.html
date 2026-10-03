@@ -29,7 +29,7 @@
                 <li><a href="index.html">主页</a></li>
                 <li><a href="about.html">个人简介</a></li>
                 <li><a href="blog.html">博客</a></li>
-                <li><a href="community.html" class="active">社区</a></li>
+                <li><a href="community-home.html" class="active">社区</a></li>
                 <li><a href="forum.html">论坛</a></li>
                 <li><a href="contact.html">联系方式</a></li>
             </ul>
@@ -37,9 +37,11 @@
     </header>
     <div class="sub-header">
         <div class="sub-header-inner">
-            <a class="sub-brand" href="community.html">🎮 <span>游戏社区</span></a>
+            <a class="sub-brand" href="community-home.html">🎮 <span>游戏社区</span></a>
             <nav class="sub-links" aria-label="社区导航">
-                <a href="community.html" data-sub="home">首页</a>
+                <a href="community-home.html" data-sub="home">首页</a>
+                <a href="community.html" data-sub="works">作品</a>
+                <a href="community-discover.html" data-sub="discover">🔍 发现</a>
                 <a href="community-publish.html" data-sub="publish">发布作品</a>
                 <a href="community-code.html" data-sub="code">💻 在线编程</a>
                 <a href="community-rank.html" data-sub="rank">🏆 排行榜</a>
@@ -53,8 +55,8 @@
         <section class="portfolio">
             <div class="community-head reveal">
                 <div>
-                    <h1 class="section-title" style="margin:0">游戏社区</h1>
-                    <p class="section-sub" style="margin:8px 0 0">分享 Scratch、Python、C++、APK 作品，在线试玩运行、评论、点赞。</p>
+                    <h1 class="section-title" style="margin:0">🎮 作品</h1>
+                    <p class="section-sub" style="margin:8px 0 0">浏览社区所有作品，搜索、筛选、排序。</p>
                 </div>
                 <a class="btn btn-blue" href="community-publish.html">＋ 发布作品</a>
             </div>
@@ -87,7 +89,7 @@
             <a href="index.html">主页</a>
             <a href="about.html">个人简介</a>
             <a href="blog.html">博客</a>
-            <a href="community.html">社区</a>
+            <a href="community-home.html">社区</a>
             <a href="forum.html">论坛</a>
             <a href="contact.html">联系方式</a>
             <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
@@ -99,9 +101,16 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261003f"></script>
+    <script src="js/community.js?v=20261003g"></script>
     <script>
     var state = { q: '', cat: '全部', type: 'all', sort: 'new' };
+    /* 支持从发现页带参数跳转：?cat=游戏 / ?type=python */
+    try {
+        var _qp = new URLSearchParams(location.search);
+        var _qc = _qp.get('cat'), _qt = _qp.get('type');
+        if (_qc) state.cat = _qc;
+        if (_qt) state.type = _qt;
+    } catch (e) {}
     var nameMap = {};
     var TYPE_FILTERS = [
         { v: 'all', label: '全部类型' },
@@ -249,7 +258,7 @@
         await renderSubHeader();
         var chips = document.getElementById('cat-chips');
         chips.innerHTML = ['全部'].concat(WORK_CATEGORIES).map(function (c) {
-            return '<button class="filter-chip' + (c === '全部' ? ' active' : '') + '" data-cat="' + c + '">' + c + '</button>';
+            return '<button class="filter-chip' + (c === state.cat ? ' active' : '') + '" data-cat="' + c + '">' + c + '</button>';
         }).join('');
         chips.addEventListener('click', function (e) {
             var b = e.target.closest('button[data-cat]');
@@ -260,7 +269,7 @@
         });
         var tChips = document.getElementById('type-chips');
         tChips.innerHTML = TYPE_FILTERS.map(function (t) {
-            return '<button class="filter-chip' + (t.v === 'all' ? ' active' : '') + '" data-type="' + t.v + '">' + t.label + '</button>';
+            return '<button class="filter-chip' + (t.v === state.type ? ' active' : '') + '" data-type="' + t.v + '">' + t.label + '</button>';
         }).join('');
         tChips.addEventListener('click', function (e) {
             var b = e.target.closest('button[data-type]');

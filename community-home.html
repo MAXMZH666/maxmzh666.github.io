@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAXMZH 游戏社区首页：热门作品、最新发布、论坛热帖、社区公告。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="MAXMZH - 游戏社区">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>MAXMZH - 游戏社区</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="css/styles.css">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+    <style>
+        .hero { text-align: center; padding: 36px 16px 28px; }
+        .hero h1 { font-size: 2rem; margin: 0 0 10px; }
+        .hero p { color: var(--muted); margin: 0 0 20px; }
+        .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .home-sec { margin-top: 34px; }
+        .home-sec-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
+        .home-sec-head h2 { margin: 0; font-size: 1.25rem; }
+        .home-sec-head a { font-size: .88rem; }
+        .thread-row { display: block; padding: 12px 14px; border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 10px; margin-bottom: 8px; text-decoration: none; color: inherit; background: var(--card, rgba(255,255,255,.02)); }
+        .thread-row:hover { border-color: var(--accent, #4d7cfe); }
+        .thread-row .t-title { font-weight: 600; margin-bottom: 4px; }
+        .thread-row .t-meta { font-size: .8rem; color: var(--muted); }
+        .pin-badge { color: #ff9f43; }
+        .announce { border-left: 3px solid #ff9f43; }
+        .feed-mini { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 10px; margin-bottom: 8px; text-decoration: none; color: inherit; }
+        .feed-mini:hover { border-color: var(--accent, #4d7cfe); }
+        .feed-mini img { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
+        .feed-mini .fm-t { font-weight: 600; font-size: .92rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .feed-mini .fm-m { font-size: .78rem; color: var(--muted); }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">主页</a></li>
+                <li><a href="about.html">个人简介</a></li>
+                <li><a href="blog.html">博客</a></li>
+                <li><a href="community-home.html" class="active">社区</a></li>
+                <li><a href="forum.html">论坛</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="sub-header">
+        <div class="sub-header-inner">
+            <a class="sub-brand" href="community-home.html">🎮 <span>游戏社区</span></a>
+            <nav class="sub-links" aria-label="社区导航">
+                <a href="community-home.html" data-sub="home">首页</a>
+                <a href="community.html" data-sub="works">作品</a>
+                <a href="community-discover.html" data-sub="discover">🔍 发现</a>
+                <a href="community-publish.html" data-sub="publish">发布作品</a>
+                <a href="community-code.html" data-sub="code">💻 在线编程</a>
+                <a href="community-rank.html" data-sub="rank">🏆 排行榜</a>
+                <a href="community-notify.html" data-sub="notify" id="sub-bell" style="display:none">🔔 通知</a>
+                <span id="sub-auth"><a href="community-auth.html">登录</a></span>
+            </nav>
+        </div>
+    </div>
+
+    <main>
+        <section class="portfolio">
+            <div class="hero reveal">
+                <h1>🎮 游戏社区</h1>
+                <p>分享 Scratch、Python、C++、APK 作品，在线试玩运行、评论、点赞，结识同好。</p>
+                <div class="hero-btns">
+                    <a class="btn btn-blue" href="community-publish.html">＋ 发布作品</a>
+                    <a class="btn" href="community.html">逛逛作品</a>
+                    <a class="btn" href="community-forum.html">💬 论坛</a>
+                    <a class="btn" href="community-discover.html">🔍 发现</a>
+                </div>
+            </div>
+
+            <div class="home-sec" id="sec-announce" style="display:none">
+                <div class="home-sec-head"><h2>📢 社区公告</h2></div>
+                <div id="announce-list"></div>
+            </div>
+
+            <div class="home-sec">
+                <div class="home-sec-head"><h2>🔥 热门作品</h2><a href="community.html">全部作品 →</a></div>
+                <div class="card-grid" id="hot-grid"><div class="works-note">加载中…</div></div>
+            </div>
+
+            <div class="home-sec">
+                <div class="home-sec-head"><h2>🆕 最新发布</h2><a href="community.html">全部作品 →</a></div>
+                <div class="card-grid" id="new-grid"><div class="works-note">加载中…</div></div>
+            </div>
+
+            <div class="home-sec">
+                <div class="home-sec-head"><h2>💬 论坛热帖</h2><a href="community-forum.html">进入论坛 →</a></div>
+                <div id="thread-list"><div class="works-note">加载中…</div></div>
+            </div>
+
+            <div class="home-sec" id="sec-feed">
+                <div class="home-sec-head"><h2>📰 动态速览</h2><a href="community-feed.html">全部动态 →</a></div>
+                <div id="feed-mini-list"><div class="works-note">加载中…</div></div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="blog.html">博客</a>
+            <a href="community-home.html">社区</a>
+            <a href="forum.html">论坛</a>
+            <a href="contact.html">联系方式</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
+    </footer>
+
+    <script src="js/scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/community.js?v=20261003g"></script>
+    <script>
+    var nameMap = {};
+    async function fillNames(ids) {
+        try {
+            var uniq = Array.from(new Set(ids));
+            if (!uniq.length) return;
+            var pr = await sb.from('profiles').select('id,username').in('id', uniq);
+            (pr.data || []).forEach(function (p) { nameMap[p.id] = p.username; });
+        } catch (e) {}
+    }
+    async function likeCounts(ids) {
+        var c = {};
+        try {
+            var r = await sb.from('likes').select('work_id').in('work_id', ids);
+            (r.data || []).forEach(function (x) { c[x.work_id] = (c[x.work_id] || 0) + 1; });
+        } catch (e) {}
+        return c;
+    }
+    function workCard(w, counts) {
+        var cover = w.cover_url
+            ? '<img src="' + esc(w.cover_url) + '" alt="' + esc(w.title) + '" loading="lazy">'
+            : '<span class="monogram">' + esc((w.title || '游').charAt(0)) + '</span>';
+        return '<a class="card" href="community-play.html?id=' + w.id + '">' +
+            '<div class="card-cover">' + cover + '</div>' +
+            '<div class="card-body"><h3>' + esc(w.title) + '</h3>' +
+            '<p>' + esc(nameMap[w.author_id] || '未知') + ' · ' + fmtDate(w.created_at) + '</p>' +
+            '<div class="card-tags"><span class="tag">❤ ' + (counts[w.id] || 0) + '</span>' +
+            '<span class="tag">👁 ' + (w.views || 0) + '</span>' + typeBadge(workTypeOf(w)) + '</div>' +
+            '</div></a>';
+    }
+
+    (async function () {
+        await renderSubHeader();
+        var sb = window.sb;
+
+        /* 公告：置顶帖 */
+        try {
+            var ar = await sb.from('forum_threads').select('id,title,author_id,created_at,reply_count')
+                .eq('is_pinned', true).order('updated_at', { ascending: false }).limit(3);
+            if (ar.data && ar.data.length) {
+                await fillNames(ar.data.map(function (t) { return t.author_id; }));
+                document.getElementById('sec-announce').style.display = '';
+                document.getElementById('announce-list').innerHTML = ar.data.map(function (t) {
+                    return '<a class="thread-row announce" href="community-thread.html?id=' + t.id + '">' +
+                        '<div class="t-title"><span class="pin-badge">📌 </span>' + esc(t.title) + '</div>' +
+                        '<div class="t-meta">' + esc(nameMap[t.author_id] || '未知') + ' · ' + fmtDate(t.created_at) +
+                        ' · 💬 ' + (t.reply_count || 0) + '</div></a>';
+                }).join('');
+            }
+        } catch (e) {}
+
+        /* 热门作品：点赞 Top4 */
+        try {
+            var wr = await sb.from('works').select('id,title,cover_url,created_at,author_id,views,work_type')
+                .order('created_at', { ascending: false }).limit(30);
+            var works = wr.data || [];
+            var counts = await likeCounts(works.map(function (w) { return w.id; }));
+            works.sort(function (a, b) { return (counts[b.id] || 0) - (counts[a.id] || 0); });
+            var hot = works.slice(0, 4);
+            await fillNames(hot.map(function (w) { return w.author_id; }));
+            document.getElementById('hot-grid').innerHTML = hot.length
+                ? hot.map(function (w) { return workCard(w, counts); }).join('')
+                : '<div class="works-note">还没有作品，快来发布第一个吧！</div>';
+        } catch (e) {
+            document.getElementById('hot-grid').innerHTML = '<div class="works-note">加载失败</div>';
+        }
+
+        /* 最新作品 */
+        try {
+            var nr = await sb.from('works').select('id,title,cover_url,created_at,author_id,views,work_type')
+                .order('created_at', { ascending: false }).limit(4);
+            var news = nr.data || [];
+            var nc = await likeCounts(news.map(function (w) { return w.id; }));
+            await fillNames(news.map(function (w) { return w.author_id; }));
+            document.getElementById('new-grid').innerHTML = news.length
+                ? news.map(function (w) { return workCard(w, nc); }).join('')
+                : '<div class="works-note">还没有作品，快来发布第一个吧！</div>';
+        } catch (e) {
+            document.getElementById('new-grid').innerHTML = '<div class="works-note">加载失败</div>';
+        }
+
+        /* 论坛热帖：最新 5 */
+        try {
+            var tr = await sb.from('forum_threads').select('id,title,author_id,created_at,reply_count,views,is_pinned')
+                .order('updated_at', { ascending: false }).limit(5);
+            var threads = tr.data || [];
+            await fillNames(threads.map(function (t) { return t.author_id; }));
+            document.getElementById('thread-list').innerHTML = threads.length
+                ? threads.map(function (t) {
+                    return '<a class="thread-row" href="community-thread.html?id=' + t.id + '">' +
+                        '<div class="t-title">' + (t.is_pinned ? '<span class="pin-badge">📌 </span>' : '') + esc(t.title) + '</div>' +
+                        '<div class="t-meta">' + esc(nameMap[t.author_id] || '未知') + ' · ' + fmtDate(t.created_at) +
+                        ' · 💬 ' + (t.reply_count || 0) + ' · 👁 ' + (t.views || 0) + '</div></a>';
+                }).join('')
+                : '<div class="works-note">论坛还没有主题，来发第一帖吧！</div>';
+        } catch (e) {
+            document.getElementById('thread-list').innerHTML = '<div class="works-note">加载失败</div>';
+        }
+
+        /* 动态速览：登录用户关注的人的最新 3 条 */
+        try {
+            var me = await currentUser();
+            var box = document.getElementById('feed-mini-list');
+            if (!me) {
+                box.innerHTML = '<div class="works-note"><a href="community-auth.html">登录</a>后查看关注的人的动态。</div>';
+            } else {
+                var fr = await sb.from('follows').select('following_id').eq('follower_id', me.id);
+                var ids = (fr.data || []).map(function (f) { return f.following_id; });
+                if (!ids.length) {
+                    box.innerHTML = '<div class="works-note">还没有关注任何人，去<a href="community-discover.html">发现</a>感兴趣的作者吧。</div>';
+                } else {
+                    var wq = await sb.from('works').select('id,title,cover_url,created_at,author_id')
+                        .in('author_id', ids).order('created_at', { ascending: false }).limit(3);
+                    var tq = await sb.from('forum_threads').select('id,title,created_at,author_id')
+                        .in('author_id', ids).order('created_at', { ascending: false }).limit(3);
+                    await fillNames(ids);
+                    var items = [];
+                    (wq.data || []).forEach(function (w) {
+                        items.push({ t: new Date(w.created_at).getTime(), html:
+                            '<a class="feed-mini" href="community-play.html?id=' + w.id + '">' +
+                            (w.cover_url ? '<img src="' + esc(w.cover_url) + '" alt="" loading="lazy">' : '') +
+                            '<div><div class="fm-t">🎮 ' + esc(w.title) + '</div>' +
+                            '<div class="fm-m">' + esc(nameMap[w.author_id] || '') + ' 发布了作品 · ' + fmtDate(w.created_at) + '</div></div></a>' });
+                    });
+                    (tq.data || []).forEach(function (t) {
+                        items.push({ t: new Date(t.created_at).getTime(), html:
+                            '<a class="feed-mini" href="community-thread.html?id=' + t.id + '">' +
+                            '<div><div class="fm-t">💬 ' + esc(t.title) + '</div>' +
+                            '<div class="fm-m">' + esc(nameMap[t.author_id] || '') + ' 发表了主题 · ' + fmtDate(t.created_at) + '</div></div></a>' });
+                    });
+                    items.sort(function (a, b) { return b.t - a.t; });
+                    box.innerHTML = items.length
+                        ? items.slice(0, 3).map(function (x) { return x.html; }).join('')
+                        : '<div class="works-note">关注的人还没有新动态。</div>';
+                }
+            }
+        } catch (e) {
+            document.getElementById('feed-mini-list').innerHTML = '<div class="works-note">加载失败</div>';
+        }
+    })();
+    </script>
+</body>
+</html>
