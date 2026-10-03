@@ -173,7 +173,7 @@
                 var iname = card ? card.querySelector('.si-name').textContent.replace(' ✅', '') : '';
                 var iprice = card ? card.querySelector('.si-price').textContent : '';
                 document.getElementById('buy-modal-name').textContent = iname + '（' + iprice + '）';
-                document.getElementById('buy-confirm').setAttribute('data-item', itemId);
+                _pendingBuyId = itemId;
                 document.getElementById('buy-modal').style.display = 'flex';
             });
         });
@@ -183,18 +183,28 @@
         document.getElementById('buy-modal').addEventListener('click', function (e) {
             if (e.target.id === 'buy-modal') e.target.style.display = 'none';
         });
+    }
+
+    /* 购买确认按钮只绑定一次（避免 load() 重复绑定导致重复扣费） */
+    var _pendingBuyId = null;
+    function bindBuyConfirmOnce() {
+        if (bindBuyConfirmOnce.done) return;
+        bindBuyConfirmOnce.done = true;
         document.getElementById('buy-confirm').addEventListener('click', async function () {
-            var itemId = this.getAttribute('data-item');
+            var itemId = _pendingBuyId;
+            if (!itemId) return;
             var btn = this;
             btn.disabled = true; btn.textContent = '购买中…';
             var r = await purchaseShopItem(itemId);
             document.getElementById('buy-modal').style.display = 'none';
             btn.disabled = false; btn.textContent = '确认购买';
+            _pendingBuyId = null;
             if (r.ok) { alert('购买成功！'); load(); }
             else {
                 alert(r.error && r.error.indexOf('not enough') >= 0 ? '积分不足，去做任务赚积分吧！' : '购买失败，请重试');
             }
         });
+    }
         document.querySelectorAll('[data-equip]').forEach(function (b) {
             b.addEventListener('click', async function () {
                 b.disabled = true;
@@ -213,6 +223,7 @@
 
     (async function () {
         await renderSubHeader();
+        bindBuyConfirmOnce();
         await load();
     })();
     </script>
