@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <link rel="preload" href="css/style.css" as="style">
+  <link rel="preload" href="images/logo.svg" as="image">
+  <link rel="preload" href="images/logo.svg" as="image" type="image/svg+xml">
+  <link rel="icon" type="image/svg+xml" href="images/logo.svg">
+  <link rel="alternate icon" href="images/favicon.ico">
+  <link rel="apple-touch-icon" href="images/logo.svg">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>星迹博客 | MAX Apex Xenith</title>
+  <link rel="stylesheet" href="css/style.css">
+  <nav class="navbar">
+    <a href="index.html" class="brand">
+      <img src="images/logo.svg" alt="MAX Apex Xenith Logo" class="logo">
+      <span class="brand-text">MAX Apex Xenith</span>
+    </a>
+    <!-- 其他导航项保持不变 -->
+  </nav>
+  <!-- 内嵌部分样式，用于覆盖背景颜色和卡片样式 -->
+  <!--（注：若 css/style.css 已经包含相关样式，则可忽略此处）-->
+  <!--
+  <style>
+    body {
+      background-color: #111;
+      color: #fff;
+    }
+    .centered-container {
+      background: transparent;
+    }
+    .blog-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      padding: 20px;
+    }
+    .blog-card {
+      background: #1a1a1a;
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .blog-card:hover {
+      transform: scale(1.05);
+      box-shadow: 0px 10px 20px rgba(255, 255, 255, 0.2);
+    }
+    .blog-card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+    .blog-content {
+      padding: 15px;
+      color: #fff;
+    }
+    .blog-detail {
+      padding: 20px;
+    }
+    .hidden {
+      display: none;
+    }
+    .related-work-button {
+      background-color: #007BFF;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 20px;
+      display: block;
+    }
+    .related-work-button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+  -->
+</head>
+<body>
+  <!-- 加载屏幕 -->
+  <div class="loading-screen">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" data-i18n="loading">加载中...</div>
+  </div>
+
+  <!-- 导航栏 -->
+  <nav class="navbar">
+    <a href="index.html" class="brand">
+      <img src="images/logo.svg" alt="MAX Apex Xenith Logo" class="logo">
+      <span class="brand-text">MAX Apex Xenith</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">星域</a></li>
+      <li><a href="about.html">星渊</a></li>
+      <li><a href="works.html">星辉</a></li>
+      <li><a href="blog.html">星迹</a></li>
+      <li><a href="forum.html">星云</a></li>
+      <li><a href="contact.html">星桥</a></li>
+    <li><a href="../index.html">← 主站</a></li>
+      <div class="search-container">
+        <input type="text" class="search-input" placeholder="搜索星域..." data-i18n-placeholder="searchPlaceholder">
+        <button class="search-button"></button>
+        <div class="search-results"></div>
+      </div>
+      <button class="theme-toggle">
+        <span class="light-icon">☀️</span>
+        <span class="dark-icon"></span>
+      </button>
+    </ul>
+    <div class="hamburger">☰</div>
+  </nav>
+
+  <!-- 页面主体 -->
+  <main class="page-content">
+    <div class="centered-container">
+      <h1>星迹博客</h1>
+
+      <!-- 博客列表区域 -->
+      <div id="blog-list" class="blog-list">
+        <div class="blog-card" data-id="blog-1">
+          <div class="blog-content">
+            <h2>《空间波 Space Waves》游戏上线</h2>
+            <p>一款激动人心的横向卷轴游戏，结合了快节奏的动作和挑战...</p>
+          </div>
+        </div>
+        <div class="blog-card" data-id="blog-2">
+          <div class="blog-content">
+            <h2>2025木屋杯</h2>
+            <p>使用《空间波 Space Waves》进行投稿参赛</p>
+          </div>
+        </div>
+      </div>
+      <div class="blog-card" data-id="blog-3">
+          <div class="blog-content">
+            <h2>《审判行动：致命瞄准》即将公测！</h2>
+            <p>这是全 Scratch 平台最真实的狙击模拟游戏...</p>
+          </div>
+        </div>
+      </div>
+    <div class="blog-card" data-id="blog-4">
+          <div class="blog-content">
+            <h2>《审判行动：致命瞄准》官方网站上线！</h2>
+            <p>快来查看最新情报吧！</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 博客详情区域（初始隐藏） -->
+      <div id="blog-detail" class="hidden">
+        <button class="back-to-list">返回列表</button>
+        <!-- 博客封面图片展示区域 -->
+        <div id="blog-image"></div>
+        <div id="blog-content"></div>
+        <div id="comments"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 返回顶部按钮 -->
+  <button class="back-to-top">⬆ 返回顶部</button>
+
+  <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const blogList = document.getElementById("blog-list");
+    const blogDetail = document.getElementById("blog-detail");
+    const blogImage = document.getElementById("blog-image");
+    const blogContent = document.getElementById("blog-content");
+    const comments = document.getElementById("comments");
+    const backToList = document.querySelector(".back-to-list");
+
+    // 博客数据（新增 image 字段和 relatedWork 字段）
+    const blogData = {
+      "blog-1": {
+        title: "《空间波 Space Waves》游戏上线",
+        content: "<p>一款激动人心的横向卷轴游戏，结合了快节奏的动作和挑战。控制一支箭飞过充满障碍物的太空隧道。</p><p>探索更多星际奥秘……</p>",
+        image: "images/spacewaves.png",
+        relatedWork: "/works#work-2" // 关联的作品详情页
+      },
+      "blog-2": {
+        title: "2025木屋杯",
+        content: `
+      <p>我们取得了佳绩，成功入围，并取得了11-20的排名！</p>
+      <img src="images/muwu-cup2.png" width="100%" height="250px" alt="游戏截图1">
+      <iframe src="https://match.xiaomawang.com/match/777/index/777" width="100%" height="500px"></iframe>
+      <img src="images/muwu-cup3.png" width="100%" height="500px" alt="游戏截图2">
+      <p>这是我们的参赛作品《空间波 Space Waves》</p>
+      <iframe src="https://world.xiaomawang.com/community/main/compose/t4Ic666J" width="100%" height="500px"></iframe>
+
+    `,
+       /* content: "<p>使用《空间波 Space Waves》进行投稿参赛</p><p>木屋杯#5链接：https://match.xiaomawang.com/match/777/index/777</p><img src="images/muwu-cup2.png" alt="展览图"><img src="images/muwu-cup3.png" alt="展览图">",*/
+        image: "images/muwu-cup.png",
+        relatedWork: "/works#work-2"
+        
+      },
+      "blog-3": {
+        title: "《审判行动：致命瞄准》即将公测！",
+        content: "<p>这是全 Scratch 平台最真实的狙击模拟游戏...</p>",
+        image: "images/spxdzmmz.png",
+        relatedWork: "/works#work-3"
+      },
+      "blog-4": {
+        title: "《审判行动：致命瞄准》官方网站上线！",
+        content: "<li><strong>《审判行动：致命瞄准》官方网站</strong> <a href=\"https://tactgame.github.io/\">点击访问</a></li>",
+        image: "images/spxdzmmz.png",
+        relatedWork: "/works#work-3"
+      },
+    };
+
+    document.querySelectorAll(".blog-card").forEach(card => {
+      card.addEventListener("click", () => {
+        const blogId = card.dataset.id;
+        blogList.classList.add("hidden");
+        blogDetail.classList.remove("hidden");
+
+        // 设置博客封面图片
+        blogImage.innerHTML = `<img src="${blogData[blogId].image}" alt="博客封面" class="blog-detail-image">`;
+
+        // 设置博客标题与内容
+        blogContent.innerHTML = `<h2>${blogData[blogId].title}</h2>${blogData[blogId].content}`;
+
+        // 添加“查看相关作品”按钮
+        if (blogData[blogId].relatedWork) {
+          const relatedBtn = document.createElement("a");
+          relatedBtn.textContent = "查看相关作品";
+          relatedBtn.className = "related-work-button";
+          relatedBtn.href = blogData[blogId].relatedWork;
+          relatedBtn.target = "_blank";
+          blogContent.appendChild(relatedBtn);
+        }
+
+        // 清空旧评论区内容
+        comments.innerHTML = "";
+        // 动态加载 Utterances 评论区
+        let script = document.createElement("script");
+        script.src = "https://utteranc.es/client.js";
+        script.setAttribute("repo", "MAX-A-X/max-a-x.github.io");
+        script.setAttribute("issue-term", blogId);
+        script.setAttribute("theme", "github-dark");
+        script.setAttribute("crossorigin", "anonymous");
+        script.async = true;
+        comments.appendChild(script);
+      });
+    });
+
+    backToList.addEventListener("click", () => {
+      blogList.classList.remove("hidden");
+      blogDetail.classList.add("hidden");
+    });
+
+    window.addEventListener("load", () => {
+      document.querySelector(".loading-screen").style.display = "none";
+    });
+  });
+  </script>
+
+  <style>
+    /* 博客详情页封面图片 */
+    .blog-detail-image {
+      width: 100%;
+      max-height: 300px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+    /* 美观的跳转按钮 */
+    .related-work-button {
+      display: inline-block;
+      background-color: #00bfff;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 18px;
+      text-align: center;
+      text-decoration: none;
+      font-weight: bold;
+      transition: 0.3s;
+      margin-top: 20px;
+    }
+    .related-work-button:hover {
+      background-color: #0088cc;
+    }
+  </style>
+
+  <script src="js/script.js"></script>
+</body>
+</html>

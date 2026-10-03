@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>自定义 SB3 运行器</title>
+  <!-- 使用自己的 GitHub Pages 资源 -->
+  <script src="https://maxmzh666.github.io/apex-xenith/scratch-vm/vm.js"></script>
+  <script src="https://maxmzh666.github.io/apex-xenith/scratch-render/render.js"></script>
+</head>
+<body>
+  <h1>我的 SB3 运行器</h1>
+  <canvas id="stage" width="480" height="360"></canvas>
+  <button onclick="startSB3()">启动</button>
+
+  <script>
+    function startSB3() {
+      const vm = new Scratch.vm();
+      const renderer = new Scratch.Renderer(document.getElementById("stage"));
+      vm.attachRenderer(renderer);
+      vm.start();
+    }
+  </script>
+</body>
+</html>

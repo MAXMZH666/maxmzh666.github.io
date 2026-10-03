@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <link rel="preload" href="css/style.css" as="style">
+  <link rel="preload" href="images/logo.svg" as="image">
+  <link rel="preload" href="images/logo.svg" as="image" type="image/svg+xml">
+  <link rel="icon" type="image/svg+xml" href="images/logo.svg">
+  <link rel="alternate icon" href="images/favicon.ico">
+  <link rel="apple-touch-icon" href="images/logo.svg">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>星辉作品 | MAX Apex Xenith</title>
+  <link rel="stylesheet" href="css/style.css">
+  <nav class="navbar">
+    <a href="index.html" class="brand">
+      <img src="images/logo.svg" alt="MAX Apex Xenith Logo" class="logo">
+      <span class="brand-text">MAX Apex Xenith</span>
+    </a>
+    <!-- 其他导航项保持不变 -->
+  </nav>
+</head>
+<body>
+  <div class="loading-screen">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" data-i18n="loading">加载中...</div>
+  </div>
+  <nav class="navbar">
+    <a href="index.html" class="brand">
+      <img src="images/logo.svg" alt="MAX Apex Xenith Logo" class="logo">
+      <span class="brand-text">MAX Apex Xenith</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">星域</a></li>
+      <li><a href="about.html">星渊</a></li>
+      <li><a href="works.html">星辉</a></li>
+      <li><a href="blog.html">星迹</a></li>
+      <li><a href="forum.html">星云</a></li>
+      <li><a href="contact.html">星桥</a></li>
+    <li><a href="../index.html">← 主站</a></li>
+      <div class="search-container">
+        <input type="text" class="search-input" placeholder="搜索星域..." data-i18n-placeholder="searchPlaceholder">
+        <button class="search-button"></button>
+        <div class="search-results"></div>
+      </div>
+      <button class="theme-toggle">
+        <span class="light-icon">☀️</span>
+        <span class="dark-icon"></span>
+      </button>
+    </ul>
+    <div class="hamburger">☰</div>
+  </nav>
+  <main class="page-content">
+    <div class="centered-container">
+      <!-- 保留标题 -->
+      <h1>星辉作品</h1>
+      <!-- 作品卡片列表区域 -->
+      <div id="work-list">
+        <div class="grid-container">
+          <div class="work-item" data-id="work-1">
+            <img src="images/logo.svg" alt="MAX至臻星域">
+            <div class="work-overlay">
+              <h3>MAX至臻星域(LOGO)</h3>
+              <p>呈现星辰与巅峰的视觉感受</p>
+            </div>
+          </div>
+          <div class="work-item" data-id="work-2">
+            <img src="images/spacewaves.png" alt="空间波 Space Waves">
+            <div class="work-overlay">
+              <h3>《空间波 Space Waves》</h3>
+              <p>一款激动人心的横向卷轴游戏</p>
+            </div>
+          </div>
+          <div class="work-item" data-id="work-3">
+            <img src="images/spxdzmmz.png" alt="审判行动：致命瞄准">
+            <div class="work-overlay">
+              <h3>《审判行动：致命瞄准》</h3>
+              <p>一款全Scratch最真实的模拟类型的狙击游戏</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 作品详情区域 -->
+      <div id="work-detail" class="hidden">
+        <article id="work-1" class="work-content hidden">
+          <h2>MAX至臻星域(LOGO)</h2>
+          <p>这是 MAX至臻星域(MAX Apex Xenith) 的官方 LOGO，结合了现代和未来感的元素，呈现星辰与巅峰的视觉感受.</p>
+          <video autoplay loop muted playsinline>
+            <source src="video/logo.webm" type="video/webm">
+           <source src="video/logo.mp4" type="video/mp4">  <!-- 备用 MP4 -->
+          您的浏览器不支持视频播放，请升级浏览器。
+        </video>
+
+          <button class="back-to-list">返回列表</button>
+          <!-- 评论区容器（用于 Utterances） -->
+          <div class="utterances-container" data-issue-term="work-1"></div>
+        </article>
+        <article id="work-2" class="work-content hidden">
+  <h2>《空间波 Space Waves》</h2>
+  <!-- 添加游戏封面图片<img src="images/spacewaves.png" alt="Space Waves" style="max-width:100%; display:block; margin-bottom:20px;"> -->
+          <img src="images/spacewaves.png" alt="Space Waves" style="max-width: 100%; height: auto;">
+  
+  
+  <p>一款激动人心的横向卷轴游戏，结合了快节奏的动作和挑战。控制一支箭飞过充满障碍物的太空隧道。</p>
+    
+  <h2>作品简介</h2>
+  <p>Space Waves 是一款激动人心的横向卷轴游戏，结合了快节奏的动作和挑战。控制一支箭飞过充满障碍物的太空隧道。</p>
+  <p>这款游戏要求玩家控制一支箭来避开障碍物，直到触及每个关卡的尽头。</p>
+  <p>Space Waves 于 2024 年 12 月由 MAX至臻星域（MAX Apex Xenith）发布，是当今玩家中很受欢迎的游戏。</p>
+    
+  <h2>怎么玩</h2>
+  <h3>你的目标是什么？</h3>
+  <p>你的目标是躲避障碍物、摧毁敌方飞船并收集能量提升来提高你的分数并尽可能长时间地生存。每个关卡的目标是避免碰撞墙壁、旋转齿轮或尖刺。</p>
+    
+  <h3>无数障碍</h3>
+  <p>太空隧道不断生成，确保每次游戏时都能获得独特的挑战体验。沿途会出现墙壁、尖刺和旋转齿轮。玩家需要精准控制箭头来避免碰撞。</p>
+    
+  <h3>如何控制</h3>
+  <ul>
+    <li>无尽模式 &amp; 关卡模式：点击任意键或屏幕改变箭头方向。</li>
+    <li>双人尽速模式：
+      <ul>
+        <li>蓝方：W、A、S、D、空格键 或 点击屏幕左半边。</li>
+        <li>绿方：方向键（↑↓←→） 或 点击屏幕右半边。</li>
+      </ul>
+    </li>
+  </ul>
+    
+  <h2>游戏模式</h2>
+  <h3>关卡模式 1</h3>
+  <p>游戏的初始关卡，难度较低，适合新手熟悉操作。</p>
+    
+  <h3>无尽模式</h3>
+  <p>挑战你的极限，尽可能存活更长时间，考验反应速度。</p>
+    
+  <h2>技巧与策略</h2>
+  <ul>
+    <li>多玩以熟练控制箭头。</li>
+    <li>合理使用能量提升。</li>
+    <li>专注于障碍物和敌方飞船。</li>
+    <li>遇到障碍时，尝试Z字形移动。</li>
+  </ul>
+    
+  <h2>开发信息</h2>
+  <p><strong>开发周期：</strong> 20小时+</p>
+  <p><strong>制作者：</strong> 蓝洞公司 &amp; MAX工作室 &amp; MAX至臻星域（MAX Apex Xenith）</p>
+  <p><strong>发行者：</strong> 蓝洞公司 &amp; MAX工作室 &amp; MAX至臻星域（MAX Apex Xenith）</p>
+    
+  <h1>版权信息</h1>
+  <p>部分图画、代码由 MAX工作室 &amp; 蓝洞公司制作，部分素材来源于网络，没有复制、抄袭。</p>
+    
+  <h1>游玩处</h1>
+  <h2>在线游玩</h2>
+   
+  <iframe src="https://forkphorus.github.io/embed.html?id=1120595441&auto-start=false&light-content=true" width="482" height="393" allowfullscreen="true" allowtransparency="true" style="border:none;"></iframe>
+          <!--
+  
+        <iframe src="https://forkphorus.github.io/embed.html?id=1120595441&auto-start=false&light-content=true" width="482" height="393" allowfullscreen="true" allowtransparency="true" style="border:none;"></iframe>
+<iframe src="https://forkphorus.github.io/embed.html?id=1120595441&amp;auto-start=false&amp;light-content=false" width="482" height="393" allowfullscreen allowtransparency style="border:none;"></iframe>
+          <iframe id="https://turbowarp.org/editor?project_url=https://m.maxmzh888.workers.dev/" width="800" height="600"></iframe>
+<iframe src="https://turbowarp.org/embed?project_url=https://m.maxmzh888.workers.dev/" width="482" height="412" allowtransparency="true" frameborder="0" scrolling="no" allowfullscreen></iframe>
+          <iframe src="https://maxmzh666.github.io/apex-xenith/ms/ms.html?sb3=https://m.maxmzh888.workers.dev/spacewaves.sb3" 
+        width="480" height="360" frameborder="0" allowfullscreen></iframe>
+
+          
+        <iframe src="https://turbowarp.org/embed?project=https://m.maxmzh888.workers.dev" width="480" height="360"></iframe>
+
+          
+         <iframe src="https://maxmzh666.github.io/apex-xenith/ms/ms.html?sb3=https://m.maxmzh888.workers.dev" 
+        width="480" height="360" frameborder="0" allowfullscreen></iframe>
+
+        <iframe src="https://maxmzh666.github.io/apex-xenith/ms/ms.html" width="480" height="360" frameborder="0" allowfullscreen></iframe>
+
+          <iframe src="https://maxmzh666.github.io/apex-xenith/ms/ms.html" width="480" height="360" frameborder="0"></iframe>
+
+-->
+
+
+
+  <button class="back-to-list">返回列表</button>
+  <!-- 评论区容器（用于 Utterances） -->  
+  <div class="utterances-container" data-issue-term="work-2"></div>
+</article>
+
+        <article id="work-3" class="work-content hidden">
+  <h2>《审判行动：致命瞄准》</h2>
+          <img src="images/spxdzmmz.png" alt="Space Waves" style="max-width: 100%; height: auto;">
+  
+  <p><strong>作品名称：</strong><br>
+    《审判行动：致命瞄准》</p>
+    
+    <p><strong>游戏类型：</strong><br>
+    第一人称战术狙击射击游戏（FPS）</p>
+    
+    <p><strong>开发平台：</strong><br>
+    PC / 移动设备 / Web 端</p>
+    
+    <p><strong>当前版本：</strong><br>
+    RC 1.0.0</p>
+    
+    <p><strong>游戏背景：</strong><br>
+    玩家代号“鹰眼”，军衔为一级军士，隶属于精英特种作战部队“审判小队”。在世界范围内，毒贩组织的活动愈发猖獗，他们不仅控制着庞大的毒品交易网络，还掌握着先进的武装力量。为维护全球安全，玩家受命执行“审判行动”，通过精准狙杀敌方目标，瓦解毒贩组织的核心势力。</p>
+    
+    <p><strong>游戏简介</strong><br>
+    《审判行动：致命瞄准》是一款专注于单发狙击枪战斗的战术射击游戏，玩家将扮演一名精英狙击手，在各种高风险任务中执行精准打击，完成致命狙杀。游戏强调真实的狙击体验，包括弹道计算、风速影响、心跳控制等元素，力求带给玩家极致的战术狙击沉浸感。</p>
+    
+    <p><strong>核心玩法：</strong></p>
+    <ol>
+        <li><strong>真实狙击模拟</strong> - 采用物理弹道模拟，考虑距离、风速、重力、呼吸控制等因素，考验玩家的狙击技巧。</li>
+        <li><strong>战术任务执行</strong> - 任务包含暗杀、破坏等多种目标，玩家需制定战术策略，灵活应对。</li>
+        <li><strong>多种狙击枪械</strong> - 仅包含单发狙击枪，真实枪械数据采集，如 AMR、巴雷特 M82A1、MK3、SV98、AWM，每种枪械拥有不同特性，需根据任务需求选择合适武器。</li>
+        <li><strong>动态环境影响</strong> - 天气、地形、目标移动等环境因素会影响射击，需要玩家精确计算。</li>
+        <li><strong>自定义装备系统、技能升级、道具购买系统</strong> - 可对狙击步枪进行配件升级，如高倍率瞄具；可对玩家操控角色进行特殊技能升级等，以适应不同任务需求；可对购买不同道具，以适应不同任务需求。</li>
+        <li><strong>沉浸式任务模式</strong> - 任务设定基于真实战场，部分任务具有时间限制，鼓励玩家自由发挥。</li>
+    </ol>
+    
+    <p><strong>游戏模式：</strong></p>
+    <ul>
+        <li><strong>任务模式</strong>：随故事驱动，扮演狙击手执行各种致命任务，任务包含极限距离狙击、移动目标狙杀等，考验玩家技术。</li>
+        <li><strong>靶场模式</strong>：含有不同距离靶标，击杀目标可获得相应奖励。</li>
+    </ul>
+    
+    <p><strong>操作说明：</strong></p>
+    <ul>
+        <li><strong>瞄准</strong>：使用鼠标指针进行瞄准，按住 Q / E 进行左倾 / 右倾 。</li>
+        <li><strong>射击</strong>：鼠标左键进行射击。</li>
+        <li><strong>呼吸控制</strong>：按住 空格 进行屏息以减少准星抖动，提高射击精准度。</li>
+        <li><strong>换弹</strong>：鼠标左键进行拉栓 / 换弹。</li>
+        <li><strong>道具使用 / 切换</strong>：滚动鼠标中键可调出相应道具，使用鼠标左键点击更换狙击配件 / 使用道具。</li>
+    </ul>
+    
+    <p><strong>开发周期：</strong></p>
+    <ul>
+        <li><strong>前期策划与原型设计</strong>（1-2 个月）：确定核心玩法、物理引擎、关卡设计。</li>
+        <li><strong>开发与测试阶段</strong>（1-2 个月）：包括程序开发、美术设计、逻辑构建等。</li>
+        <li><strong>优化与发布</strong>（2-3 个月）：优化性能，进行最终测试，并发布RC版本。</li>
+    </ul>
+    
+    <p><strong>文件大小：</strong> 42MB</p>
+    
+    <p><strong>相关图片：</strong></p>
+    
+    <p><strong>开发愿景：</strong><br>
+    《审判行动：致命瞄准》旨在打造一款硬核、写实的狙击游戏，为热爱战术狙击的玩家提供独特体验。游戏将摒弃传统FPS枪战游戏的快节奏冲锋玩法，强调隐蔽、耐心和精准，带来最纯粹的狙击快感。</p>
+    
+    <p><strong>游戏官网：</strong> <a href="https://tactgame.github.io/">点击访问</a></p>
+    
+    <p><strong>详情链接：</strong></p>
+    <ul>
+        <li><strong>枪械数据详情：</strong> <a href="https://tactgame.github.io/intro/">点击访问</a></li>
+        <li><strong>游戏论坛：</strong> <a href="https://tactgame.github.io/forum/">点击访问</a></li>
+        <li><strong>游戏总排行榜：</strong> <a href="https://tactgame.github.io/leaderboard/">点击访问</a></li>
+        <li><strong>游戏下载链接：</strong> <a href="https://tactgame.github.io/download/">点击访问</a></li>
+        <li><strong>更新日志：</strong> <a href="https://tactgame.github.io/changelog/">点击访问</a></li>
+        <li><strong>关于我们：</strong> <a href="https://tactgame.github.io/about/">点击访问</a></li>
+    </ul>
+    
+  <h2>游玩处</h2>
+  <h3>在线游玩</h3>
+  <iframe src="https://forkphorus.github.io/embed.html?id=1121490833&auto-start=false&light-content=true" width="482" height="393" allowfullscreen="true" allowtransparency="true" style="border:none;"></iframe>
+          
+  
+  <button class="back-to-list">返回列表</button>
+  
+  <!-- 评论区容器（用于 Utterances） -->  
+  <div class="utterances-container" data-issue-term="work-3"></div>
+</article>
+
+      </div>
+    </div>
+  </main>
+  <button class="back-to-top">⬆ 返回顶部</button>
+  <script src="js/works.js"></script>
+  <script src="js/script.js"></script>
+</body>
+</html>

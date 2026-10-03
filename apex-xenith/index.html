@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <!-- 引入 manifest -->
+<link rel="manifest" href="manifest.json">
+
+<!-- 设置主题色 -->
+<meta name="theme-color" content="#000000">
+
+<!-- 优化 iOS 下的显示效果 -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- 禁用缓存，保证 WebView 版本更新 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+  <link rel="preload" href="css/style.css" as="style">
+
+<link rel="preload" href="images/logo.svg" as="image">
+
+
+<link rel="icon" type="image/svg+xml" href="images/logo.svg">
+<link rel="alternate icon" href="images/favicon.ico">
+<link rel="apple-touch-icon" href="images/logo.svg">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MAX Apex Xenith | 「独筑星海，至臻永恒」</title>
+  <link rel="stylesheet" href="css/style.css">
+<nav class="navbar">
+  <a href="index.html" class="brand">
+    <img src="images/logo.svg" alt="MAX Apex Xenith Logo" class="logo">
+    <span class="brand-text">MAX Apex Xenith</span>
+  </a>
+  <!-- 其他导航项保持不变 -->
+</nav>
+
+
+</head>
+<body>
+  <div class="loading-screen">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" data-i18n="loading">加载中...</div>
+</div>
+
+<nav class="navbar">
+  <a href="index.html" class="brand">
+    <img src="images/logo.svg" alt="MAX Apex Xenith Logo" class="logo">
+    <span class="brand-text">MAX Apex Xenith</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">星域</a></li>
+    <li><a href="about.html">星渊</a></li>
+    <li><a href="works.html">星辉</a></li>
+    <li><a href="blog.html">星迹</a></li>
+    <li><a href="forum.html">星云</a></li>
+    <li><a href="contact.html">星桥</a></li>
+    <li><a href="../index.html">← 主站</a></li>
+    <div class="search-container">
+      <input type="text" class="search-input" placeholder="搜索星域..." data-i18n-placeholder="searchPlaceholder">
+      <button class="search-button">🔍</button>
+      <div class="search-results"></div>
+    </div>
+    <button class="theme-toggle">
+      <span class="light-icon">☀️</span>
+      <span class="dark-icon">🌙</span>
+    </button>
+  </ul>
+  <div class="hamburger">☰</div>
+</nav>
+
+
+
+  <section class="hero">
+  <div class="stellar-bg"></div>
+  <div class="hero-content">
+    <h1 class="glitch-text">「独筑星海，至臻永恒」</h1>
+    <div class="logo-container">
+      <img src="images/logo.svg" alt="MAX Apex Xenith Logo" class="hero-logo">
+      <div class="logo-glow"></div>
+    </div>
+  </div>
+  <div class="particle-effects"></div>
+</section>
+
+<button class="back-to-top">⬆ 返回顶部</button>
+<!--<button class="back-to-top" aria-label="返回顶部">↑</button>-->
+  <script src="js/main.js"></script>
+<script src="js/script.js"></script>
+  
+</body>
+</html>
