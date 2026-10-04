@@ -396,6 +396,8 @@
                 if (n.type === 'like') { text = who + ' 点赞了你的作品《' + wt + '》'; link = 'community-play.html?id=' + n.work_id; }
                 else if (n.type === 'comment') { text = who + ' 评论了你的作品《' + wt + '》'; link = 'community-play.html?id=' + n.work_id; }
                 else if (n.type === 'reply') { text = who + ' 回复了你的帖子《' + tt + '》'; link = 'community-thread.html?id=' + n.thread_id; }
+                else if (n.type === 'contest_entry') { text = '🏁 ' + who + ' 报名参加了你的赛事「' + esc(n.content || '') + '」'; link = 'community-contest.html?id=' + n.ref_id; }
+                else if (n.type === 'contest_reward') { text = '🏆 ' + esc(n.content || ''); link = 'community-contest.html?id=' + n.ref_id; }
                 else { text = who + ' 关注了你'; link = 'community-user.html?id=' + n.from_user_id; }
                 return '<a class="' + cls + '" href="' + link + '">' +
                     '<div>' + text + '</div>' + tm + '</a>';

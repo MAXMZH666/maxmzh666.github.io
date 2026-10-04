@@ -92,7 +92,7 @@
             '</div>';
     }
 
-    function bindRunner(kind, code) {
+    function bindRunner(kind, code, lazyLoader) {
         var out = document.getElementById('run-output');
         var status = document.getElementById('run-status');
         var runBtn = document.getElementById('run-btn');
@@ -103,9 +103,16 @@
             runBtn.disabled = true;
             out.textContent = '';
             try {
+                /* 懒加载：code 为 null 时通过 lazyLoader 按需取码 */
+                var src = code;
+                if (src == null && lazyLoader) {
+                    say('正在加载代码…');
+                    src = await new Promise(function (resolve) { lazyLoader(resolve); });
+                }
+                if (!src) { append('[错误] 无法加载代码'); say('加载失败'); runBtn.disabled = false; return; }
                 var inputText = document.getElementById('run-input').value;
-                if (kind === 'python') await runPython(code, inputText, say, append);
-                else await runCpp(code, inputText, say, append);
+                if (kind === 'python') await runPython(src, inputText, say, append);
+                else await runCpp(src, inputText, say, append);
             } catch (e) {
                 append('[错误] ' + (e && e.message ? e.message : e));
                 say('运行出错');
@@ -130,7 +137,8 @@
         var id = new URLSearchParams(location.search).get('id');
         if (!id) { wrap.innerHTML = '<p class="works-note">缺少作品 ID。<a href="community.html">返回社区</a></p>'; return; }
 
-        var res = await sb.from('works').select('*').eq('id', id).single();
+        /* 公开查询不拉源码列（code），防闭源代码从接口泄露；授权用户走 get_work_code RPC 取 */
+        var res = await sb.from('works').select('id,title,author_id,cover_url,sb3_url,is_open_source,description,created_at,apk_url,views,site_url,screenshots,work_type,category').eq('id', id).single();
         if (res.error || !res.data) {
             wrap.innerHTML = '<p class="works-note">作品不存在或已被删除。<a href="community.html">返回社区</a></p>';
             return;
@@ -175,9 +183,17 @@
                 (isAuthor && wtype === 'scratch' ? '<p class="form-hint" style="margin-top:10px">💻 <a href="community-code.html?edit=' + id + '">在在线编程里继续编辑这个作品</a></p>' : '');
         } else if (wtype === 'python' || wtype === 'cpp') {
             var canSeeCode = w.is_open_source || isAuthor || (me && isAdminFlag);
+            /* 授权用户通过 RPC 取源码，未授权不请求 */
+            var codeText = '';
+            if (canSeeCode) {
+                try {
+                    var cr = await sb.rpc('get_work_code', { p_work_id: id });
+                    if (cr.data && cr.data.code) codeText = cr.data.code;
+                } catch (e) {}
+            }
             previewHtml = (canSeeCode
                 ? '<pre class="code-view"><code id="code-block" class="' + (wtype === 'python' ? 'language-python' : 'language-cpp') + '">' +
-                  esc(w.code || '') + '</code></pre>'
+                  esc(codeText) + '</code></pre>'
                 : '<div class="tip-box">🔒 作者未开源此作品，你可以在线运行，但无法查看源代码。</div>') + runnerHtml();
         } else if (wtype === 'website') {
             var siteSrc = w.site_url || '';
@@ -223,12 +239,14 @@
 
         wrap.innerHTML =
             '<p class="article-back"><a href="community.html">← 返回社区</a></p>' +
-            '<h1 class="section-title" style="margin-top:6px">' + esc(w.title) + '</h1>' +
+            '<div class="play-layout">' +
+            '<div class="play-main">' + previewHtml + '</div>' +
+            '<div class="play-side">' +
+            '<h1 class="section-title" style="margin-top:0">' + esc(w.title) + '</h1>' +
             '<p class="work-meta">' + typeBadge(wtype) +
             ' 作者：<a href="community-user.html?id=' + w.author_id + '">' + esc(authorName) + '</a>' +
             ' · ' + fmtDate(w.created_at) + ' · 👁 <span id="view-count">' + (w.views || 0) + '</span></p>' +
             '<div class="card-tags" id="work-tags" style="margin:8px 0"></div>' +
-            previewHtml +
             (w.description ? '<div class="work-desc markdown-body">' + renderMarkdown(w.description) + '</div>' : '') +
             '<div class="work-actions">' +
                 '<button class="like-btn" id="like-btn">❤ <span id="like-count">…</span></button>' +
@@ -240,6 +258,8 @@
                     ? '<a href="community-publish.html?edit=' + id + '">编辑作品</a><a href="#" class="link-danger" id="del-work">删除作品</a>'
                     : '<a href="#" class="link-danger" id="report-work">举报</a>') +
             '</div>' +
+            '<div id="work-contests"></div>' +
+            '</div></div>' +
             '<div class="comments"><h2>评论</h2><div id="comment-list"><p class="works-note">加载中…</p></div>' +
             '<form id="comment-form" class="comment-form contact-form" style="max-width:none">' +
                 '<label for="c-text">写评论</label>' +
@@ -267,14 +287,42 @@
             } catch (e) {}
         })();
 
-        /* 代码高亮（python/cpp） */
-        if ((wtype === 'python' || wtype === 'cpp') && w.code) {
-            injectHljsTheme();
+        /* 🏁 参与的赛事 */
+        (async function () {
             try {
-                await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js');
-                if (window.hljs) hljs.highlightElement(document.getElementById('code-block'));
+                var er = await sb.from('contest_entries').select('contest_id').eq('work_id', id);
+                var cids = (er.data || []).map(function (x) { return x.contest_id; });
+                if (!cids.length) return;
+                var cr = await sb.from('contests').select('id,title,submit_end,vote_end,settled').in('id', cids);
+                var list = cr.data || [];
+                if (!list.length) return;
+                var now = Date.now();
+                var box = document.getElementById('work-contests');
+                box.innerHTML = '<div class="work-contests"><h3>🏁 参与的赛事</h3>' + list.map(function (c) {
+                    var end = Math.max(new Date(c.submit_end).getTime(), new Date(c.vote_end).getTime());
+                    var live = !c.settled && now < end;
+                    return '<a class="contest-link" href="community-contest.html?id=' + c.id + '">' +
+                        '<span class="c-status' + (live ? ' live' : '') + '">' + (live ? '进行中' : '已结束') + '</span>' +
+                        esc(c.title) + '</a>';
+                }).join('') + '</div>';
             } catch (e) {}
-            bindRunner(wtype, w.code || '');
+        })();
+
+        /* 代码高亮（python/cpp）：codeText 来自授权 RPC，未授权时为空 */
+        if (wtype === 'python' || wtype === 'cpp') {
+            if (typeof codeText !== 'undefined' && codeText) {
+                injectHljsTheme();
+                try {
+                    await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js');
+                    if (window.hljs) hljs.highlightElement(document.getElementById('code-block'));
+                } catch (e) {}
+            }
+            /* 运行器：点击运行时才通过 RPC 取代码，不预载 */
+            bindRunner(wtype, null, function (cb) {
+                sb.rpc('get_work_code', { p_work_id: id }).then(function (r) {
+                    cb(r.data && r.data.code ? r.data.code : '');
+                }).catch(function () { cb(''); });
+            });
         }
 
         /* 点赞 */
