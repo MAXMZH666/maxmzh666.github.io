@@ -904,7 +904,7 @@ async function getBlockedIds() {
         return (r.data || []).map(function (x) { return x.blocked_id; });
     } catch (e) { return []; }
 }
-/* ===== 页眉滚动自动隐藏：下滚隐藏，上滚显示 ===== */
+/* ===== 主站页眉滚动自动隐藏：下滚隐藏，上滚显示（社区页眉常显） ===== */
 (function () {
     var ticking = false;
     var lastY = 0;
@@ -913,11 +913,6 @@ async function getBlockedIds() {
             window.requestAnimationFrame(function () {
                 var y = window.scrollY || window.pageYOffset;
                 var goingDown = y > 120 && y > lastY;
-                /* 社区页眉 */
-                var subHeader = document.querySelector('.sub-header');
-                if (subHeader) {
-                    subHeader.classList.toggle('sub-header-hidden', goingDown);
-                }
                 /* 主站页眉 */
                 var siteHeader = document.querySelector('.site-header');
                 if (siteHeader) {
@@ -930,8 +925,8 @@ async function getBlockedIds() {
             ticking = true;
         }
     }
-    /* 有页眉的页面启用 */
-    if (document.querySelector('.site-header') || document.querySelector('.sub-header')) {
+    /* 有主站页眉的页面启用 */
+    if (document.querySelector('.site-header')) {
         window.addEventListener('scroll', onScroll, { passive: true });
     }
 })();
