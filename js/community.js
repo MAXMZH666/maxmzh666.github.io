@@ -200,8 +200,8 @@ async function renderSubHeader() {
             authEl.innerHTML = '<div class="sub-drop" id="sub-account">' +
                 '<button type="button" class="sub-drop-btn" data-sub="mine" aria-haspopup="true" aria-expanded="false">' + esc(p.username) + ' ▾<span id="mine-dot" class="bell-badge" style="display:none"></span></button>' +
                 '<div class="sub-drop-menu" role="menu">' +
-                '<a href="community-feed.html" data-subitem="feed" role="menuitem">💬 动态</a>' +
-                '<a href="community-dm.html" data-subitem="dm" role="menuitem">✉️ 私信</a>' +
+                '<a href="community-feed.html" data-subitem="feed" role="menuitem">💬 动态<span class="menu-dot" id="dot-feed" style="display:none"></span></a>' +
+                '<a href="community-dm.html" data-subitem="dm" role="menuitem">✉️ 私信<span class="menu-dot" id="dot-dm" style="display:none"></span></a>' +
                 '<a href="community-stats.html" data-subitem="stats" role="menuitem">📊 数据</a>' +
                 
                 '<a href="community-user.html?id=' + p.id + '" data-subitem="profile" role="menuitem">👤 个人主页</a>' +
@@ -243,6 +243,17 @@ async function renderSubHeader() {
                     mineDot.style.display = '';
                 } else {
                     mineDot.style.display = 'none';
+                }
+                /* 各菜单项同步红点：动态=未读通知，私信=未读私信 */
+                var dotFeed = document.getElementById('dot-feed');
+                if (dotFeed) {
+                    if (nr.count > 0) { dotFeed.textContent = nr.count > 99 ? '99+' : String(nr.count); dotFeed.style.display = ''; }
+                    else dotFeed.style.display = 'none';
+                }
+                var dotDm = document.getElementById('dot-dm');
+                if (dotDm) {
+                    if (dr.count > 0) { dotDm.textContent = dr.count > 99 ? '99+' : String(dr.count); dotDm.style.display = ''; }
+                    else dotDm.style.display = 'none';
                 }
             } catch (e) { mineDot.style.display = 'none'; }
         }
