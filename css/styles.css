@@ -1123,11 +1123,7 @@ form input[type="file"]:focus {
     z-index: 90;
     background: var(--surface);
     border-bottom: 1px solid var(--border);
-    transition: transform 0.3s ease, top 0.3s ease;
-}
-/* 向下滚动时自动隐藏 */
-.sub-header.sub-header-hidden {
-    transform: translateY(-110%);
+    transition: top 0.3s ease;
 }
 .sub-header-inner {
     max-width: 1200px;
