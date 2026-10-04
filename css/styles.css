@@ -1740,3 +1740,17 @@ img, video, iframe { max-width: 100%; }
 @media (max-width: 640px) {
     .profile-duo { grid-template-columns: 1fr; }
 }
+
+/* NEW 徽标 */
+.new-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 800;
+    background: #ff4757;
+    color: #fff;
+    border-radius: 999px;
+    padding: 2px 7px;
+    margin-left: 4px;
+    vertical-align: 2px;
+    letter-spacing: 0.5px;
+}

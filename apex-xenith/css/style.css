@@ -1144,3 +1144,32 @@ body {
   color: var(--text-primary
 
              
+
+/* LOGO 设计展示 */
+.logo-showcase {
+  max-width: 800px;
+  margin: 60px auto;
+  padding: 0 20px;
+  text-align: center;
+}
+.logo-showcase h2 {
+  font-size: 1.8rem;
+  margin-bottom: 12px;
+}
+.logo-showcase p {
+  opacity: 0.8;
+  line-height: 1.8;
+  margin-bottom: 24px;
+}
+.logo-embed {
+  max-width: 520px;
+  margin: 0 auto;
+  aspect-ratio: 482/412;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.logo-embed iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}

@@ -14,7 +14,7 @@
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
-    <link rel="stylesheet" href="css/styles.css?v=20261004g">
+    <link rel="stylesheet" href="css/styles.css?v=20261004h">
     <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
 </head>
 <body>
@@ -320,10 +320,42 @@
             }
             applyBg(pr.data.background_url);
             if (isSelf) {
-                var bgBtnHtml = '<p><button class="btn btn-ghost" id="change-bg-btn">🎨 换背景</button></p>';
+                var bgBtnHtml = '<p><button class="btn btn-ghost" id="change-bg-btn">🎨 换背景</button> ' +
+                    '<button class="btn btn-ghost" id="change-avatar-btn">🖼️ 换头像</button>' +
+                    '<input type="file" id="avatar-upload-input" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none"></p>';
                 var editBtn = document.querySelector('a[href="community-profile-edit.html"]');
                 if (editBtn && editBtn.parentNode) editBtn.parentNode.insertAdjacentHTML('afterend', bgBtnHtml);
                 document.getElementById('change-bg-btn').addEventListener('click', openBgPicker);
+                document.getElementById('change-avatar-btn').addEventListener('click', function () {
+                    document.getElementById('avatar-upload-input').click();
+                });
+                document.getElementById('avatar-upload-input').addEventListener('change', async function () {
+                    var f = this.files[0];
+                    if (!f) return;
+                    if (!/^image\/(png|jpeg|gif|webp)$/.test(f.type)) { alert('只支持 png/jpg/gif/webp 图片'); return; }
+                    if (f.size > 2 * 1024 * 1024) { alert('头像不能超过 2MB'); return; }
+                    var btn = document.getElementById('change-avatar-btn');
+                    btn.disabled = true; btn.textContent = '上传中…';
+                    try {
+                        var ext = (f.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '') || 'png';
+                        var key = 'avatars/' + uid + '/' + Date.now() + '.' + ext;
+                        var url = await uploadWithProgress('covers', key, f, f.type, null);
+                        var r = await sb.from('profiles').update({ avatar_url: url }).eq('id', uid);
+                        if (r.error) throw r.error;
+                        var av = document.getElementById('u-avatar');
+                        if (av) {
+                            if (av.tagName === 'IMG') { av.src = url; }
+                            else {
+                                var img = document.createElement('img');
+                                img.src = url; img.alt = '头像'; img.id = 'u-avatar';
+                                img.className = 'profile-avatar';
+                                av.replaceWith(img);
+                            }
+                        }
+                    } catch (e) { alert('上传失败：' + e.message); }
+                    btn.disabled = false; btn.textContent = '🖼️ 换头像';
+                    this.value = '';
+                });
             }
             async function openBgPicker() {
                 var modalId = 'bg-picker-modal';

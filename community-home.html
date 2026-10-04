@@ -14,7 +14,7 @@
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
-    <link rel="stylesheet" href="css/styles.css?v=20261004g">
+    <link rel="stylesheet" href="css/styles.css?v=20261004h">
     <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
     <style>
         .hero { text-align: center; padding: 36px 16px 28px; }
@@ -187,17 +187,35 @@
 
         await Promise.all([
         (async function () {
-        /* 公告：置顶帖 */
+        /* 公告栏：站点公告 */
         try {
-            var ar = await sb.from('forum_threads').select('id,title,author_id,created_at,reply_count')
-                .eq('is_pinned', true).order('updated_at', { ascending: false }).limit(3);
-            if (ar.data && ar.data.length) {
-                await fillNames(ar.data.map(function (t) { return t.author_id; }));
-                document.getElementById('sec-announce').style.display = '';
-                document.getElementById('announce-list').innerHTML = ar.data.map(function (t) {
-                    return '<a class="thread-row announce" href="community-thread.html?id=' + t.id + '">' +
-                        '<div class="t-title"><span class="pin-badge">📌 </span>' + esc(t.title) + '</div>' +
-                        '<div class="t-meta">' + esc(nameMap[t.author_id] || '未知') + ' · ' + fmtDate(t.created_at) +
+            var ar = await sb.from('site_announcements').select('id,title,content,link_url,created_at')
+                .eq('is_active', true).order('created_at', { ascending: false }).limit(3);
+            var announces = (ar.data && ar.data.length) ? ar.data : [{
+                title: '🎉 欢迎来到 MAX社区',
+                content: '分享你的作品，在线试玩、评论点赞，结识同好！',
+                link_url: 'community-publish.html',
+                created_at: null
+            }];
+            document.getElementById('sec-announce').style.display = '';
+            document.getElementById('announce-list').innerHTML = announces.map(function (a) {
+                var inner = '<div class="t-title">📢 ' + esc(a.title) + '</div>' +
+                    (a.content ? '<div class="t-meta">' + esc(a.content) + '</div>' : '') +
+                    (a.created_at ? '<div class="t-meta">' + fmtDate(a.created_at) + '</div>' : '');
+                return a.link_url ? '<a class="thread-row announce" href="' + esc(a.link_url) + '">' + inner + '</a>'
+                    : '<div class="thread-row announce">' + inner + '</div>';
+            }).join('');
+        } catch (e) {
+            try {
+                var pr2 = await sb.from('forum_threads').select('id,title,author_id,created_at,reply_count')
+                    .eq('is_pinned', true).order('updated_at', { ascending: false }).limit(3);
+                if (pr2.data && pr2.data.length) {
+                    await fillNames(pr2.data.map(function (t) { return t.author_id; }));
+                    document.getElementById('sec-announce').style.display = '';
+                    document.getElementById('announce-list').innerHTML = pr2.data.map(function (t) {
+                        return '<a class="thread-row announce" href="community-thread.html?id=' + t.id + '">' +
+                            '<div class="t-title"><span class="pin-badge">📌 </span>' + esc(t.title) + '</div>' +
+                            '<div class="t-meta">' + esc(nameMap[t.author_id] || '未知') + ' · ' + fmtDate(t.created_at) +
                         ' · 💬 ' + (t.reply_count || 0) + '</div></a>';
                 }).join('');
             }
