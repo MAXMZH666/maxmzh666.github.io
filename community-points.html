@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAX社区积分明细：查看积分收支记录。">
+    <title>积分明细 - MAXMZH 社区</title>
+    <link rel="stylesheet" href="css/styles.min.css?v=20261004s">
+    <style>
+        .tx-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+        .tx-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+            border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 12px;
+            background: var(--surface, #1c1c24); }
+        .tx-amount { font-size: 1.2rem; font-weight: 800; min-width: 90px; text-align: right; }
+        .tx-amount.plus { color: #51cf66; }
+        .tx-amount.minus { color: #ff6b6b; }
+        .tx-info { flex: 1; }
+        .tx-reason { font-weight: 600; }
+        .tx-time { font-size: .8rem; color: var(--muted); margin-top: 2px; }
+        .tx-balance { font-size: .8rem; color: var(--muted); }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a href="index.html" class="logo">M<sub>AXMZH</sub></a>
+            <nav class="site-nav">
+                <a href="index.html">主页</a><a href="about.html">个人简介</a>
+                <a href="blog.html">博客</a><a href="community.html" class="active">社区</a>
+                <a href="contact.html">联系方式</a>
+            </nav>
+        </div>
+    </header>
+    <div class="sub-header">
+        <div class="sub-inner">
+            <a href="community.html" class="sub-logo">🎮 MAX社区</a>
+            <nav class="sub-links">
+                <a href="community.html" data-sub="home">首页</a>
+                <a href="community.html#discover" data-sub="works">🔍 发现</a>
+                <a href="community-forum.html" data-sub="forum">💬 论坛</a>
+                <a href="community-studios.html" data-sub="studios">🏢 工作室</a>
+                <a href="community-shop.html" data-sub="shop">🎁 任务商城</a>
+                <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
+                <a href="community-publish.html" data-sub="publish">🚀 发布</a>
+                <span id="sub-auth"></span>
+            </nav>
+        </div>
+    </div>
+    <main class="container">
+        <section class="section">
+            <p class="article-back"><a href="community-shop.html">← 返回任务商城</a></p>
+            <h1 class="section-title">🧾 积分明细</h1>
+            <div class="points-banner">
+                <div class="pb-num" id="my-points">0</div>
+                <div class="pb-label">当前积分</div>
+            </div>
+            <div id="tx-wrap"><p class="works-note">加载中…</p></div>
+        </section>
+    </main>
+    <footer><div class="foot-links">
+        <a href="index.html">主页</a><a href="about.html">个人简介</a>
+        <a href="blog.html">博客</a><a href="contact.html">联系方式</a>
+    </div></footer>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/community.min.js?v=20261004s"></script>
+    <script src="js/redpacket.js"></script>
+    <script>
+        (async function () {
+            await renderSubHeader();
+            injectRedPacketCSS();
+            var me = await currentUser();
+            var wrap = document.getElementById('tx-wrap');
+            if (!me) { wrap.innerHTML = '<p class="works-note">请先<a href="community-auth.html">登录</a>后查看积分明细。</p>'; return; }
+            try {
+                var p = await myPoints();
+                document.getElementById('my-points').textContent = p;
+                var r = await sb.from('point_transactions').select('*')
+                    .eq('user_id', me.id).order('created_at', { ascending: false }).limit(100);
+                if (r.error) throw r.error;
+                var txs = r.data || [];
+                if (!txs.length) { wrap.innerHTML = '<p class="works-note">还没有积分记录。</p>'; return; }
+                wrap.innerHTML = '<div class="tx-list">' + txs.map(function (t) {
+                    var plus = t.amount > 0;
+                    return '<div class="tx-item">' +
+                        '<div class="tx-info"><div class="tx-reason">' + esc(t.reason || '积分变动') + '</div>' +
+                        '<div class="tx-time">' + fmtDate(t.created_at) + ' · 余额 ' + t.balance_after + '</div></div>' +
+                        '<div class="tx-amount ' + (plus ? 'plus' : 'minus') + '">' + (plus ? '+' : '') + t.amount + '</div>' +
+                        '</div>';
+                }).join('') + '</div>';
+            } catch (e) {
+                wrap.innerHTML = '<p class="works-note">加载失败：' + esc(e.message || '') + '</p>';
+            }
+        })();
+    </script>
+</body>
+</html>
