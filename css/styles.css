@@ -1704,7 +1704,22 @@ img, video, iframe { max-width: 100%; }
 }
 .sub-drop-menu a:hover { background: rgba(255, 255, 255, 0.06); text-decoration: none; color: var(--text); }
 .sub-drop-menu a.active { color: var(--gold); font-weight: 700; }
-/* "我的"按钮上的合计数红点（复用 bell-badge 定位） */
+/* 下拉菜单项上的未读红点 */
+.menu-dot {
+    display: inline-block;
+    background: #f87171;
+    color: #fff;
+    font-size: .68rem;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    line-height: 18px;
+    text-align: center;
+    border-radius: 999px;
+    padding: 0 4px;
+    margin-left: 6px;
+    vertical-align: 1px;
+}
 #mine-dot { top: 0; right: 2px; }
 @media (max-width: 640px) {
     .sub-drop-btn { padding: 8px 10px; font-size: .85rem; min-height: 44px; }
