@@ -1722,3 +1722,11 @@ img, video, iframe { max-width: 100%; }
     border-radius: 999px;
     min-height: 44px;
 }
+/* 覆盖通用 form button[type=submit] 样式（优先级更高，不能影响搜索栏） */
+.discover-search button[type="submit"] {
+    width: auto;
+    margin-top: 0;
+    flex-shrink: 0;
+    background: var(--blue);
+    color: #fff;
+}
