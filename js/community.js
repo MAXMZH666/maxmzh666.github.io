@@ -540,7 +540,9 @@ async function workerToken() {
 /* R2 预签名直传（带进度），失败时抛错由调用方回退 */
 async function uploadViaR2(key, file, contentType, onProgress) {
     var token = await workerToken();
-    var r = await fetch(R2_WORKER_URL + '/r2/put-url', {
+    /* sb3 走私有桶（无 publicUrl，播放走代理），其他走公开桶 */
+    var isPrivate = key.indexOf('sb3/') === 0;
+    var r = await fetch(R2_WORKER_URL + (isPrivate ? '/r2/put-url-private' : '/r2/put-url'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
         body: JSON.stringify({ key: key, contentType: contentType || 'application/octet-stream' }),
@@ -562,7 +564,28 @@ async function uploadViaR2(key, file, contentType, onProgress) {
         xhr.onerror = function () { reject(new Error('网络错误，上传中断')); };
         xhr.send(file);
     });
-    return u.publicUrl;
+    /* 私有桶返回 key（播放走代理），公开桶返回 publicUrl */
+    return isPrivate ? (u.key || key) : u.publicUrl;
+}
+
+/* 取 sb3 播放 token（需登录） */
+async function sb3PlayToken(workId) {
+    try {
+        var token = await workerToken();
+        if (!token) return '';
+        var r = await fetch(R2_WORKER_URL + '/sb3/token?work_id=' + encodeURIComponent(workId), {
+            headers: { 'Authorization': 'Bearer ' + token },
+        });
+        if (!r.ok) return '';
+        var j = await r.json();
+        return j.token || '';
+    } catch (e) {
+        return '';
+    }
+}
+/* sb3 代理播放地址 */
+function sb3ProxyUrl(workId, token) {
+    return R2_WORKER_URL + '/sb3/' + workId + '?token=' + encodeURIComponent(token);
 }
 
 /* ===== 网页运行器（试玩页 + 在线编程共用） ===== */
