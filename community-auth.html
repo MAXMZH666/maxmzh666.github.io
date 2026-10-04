@@ -200,6 +200,13 @@
             btn.textContent = '完成注册';
             note.textContent = '邮箱验证成功！设置登录密码即可完成注册';
             note.className = 'form-note ok';
+            /* 邀请码 URL 兜底：邮件链接可能用其他浏览器打开，localStorage 会丢失 */
+            try {
+                var urlInvite = new URLSearchParams(location.search).get('invite');
+                if (urlInvite && !localStorage.getItem('mmc_invite_code')) {
+                    localStorage.setItem('mmc_invite_code', urlInvite.toUpperCase().trim());
+                }
+            } catch (e) {}
         }
         tabLogin.addEventListener('click', function () { setMode('login'); });
         tabSignup.addEventListener('click', function () { setMode('signup'); });
@@ -270,7 +277,9 @@
             note.textContent = '正在发送验证邮件…';
             note.className = 'form-note sending';
             try {
-                var redirectTo = 'https://maxmzh666.github.io/community-auth.html?mode=signup&verified=1&next=' + encodeURIComponent(next);
+                var inviteForUrl = document.getElementById('a-invite').value.trim().toUpperCase();
+                var redirectTo = 'https://maxmzh666.github.io/community-auth.html?mode=signup&verified=1&next=' + encodeURIComponent(next) +
+                    (inviteForUrl ? '&invite=' + encodeURIComponent(inviteForUrl) : '');
                 var r = await sb.auth.signInWithOtp({
                     email: email,
                     options: { data: { username: username }, emailRedirectTo: redirectTo }
@@ -344,14 +353,17 @@
                         var savedCode = localStorage.getItem('mmc_invite_code');
                         localStorage.removeItem('mmc_invite_code');
                         if (savedCode) {
-                            var ir = await sb.rpc('process_invite', { p_invite_code: savedCode });
+                            showLoading('正在领取邀请奖励…');
+                            var ir = await withTimeout(sb.rpc('process_invite', { p_invite_code: savedCode }), 15000, '领取邀请奖励超时');
                             if (!ir.error && ir.data && ir.data.invited) {
                                 inviteMsg = '🎉 邀请成功！你和邀请人各得 100 积分';
                             } else if (ir.error) {
                                 inviteMsg = '（邀请码无效：' + (ir.error.message || '') + '）';
                             }
                         }
-                    } catch (e4) {}
+                    } catch (e4) {
+                        inviteMsg = '（邀请奖励领取失败：' + (e4.message || '请稍后重试') + '）';
+                    }
                     hideLoading();
                     showLoading('注册成功，跳转中…' + (inviteMsg ? ' ' + inviteMsg : ''));
                     location.href = next;
