@@ -71,6 +71,7 @@
             </div>
             <div class="filter-chips reveal" id="cat-chips"></div>
             <div class="filter-chips reveal" id="type-chips"></div>
+            <div class="filter-chips reveal" id="tag-chips" style="display:none"></div>
             <div class="sort-tabs reveal" id="sort-tabs">
                 <button data-sort="new" class="active">最新发布</button>
                 <button data-sort="hot">最多点赞</button>
@@ -158,13 +159,14 @@
         renderRandom();
     });
 
-    var state = { q: '', cat: '全部', type: 'all', sort: 'new' };
+    var state = { q: '', cat: '全部', type: 'all', sort: 'new', tag: '' };
     /* 支持从发现页带参数跳转：?cat=游戏 / ?type=python */
     try {
         var _qp = new URLSearchParams(location.search);
-        var _qc = _qp.get('cat'), _qt = _qp.get('type');
+        var _qc = _qp.get('cat'), _qt = _qp.get('type'), _qtag = _qp.get('tag');
         if (_qc) state.cat = _qc;
         if (_qt) state.type = _qt;
+        if (_qtag) state.tag = _qtag;
     } catch (e) {}
     var nameMap = {};
     var TYPE_FILTERS = [
@@ -178,10 +180,13 @@
         { v: 'website', label: '🌐 网站' }
     ];
 
-    function workCard(w, counts, favCounts) {
+    function workCard(w, counts, favCounts, tagMap) {
         var cover = w.cover_url
             ? '<img src="' + esc(w.cover_url) + '" alt="' + esc(w.title) + '" loading="lazy">'
             : '<span class="monogram">' + esc((w.title || '游').charAt(0)) + '</span>';
+        var tagsHtml = (tagMap && tagMap[w.id] ? tagMap[w.id].slice(0, 3).map(function (n) {
+            return '<span class="tag">🏷️ ' + esc(n) + '</span>';
+        }).join('') : '');
         return '<a class="card" href="community-play.html?id=' + w.id + '">' +
             '<div class="card-cover">' + cover + '</div>' +
             '<div class="card-body"><h3>' + esc(w.title) + '</h3>' +
@@ -189,7 +194,7 @@
             '<div class="card-tags"><span class="tag">❤ ' + (counts[w.id] || 0) + '</span>' +
             '<span class="tag">⭐ ' + ((favCounts && favCounts[w.id]) || 0) + '</span>' +
             '<span class="tag">👁 ' + (w.views || 0) + '</span>' + typeBadge(workTypeOf(w)) +
-            (w.category ? '<span class="tag blue">' + esc(w.category) + '</span>' : '') + '</div>' +
+            (w.category ? '<span class="tag blue">' + esc(w.category) + '</span>' : '') + tagsHtml + '</div>' +
             '</div></a>';
     }
 
@@ -223,7 +228,7 @@
     function escLike(s) { return s.replace(/[%_\\]/g, function (c) { return '\\' + c; }); }
 
     /* 列表缓存：60 秒内相同筛选直接读缓存，秒开 */
-    function cacheKey() { return 'works_cache_' + state.cat + '_' + state.type + '_' + state.sort + '_' + state.q; }
+    function cacheKey() { return 'works_cache_' + state.cat + '_' + state.type + '_' + state.sort + '_' + state.q + '_' + state.tag; }
     function readCache() {
         try {
             var c = JSON.parse(sessionStorage.getItem(cacheKey()) || 'null');
@@ -244,10 +249,20 @@
         grid.innerHTML = skeletonHtml(6);
         note.style.display = 'none';
         try {
+            var tagWorkIds = null;
+            if (state.tag) {
+                /* 先查标签 id，再查该标签下的作品 id */
+                var _tr = await sb.from('tags').select('id').eq('name', state.tag).limit(1);
+                if (_tr.data && _tr.data[0]) {
+                    var _wr = await sb.from('work_tags').select('work_id').eq('tag_id', _tr.data[0].id);
+                    tagWorkIds = (_wr.data || []).map(function (x) { return x.work_id; });
+                } else tagWorkIds = [];
+            }
             var query = sb.from('works').select('id,title,cover_url,created_at,author_id,category,views,work_type');
             if (state.cat !== '全部') query = query.eq('category', state.cat);
             if (state.type !== 'all') query = query.eq('work_type', state.type);
             if (state.q) query = query.ilike('title', '%' + escLike(state.q) + '%');
+            if (tagWorkIds) query = query.in('id', tagWorkIds.length ? tagWorkIds : ['00000000-0000-0000-0000-000000000000']);
             query = state.sort === 'views'
                 ? query.order('views', { ascending: false })
                 : query.order('created_at', { ascending: false });
@@ -256,9 +271,10 @@
             var works = res.data || [];
             var ids = works.map(function (w) { return w.id; });
             var authorIds = works.map(function (w) { return w.author_id; });
-            var results = await Promise.all([countLikes(ids), countFavs(ids), fillNames(authorIds)]);
+            var results = await Promise.all([countLikes(ids), countFavs(ids), fillNames(authorIds), getWorksTags(ids)]);
             var counts = results[0];
             var favCounts = results[1];
+            var tagMap = results[3];
             if (state.sort === 'hot') {
                 works.sort(function (a, b) { return (counts[b.id] || 0) - (counts[a.id] || 0); });
             }
@@ -268,8 +284,8 @@
                 note.style.display = 'block';
                 return;
             }
-            grid.innerHTML = works.map(function (w) { return workCard(w, counts, favCounts); }).join('');
-            var listTitle = state.q ? '搜索：' + state.q : (state.cat === '全部' ? '全部作品' : state.cat);
+            grid.innerHTML = works.map(function (w) { return workCard(w, counts, favCounts, tagMap); }).join('');
+            var listTitle = state.tag ? '🏷️ ' + state.tag : (state.q ? '搜索：' + state.q : (state.cat === '全部' ? '全部作品' : state.cat));
             document.getElementById('list-title').textContent = listTitle;
             try {
                 sessionStorage.setItem(cacheKey(), JSON.stringify({ t: Date.now(), html: grid.innerHTML, title: listTitle }));
@@ -335,6 +351,38 @@
             tChips.querySelectorAll('button').forEach(function (x) { x.classList.toggle('active', x === b); });
             loadWorks();
         });
+        /* 🏷️ 热门标签 */
+        (async function loadHotTags() {
+            try {
+                var box = document.getElementById('tag-chips');
+                /* 取最近 500 条作品标签关联，统计热度 */
+                var r = await sb.from('work_tags').select('tag_id').limit(500);
+                var rows = r.data || [];
+                if (!rows.length) return;
+                var freq = {};
+                rows.forEach(function (x) { freq[x.tag_id] = (freq[x.tag_id] || 0) + 1; });
+                var topIds = Object.keys(freq).sort(function (a, b) { return freq[b] - freq[a]; }).slice(0, 12);
+                if (!topIds.length) return;
+                var tr = await sb.from('tags').select('id,name').in('id', topIds);
+                var tmap = {};
+                (tr.data || []).forEach(function (t) { tmap[t.id] = t.name; });
+                var names = topIds.map(function (id) { return tmap[id]; }).filter(Boolean);
+                if (!names.length) return;
+                box.style.display = '';
+                box.innerHTML = '<span class="chips-label">🏷️</span>' + names.map(function (n) {
+                    return '<button class="filter-chip' + (n === state.tag ? ' active' : '') + '" data-tag="' + esc(n) + '">' + esc(n) + '</button>';
+                }).join('');
+                /* 如果从 ?tag= 进入，高亮对应 chip */
+                box.addEventListener('click', function (e) {
+                    var b = e.target.closest('button[data-tag]');
+                    if (!b) return;
+                    var nm = b.getAttribute('data-tag');
+                    state.tag = (state.tag === nm) ? '' : nm;
+                    box.querySelectorAll('button').forEach(function (x) { x.classList.toggle('active', x.getAttribute('data-tag') === state.tag); });
+                    loadWorks();
+                });
+            } catch (e) {}
+        })();
         document.getElementById('sort-tabs').addEventListener('click', function (e) {
             var b = e.target.closest('button[data-sort]');
             if (!b) return;

@@ -20,6 +20,11 @@
         .points-banner { text-align: center; padding: 24px 16px; border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 14px; background: linear-gradient(135deg, rgba(77,124,254,.12), rgba(156,77,254,.08)); margin-bottom: 8px; }
         .points-banner .pb-num { font-size: 2.4rem; font-weight: 800; color: #ffd43b; }
         .points-banner .pb-label { color: var(--muted); margin-top: 4px; }
+        /* 每日签到卡片 */
+        .checkin-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 14px; background: linear-gradient(135deg, rgba(255,204,0,.08), rgba(255,150,0,.04)); margin-bottom: 16px; }
+        .checkin-title { font-size: 1.1rem; font-weight: 700; }
+        .checkin-streak { color: var(--muted); font-size: .9rem; margin-top: 4px; }
+        .checkin-card .btn:disabled { opacity: .6; cursor: default; }
         .shop-sec { margin-top: 28px; }
         .shop-sec h2 { font-size: 1.2rem; margin: 0 0 12px; }
         .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
@@ -87,6 +92,13 @@
                         <div class="pb-num" id="my-points-tasks">0</div>
                         <div class="pb-label">我的积分</div>
                     </div>
+                    <div class="checkin-card" id="checkin-card" style="display:none">
+                        <div class="checkin-info">
+                            <div class="checkin-title">📅 每日签到</div>
+                            <div class="checkin-streak" id="checkin-streak">已连续签到 0 天</div>
+                        </div>
+                        <button class="btn btn-blue" id="checkin-btn">签到 +5 🪙</button>
+                    </div>
                     <div class="task-sec">
                         <h2>📅 每日任务 <span class="works-note" style="display:inline">（每天 0 点刷新）</span></h2>
                         <div id="daily-list"><p class="works-note">加载中…</p></div>
@@ -131,6 +143,7 @@
             <a href="about.html">个人简介</a>
             <a href="blog.html">博客</a>
             <a href="community-home.html">社区</a>
+            <a href="community-help.html">❓ 帮助</a>
             <a href="community-forum.html">论坛</a>
             <a href="contact.html">联系方式</a>
             <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
@@ -141,7 +154,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261004g"></script>
+    <script src="js/community.js?v=20261004h"></script>
     <div class="modal-backdrop" id="buy-modal" style="display:none">
         <div class="modal"><h3>确认购买</h3>
             <p class="form-hint" id="buy-modal-name"></p>
@@ -312,10 +325,96 @@
             if ((fr.data || []).length >= 5) await recordTaskProgress('followers', 5);
         } catch (e) {}
     }
+    /* ===== 每日签到 ===== */
+    function fmtDay(d) {
+        return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+    }
+    async function addPoints(uid, amount) {
+        /* 读-改-写加积分 */
+        try {
+            var pr = await sb.from('profiles').select('points').eq('id', uid).single();
+            var cur = (pr.data && pr.data.points) || 0;
+            var r = await sb.from('profiles').update({ points: cur + amount }).eq('id', uid);
+            return !r.error;
+        } catch (e) { return false; }
+    }
+    async function calcStreak(uid) {
+        /* 从 checkins 按日期倒序算连续签到天数 */
+        try {
+            var r = await sb.from('checkins').select('check_date').eq('user_id', uid)
+                .order('check_date', { ascending: false }).limit(40);
+            var dates = (r.data || []).map(function (x) { return x.check_date; });
+            if (!dates.length) return 0;
+            var today = new Date();
+            var todayStr = fmtDay(today);
+            var yesterday = new Date(today.getTime() - 86400000);
+            var yesterdayStr = fmtDay(yesterday);
+            /* 今天没签则从昨天开始算 */
+            var startIdx = dates[0] === todayStr ? 0 : (dates[0] === yesterdayStr ? 0 : -1);
+            if (startIdx < 0) return 0;
+            var streak = 0;
+            var cursor = dates[0] === todayStr ? today : yesterday;
+            for (var i = 0; i < dates.length; i++) {
+                if (dates[i] === fmtDay(cursor)) {
+                    streak++;
+                    cursor = new Date(cursor.getTime() - 86400000);
+                } else break;
+            }
+            return streak;
+        } catch (e) { return 0; }
+    }
+    async function initCheckin(me) {
+        var card = document.getElementById('checkin-card');
+        var btn = document.getElementById('checkin-btn');
+        var streakEl = document.getElementById('checkin-streak');
+        card.style.display = '';
+        var todayStr = fmtDay(new Date());
+        /* 今天是否已签 */
+        var cr = await sb.from('checkins').select('check_date').eq('user_id', me.id).eq('check_date', todayStr).limit(1);
+        var checked = cr.data && cr.data.length > 0;
+        var streak = await calcStreak(me.id);
+        if (checked) {
+            btn.disabled = true;
+            btn.textContent = '今日已签 ✓';
+            streakEl.textContent = '已连续签到 ' + streak + ' 天';
+        } else {
+            streakEl.textContent = streak > 0 ? '已连续签到 ' + streak + ' 天，再签 1 天' : '还没有签到记录，快来签到吧';
+            btn.addEventListener('click', async function () {
+                btn.disabled = true;
+                btn.textContent = '签到中…';
+                try {
+                    /* 插入签到记录（主键防重复） */
+                    var ir = await sb.from('checkins').insert({ user_id: me.id, check_date: todayStr, points_awarded: 5 });
+                    if (ir.error) throw ir.error;
+                    /* 算签到后的连续天数（含今天） */
+                    var newStreak = await calcStreak(me.id);
+                    var bonus = 5;
+                    var msg = '签到成功 +5 积分';
+                    /* 里程碑奖励：7天+10，30天+30 */
+                    if (newStreak === 7) { bonus += 10; msg += '，连续7天额外 +10！'; }
+                    else if (newStreak === 30) { bonus += 30; msg += '，连续30天额外 +30！'; }
+                    else if (newStreak > 1) { msg += '，已连续 ' + newStreak + ' 天'; }
+                    var ok = await addPoints(me.id, bonus);
+                    if (!ok) throw new Error('积分更新失败');
+                    alert(msg);
+                    /* 刷新显示 */
+                    btn.textContent = '今日已签 ✓';
+                    streakEl.textContent = '已连续签到 ' + newStreak + ' 天';
+                    document.getElementById('my-points-tasks').textContent = await myPoints();
+                    document.getElementById('my-points').textContent = await myPoints();
+                } catch (e) {
+                    alert('签到失败：' + e.message);
+                    btn.disabled = false;
+                    btn.textContent = '签到 +5 🪙';
+                }
+            });
+        }
+    }
     async function loadTasks() {
         var me = await currentUser();
         if (!me) { document.getElementById('need-login-tasks').style.display = ''; return; }
         document.getElementById('tasks-wrap').style.display = '';
+        await initCheckin(me);
         await recordTaskProgress('login', 1);
         await checkStateTasks(me);
         document.getElementById('my-points-tasks').textContent = await myPoints();

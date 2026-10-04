@@ -89,6 +89,11 @@
                 </div>
 
                 <div class="set-card">
+                    <h2>🚫 屏蔽列表</h2>
+                    <div id="block-list"><p class="works-note">加载中…</p></div>
+                </div>
+
+                <div class="set-card">
                     <h2>🎛️ 个人喜好</h2>
                     <label for="pf-autosave">在线编辑器自动保存间隔</label>
                     <select id="pf-autosave">
@@ -116,6 +121,7 @@
             <a href="about.html">个人简介</a>
             <a href="blog.html">博客</a>
             <a href="community-home.html">社区</a>
+            <a href="community-help.html">❓ 帮助</a>
             <a href="community-forum.html">论坛</a>
             <a href="contact.html">联系方式</a>
             <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
@@ -126,7 +132,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261004g"></script>
+    <script src="js/community.js?v=20261004h"></script>
     <script>
     (async function () {
         await renderSubHeader();
@@ -134,6 +140,35 @@
         if (!me) { document.getElementById('need-login').style.display = ''; return; }
         document.getElementById('set-wrap').style.display = '';
         document.getElementById('back-link').href = 'community-user.html?id=' + me.id;
+        /* 🚫 屏蔽列表 */
+        (async function loadBlockList() {
+            var box = document.getElementById('block-list');
+            try {
+                var br = await sb.from('blocks').select('blocked_id,created_at').eq('blocker_id', me.id)
+                    .order('created_at', { ascending: false });
+                var rows = br.data || [];
+                if (!rows.length) { box.innerHTML = '<p class="works-note">没有屏蔽任何人。</p>'; return; }
+                var pr = await sb.from('profiles').select('id,username').in('id', rows.map(function (x) { return x.blocked_id; }));
+                var nm = {};
+                (pr.data || []).forEach(function (p) { nm[p.id] = p.username; });
+                box.innerHTML = rows.map(function (x) {
+                    return '<div class="user-row"><a href="community-user.html?id=' + x.blocked_id + '">' +
+                        esc(nm[x.blocked_id] || '未知用户') + '</a>' +
+                        '<button class="btn btn-ghost" style="margin-left:auto;font-size:.8rem;padding:6px 12px" ' +
+                        'data-unblock="' + x.blocked_id + '">解除</button></div>';
+                }).join('');
+                box.querySelectorAll('[data-unblock]').forEach(function (btn) {
+                    btn.addEventListener('click', async function () {
+                        if (!confirm('确定要解除屏蔽吗？')) return;
+                        try {
+                            await sb.from('blocks').delete()
+                                .eq('blocker_id', me.id).eq('blocked_id', btn.getAttribute('data-unblock'));
+                            loadBlockList();
+                        } catch (e) { alert('操作失败：' + e.message); }
+                    });
+                });
+            } catch (e) { box.innerHTML = '<p class="works-note">加载失败：' + esc(e.message) + '</p>'; }
+        })();
         document.getElementById('cur-email').textContent = me.email || '—';
 
         function note(id, msg, ok) {

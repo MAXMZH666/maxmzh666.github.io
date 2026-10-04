@@ -17,14 +17,29 @@
     <link rel="stylesheet" href="css/styles.css?v=20261004h">
     <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
     <style>
-        .feed-row { display: flex; gap: 12px; padding: 14px 16px; border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 12px; margin-bottom: 10px; text-decoration: none; color: inherit; background: var(--card, rgba(255,255,255,.02)); align-items: center; }
-        .feed-row:hover { border-color: var(--accent, #4d7cfe); }
+        .feed-row { display: block; padding: 14px 16px; border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 12px; margin-bottom: 10px; background: var(--card, rgba(255,255,255,.02)); }
+        .feed-row-main { display: flex; gap: 12px; align-items: center; text-decoration: none; color: inherit; }
+        .feed-row-main:hover .feed-title { color: var(--accent, #4d7cfe); }
         .feed-thumb { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; flex-shrink: 0; background: var(--card); }
         .feed-thumb.ph { display: flex; align-items: center; justify-content: center; font-size: 1.6rem; }
         .feed-main { flex: 1; min-width: 0; }
         .feed-title { font-size: 1rem; font-weight: 600; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .feed-meta { font-size: .82rem; color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
         .notify-actions { margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
+        /* 动态内联互动 */
+        .feed-actions { display: flex; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border, rgba(255,255,255,.08)); }
+        .feed-act-btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border, rgba(255,255,255,.12)); background: transparent; color: var(--muted); font-size: .85rem; cursor: pointer; }
+        .feed-act-btn:hover { border-color: var(--accent, #4d7cfe); color: inherit; }
+        .feed-act-btn.liked { border-color: #f87171; color: #f87171; }
+        .feed-act-btn:disabled { opacity: .6; cursor: default; }
+        .feed-comments { margin-top: 10px; border-top: 1px dashed var(--border, rgba(255,255,255,.08)); padding-top: 10px; }
+        .feed-cmt { padding: 8px 0; border-bottom: 1px solid var(--border, rgba(255,255,255,.05)); font-size: .88rem; }
+        .feed-cmt:last-child { border-bottom: none; }
+        .feed-cmt-meta { color: var(--muted); font-size: .78rem; margin-bottom: 3px; }
+        .feed-cmt-form { display: flex; gap: 8px; margin-top: 8px; }
+        .feed-cmt-form input { flex: 1; min-width: 0; padding: 8px 12px; border-radius: 999px; border: 1px solid var(--border, rgba(255,255,255,.12)); background: var(--card); color: inherit; font-size: .88rem; }
+        .feed-cmt-form button { padding: 8px 18px; border-radius: 999px; border: none; background: var(--accent, #4d7cfe); color: #fff; cursor: pointer; font-size: .85rem; flex-shrink: 0; }
+        .feed-cmt-form button:disabled { opacity: .6; }
     </style>
 </head>
 <body>
@@ -87,6 +102,7 @@
             <a href="about.html">个人简介</a>
             <a href="blog.html">博客</a>
             <a href="community-home.html">社区</a>
+            <a href="community-help.html">❓ 帮助</a>
             <a href="community-forum.html">论坛</a>
             <a href="contact.html">联系方式</a>
             <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
@@ -96,7 +112,7 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261004g"></script>
+    <script src="js/community.js?v=20261004h"></script>
     <script src="js/scripts.js"></script>
     <script>
     (async function () {
@@ -109,6 +125,11 @@
             var fr = await sb.from('follows').select('following_id').eq('follower_id', me.id);
             if (fr.error) throw fr.error;
             var ids = (fr.data || []).map(function (f) { return f.following_id; });
+            /* 🚫 过滤被屏蔽用户 */
+            try {
+                var _blocked = await getBlockedIds();
+                if (_blocked.length) ids = ids.filter(function (x) { return _blocked.indexOf(x) < 0; });
+            } catch (e) {}
             if (!ids.length) { note.innerHTML = '还没有关注任何人，去<a href="community-rank.html">排行榜</a>发现感兴趣的作者吧。'; return; }
             var items = [];
             var wr = await sb.from('works').select('id,title,cover_url,author_id,created_at').in('author_id', ids).order('created_at', { ascending: false }).limit(30);
@@ -123,18 +144,135 @@
             var unames = {};
             var pr = await sb.from('profiles').select('id,username').in('id', aids);
             (pr.data || []).forEach(function (p) { unames[p.id] = p.username; });
+            /* 批量查点赞数 + 我的点赞状态 */
+            var workIds = items.filter(function (x) { return x.kind === 'work'; }).map(function (x) { return x.id; });
+            var threadIds = items.filter(function (x) { return x.kind === 'thread'; }).map(function (x) { return x.id; });
+            var likeCount = {}, myLiked = {}, cmtCount = {};
+            try {
+                if (workIds.length) {
+                    var wl = await sb.from('likes').select('work_id').in('work_id', workIds);
+                    (wl.data || []).forEach(function (r) { likeCount['w:' + r.work_id] = (likeCount['w:' + r.work_id] || 0) + 1; });
+                    var ml = await sb.from('likes').select('work_id').eq('user_id', me.id).in('work_id', workIds);
+                    (ml.data || []).forEach(function (r) { myLiked['w:' + r.work_id] = 1; });
+                    var wc = await sb.from('comments').select('work_id').in('work_id', workIds);
+                    (wc.data || []).forEach(function (r) { cmtCount['w:' + r.work_id] = (cmtCount['w:' + r.work_id] || 0) + 1; });
+                }
+                if (threadIds.length) {
+                    var tl = await sb.from('thread_likes').select('thread_id').in('thread_id', threadIds);
+                    (tl.data || []).forEach(function (r) { likeCount['t:' + r.thread_id] = (likeCount['t:' + r.thread_id] || 0) + 1; });
+                    var mt = await sb.from('thread_likes').select('thread_id').eq('user_id', me.id).in('thread_id', threadIds);
+                    (mt.data || []).forEach(function (r) { myLiked['t:' + r.thread_id] = 1; });
+                    var tc = await sb.from('forum_posts').select('thread_id').in('thread_id', threadIds);
+                    (tc.data || []).forEach(function (r) { cmtCount['t:' + r.thread_id] = (cmtCount['t:' + r.thread_id] || 0) + 1; });
+                }
+            } catch (e) { /* 计数失败不影响主列表 */ }
             list.innerHTML = items.map(function (x) {
                 var isWork = x.kind === 'work';
+                var key = (isWork ? 'w:' : 't:') + x.id;
                 var href = isWork ? 'community-play.html?id=' + x.id : 'community-thread.html?id=' + x.id;
                 var thumb = isWork
                     ? (x.cover ? '<img class="feed-thumb" src="' + esc(x.cover) + '" alt="" loading="lazy">' : '<span class="feed-thumb ph">🎮</span>')
                     : '<span class="feed-thumb ph">💬</span>';
-                return '<a class="feed-row" href="' + href + '">' + thumb +
+                return '<div class="feed-row" data-kind="' + x.kind + '" data-id="' + x.id + '">' +
+                    '<a class="feed-row-main" href="' + href + '">' + thumb +
                     '<div class="feed-main"><div class="feed-title">' + esc(x.title) + '</div>' +
                     '<div class="feed-meta"><span class="tag">' + (isWork ? '🎮 作品' : '💬 帖子') + '</span>' +
                     '<span>' + esc(unames[x.author_id] || '未知') + '</span>' +
-                    '<span>' + fmtDate(x.at) + '</span></div></div></a>';
+                    '<span>' + fmtDate(x.at) + '</span></div></div></a>' +
+                    '<div class="feed-actions">' +
+                    '<button class="feed-act-btn feed-like' + (myLiked[key] ? ' liked' : '') + '" data-kind="' + x.kind + '" data-id="' + x.id + '">❤️ <span>' + (likeCount[key] || 0) + '</span></button>' +
+                    '<button class="feed-act-btn feed-cmt-toggle" data-kind="' + x.kind + '" data-id="' + x.id + '">💬 <span>' + (cmtCount[key] || 0) + '</span></button>' +
+                    '</div>' +
+                    '<div class="feed-comments" style="display:none"><div class="feed-cmt-list"><p class="works-note" style="padding:12px 0">加载中…</p></div>' +
+                    '<div class="feed-cmt-form"><input maxlength="300" placeholder="写评论…（@用户名 可提及）" aria-label="写评论">' +
+                    '<button>发送</button></div></div></div>';
             }).join('');
+            /* 内联点赞 */
+            list.querySelectorAll('.feed-like').forEach(function (b) {
+                b.addEventListener('click', async function () {
+                    var kind = b.getAttribute('data-kind'), fid = b.getAttribute('data-id');
+                    var tbl = kind === 'work' ? 'likes' : 'thread_likes';
+                    var col = kind === 'work' ? 'work_id' : 'thread_id';
+                    b.disabled = true;
+                    try {
+                        var likedNow = b.classList.contains('liked');
+                        if (likedNow) {
+                            await sb.from(tbl).delete().eq(col, fid).eq('user_id', me.id);
+                            b.classList.remove('liked');
+                        } else {
+                            var ins = { user_id: me.id }; ins[col] = fid;
+                            var ir = await sb.from(tbl).insert(ins);
+                            if (ir.error) throw ir.error;
+                            b.classList.add('liked');
+                        }
+                        var cntEl = b.querySelector('span');
+                        var n = parseInt(cntEl.textContent, 10) || 0;
+                        cntEl.textContent = likedNow ? Math.max(0, n - 1) : n + 1;
+                    } catch (e) { alert('操作失败：' + e.message); }
+                    b.disabled = false;
+                });
+            });
+            /* 内联评论：展开 / 收起 */
+            list.querySelectorAll('.feed-cmt-toggle').forEach(function (b) {
+                b.addEventListener('click', async function () {
+                    var row = b.closest('.feed-row');
+                    var box = row.querySelector('.feed-comments');
+                    var open = box.style.display !== 'none';
+                    box.style.display = open ? 'none' : '';
+                    if (open || box.dataset.loaded) return;
+                    box.dataset.loaded = '1';
+                    await loadFeedComments(row);
+                });
+            });
+            /* 内联评论：发表 */
+            list.querySelectorAll('.feed-cmt-form').forEach(function (fm) {
+                var input = fm.querySelector('input'), btn = fm.querySelector('button');
+                btn.addEventListener('click', async function () {
+                    var row = fm.closest('.feed-row');
+                    var kind = row.getAttribute('data-kind'), fid = row.getAttribute('data-id');
+                    var text = input.value.trim();
+                    if (!text) return;
+                    btn.disabled = true;
+                    try {
+                        var payload = kind === 'work'
+                            ? { work_id: fid, author_id: me.id, content: text }
+                            : { thread_id: fid, author_id: me.id, content: text };
+                        var tbl = kind === 'work' ? 'comments' : 'forum_posts';
+                        var ir = await sb.from(tbl).insert(payload);
+                        if (ir.error) throw ir.error;
+                        input.value = '';
+                        try { await sendMentions(text, me.id, fid, kind); } catch (e) {}
+                        delete row.querySelector('.feed-comments').dataset.loaded;
+                        await loadFeedComments(row);
+                        /* 评论数 +1 */
+                        var cbtn = row.querySelector('.feed-cmt-toggle span');
+                        cbtn.textContent = (parseInt(cbtn.textContent, 10) || 0) + 1;
+                    } catch (e) { alert('发表失败：' + e.message); }
+                    btn.disabled = false;
+                });
+            });
+            /* 加载某卡片的内联评论 */
+            async function loadFeedComments(row) {
+                var kind = row.getAttribute('data-kind'), fid = row.getAttribute('data-id');
+                var listEl = row.querySelector('.feed-cmt-list');
+                try {
+                    var r = kind === 'work'
+                        ? await sb.from('comments').select('id,content,created_at,author_id').eq('work_id', fid).order('created_at', { ascending: false }).limit(20)
+                        : await sb.from('forum_posts').select('id,content,created_at,author_id').eq('thread_id', fid).order('created_at', { ascending: false }).limit(20);
+                    if (r.error) throw r.error;
+                    var cs = r.data || [];
+                    if (!cs.length) { listEl.innerHTML = '<p class="works-note" style="padding:12px 0">还没有评论，来抢沙发！</p>'; return; }
+                    var uids = Array.from(new Set(cs.map(function (c) { return c.author_id; })));
+                    var nm = {};
+                    var pu = await sb.from('profiles').select('id,username').in('id', uids);
+                    (pu.data || []).forEach(function (p) { nm[p.id] = p.username; });
+                    listEl.innerHTML = cs.map(function (c) {
+                        return '<div class="feed-cmt"><div class="feed-cmt-meta">' +
+                            esc(nm[c.author_id] || '未知') + ' · ' + fmtDate(c.created_at) + '</div>' +
+                            '<div>' + md(c.content) + '</div></div>';
+                    }).join('');
+                } catch (e) { listEl.innerHTML = '<p class="works-note" style="padding:12px 0">评论加载失败</p>'; }
+            }
         } catch (e) { note.textContent = '加载失败：' + e.message; }
     })();
     </script>

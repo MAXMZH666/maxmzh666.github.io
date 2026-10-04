@@ -63,6 +63,7 @@
             <a href="about.html">个人简介</a>
             <a href="blog.html">博客</a>
             <a href="community-home.html">社区</a>
+            <a href="community-help.html">❓ 帮助</a>
             <a href="community-forum.html">论坛</a>
             <a href="contact.html">联系方式</a>
             <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
@@ -74,7 +75,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261004g"></script>
+    <script src="js/community.js?v=20261004h"></script>
     <script>
     (async function () {
         await renderSubHeader();
@@ -283,6 +284,7 @@
                 '<div class="work-actions">' +
                 (!isSelf && me ? '<button class="follow-btn" id="u-follow-btn">＋ 关注</button>' : '') +
                 (!isSelf && me ? ' <a class="btn btn-ghost" href="community-dm.html?to=' + uid + '">💬 私信</a>' : '') +
+                (!isSelf && me ? ' <button class="btn btn-ghost" id="u-block-btn">🚫 屏蔽</button>' : '') +
                 (!isSelf && !me ? '<a class="btn btn-blue" href="community-auth.html">登录后关注</a>' : '') +
                 '</div>' +
                 '<h2 class="feat-title">TA 的作品</h2>' +
@@ -458,6 +460,36 @@
                     }
                 } catch (e) { alert('操作失败：' + e.message); }
                 paintU();
+            });
+        }
+
+        /* 🚫 屏蔽 / 解除屏蔽 */
+        var uBlockBtn = document.getElementById('u-block-btn');
+        if (uBlockBtn && me && !isSelf) {
+            var uBlocked = false;
+            var paintBlock = function () {
+                uBlockBtn.textContent = uBlocked ? '✅ 已屏蔽，点击解除' : '🚫 屏蔽';
+            };
+            try {
+                var br = await sb.from('blocks').select('blocker_id')
+                    .eq('blocker_id', me.id).eq('blocked_id', uid).maybeSingle();
+                uBlocked = !!br.data;
+            } catch (e) {}
+            paintBlock();
+            uBlockBtn.addEventListener('click', async function () {
+                try {
+                    if (uBlocked) {
+                        if (!confirm('确定要解除屏蔽吗？')) return;
+                        await sb.from('blocks').delete().eq('blocker_id', me.id).eq('blocked_id', uid);
+                        uBlocked = false;
+                    } else {
+                        if (!confirm('屏蔽后将不再看到 TA 的动态和消息，确定吗？')) return;
+                        var ir = await sb.from('blocks').insert({ blocker_id: me.id, blocked_id: uid });
+                        if (ir.error) throw ir.error;
+                        uBlocked = true;
+                    }
+                } catch (e) { alert('操作失败：' + e.message); }
+                paintBlock();
             });
         }
 

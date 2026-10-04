@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAX社区帮助中心：账号、作品发布、工作室、赛事、积分商城、私信等常见问题。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="MAXMZH - 帮助中心">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>❓ 帮助中心 - MAXMZH 社区</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="css/styles.css?v=20261004h">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+    <style>
+        .faq-group { margin-bottom: 24px; }
+        .faq-group > h2 { font-size: 1.15rem; margin: 0 0 10px; }
+        .faq-item { border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 12px; margin-bottom: 8px; background: var(--card, rgba(255,255,255,.02)); overflow: hidden; }
+        .faq-q { width: 100%; text-align: left; padding: 14px 16px; background: none; border: none; color: inherit; font-size: .95rem; font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .faq-q .arrow { transition: transform .2s; flex-shrink: 0; }
+        .faq-item.open .faq-q .arrow { transform: rotate(90deg); }
+        .faq-a { display: none; padding: 0 16px 14px; font-size: .9rem; line-height: 1.8; color: var(--muted); }
+        .faq-item.open .faq-a { display: block; }
+        .faq-a a { color: var(--accent, #4d7cfe); }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">主页</a></li>
+                <li><a href="about.html">个人简介</a></li>
+                <li><a href="blog.html">博客</a></li>
+                <li><a href="community-home.html" class="active">社区</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="sub-header">
+        <div class="sub-header-inner">
+            <a class="sub-brand" href="community-home.html">🎮 <span>MAX社区</span></a>
+            <nav class="sub-links" aria-label="社区导航">
+                <a href="community-home.html" data-sub="home">首页</a>
+                <a href="community.html" data-sub="works">🔍 发现</a>
+                <a href="community-forum.html" data-sub="forum">💬 论坛</a>
+                <a href="community-studios.html" data-sub="studios">🏢 工作室</a>
+                <a href="community-shop.html" data-sub="shop">🎁 任务商城</a>
+                <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
+                <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
+                <a href="community-publish.html" data-sub="publish">🚀 发布</a>
+                <span id="sub-auth"><a href="community-auth.html">登录</a></span>
+            </nav>
+        </div>
+    </div>
+
+    <main>
+        <section class="portfolio" style="max-width:760px">
+            <h1 class="section-title">❓ 帮助中心</h1>
+            <p class="section-sub">常见问题解答，点击展开查看。</p>
+            <div id="faq-list"></div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="community-home.html">社区</a>
+            <a href="community-help.html">❓ 帮助</a>
+            <a href="contact.html">联系方式</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+    </footer>
+    <script src="js/scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/community.js?v=20261004h"></script>
+    <script>
+    (async function () {
+        await renderSubHeader();
+        /* 分组 FAQ：[分组名, [[问题, 答案], ...]] */
+        var FAQS = [
+            ['👤 账号', [
+                ['如何注册？', '点击页眉右上角「登录」，切换到注册页，填写邮箱和密码后按邮件里的验证链接完成注册。'],
+                ['忘记密码怎么办？', '在登录页点击「忘记密码」，输入注册邮箱，查收重置邮件后设置新密码。'],
+                ['如何换头像 / 换背景？', '进入「我的 ▾ → 👤 个人主页」，点击「🖼️ 换头像」或「🎨 换背景」即可更换（背景可在任务商城购买更多款式）。'],
+                ['在哪里改密码和邮箱？', '「我的 ▾ → ⚙️ 设置」里可以修改密码、邮箱和个人偏好。'],
+            ]],
+            ['🚀 作品发布', [
+                ['支持哪些作品类型？', 'Scratch（.sb3）、Python、C++、APK、Windows、Linux 和网站作品。发布页有 4 个标签页分别对应。'],
+                ['作品可以设置标签吗？', '可以。发布或编辑作品时填写「🏷️ 标签」，逗号或空格分隔，最多 5 个，每个不超过 10 个字，方便他人按标签发现你的作品。'],
+                ['什么是开源作品？', '发布时勾选「开源」，他人可以看到源码 / 下载 .sb3。不勾选则仅可试玩，保护你的代码。'],
+                ['如何编辑或删除已发布的作品？', '在作品试玩页点击「编辑作品」（仅作者可见），或删除。每次编辑会自动保存一个历史版本，可回溯。'],
+                ['什么是合集？', '合集是作品的精选集。在试玩页点「➕ 加入合集」，在「我的 ▾ → 👤 个人主页」的合集区管理。'],
+            ]],
+            ['🏢 工作室', [
+                ['如何加入工作室？', '在工作室列表页找到感兴趣的工作室，点击「申请加入」，等待管理员审核；也可以接受管理员的邀请。'],
+                ['一个人可以加入多个工作室吗？', '不可以，一人只能加入一个工作室（创建 / 加入新工作室前需先退出当前工作室）。'],
+                ['工作室内部讨论室怎么用？', '工作室成员可在「💬 讨论」区发帖，支持综合 / 公告 / 活动 / 闲聊分类筛选。'],
+                ['如何解散工作室？', '室长在「工作室设置 → 修改信息」中找到「解散工作室」（需二次确认，删除后不可恢复）。'],
+            ]],
+            ['🏁 赛事', [
+                ['如何参加赛事？', '在赛事详情页点击「投稿」，选择自己已发布的作品参赛。注意投稿时间窗口。'],
+                ['赛事奖励怎么算？', '投票结束后由主办方结算，前三名获得积分奖励（默认 100 / 50 / 30，主办方可自定义）。'],
+                ['我可以发起赛事吗？', '可以。「🚀 发布 → 赛事」或赛事页点击发起，普通用户发布的赛事奖励积分将从你的积分中锁定扣除。'],
+            ]],
+            ['🎁 积分商城', [
+                ['积分怎么获得？', '完成每日任务、参加赛事获奖、在商城任务区查看具体任务。'],
+                ['积分能买什么？', '个人主页背景、头像框等装饰道具，以及其他虚拟商品（暂不支持真实货币交易）。'],
+                ['签到有奖励吗？', '有。在任务商城的任务区每日签到可领取积分，连续签到奖励更多。'],
+            ]],
+            ['✉️ 私信', [
+                ['怎么给别人发私信？', '进入对方个人主页，点击「💬 私信」按钮即可开始聊天。'],
+                ['私信支持发图片吗？', '支持。点击输入框旁的 📷 按钮选择图片（最大 5MB）。也支持 Emoji 快捷插入。'],
+                ['如何屏蔽骚扰用户？', '进入对方个人主页点击「🚫 屏蔽」，屏蔽后对方的消息不再显示，也无法给你发私信。可在「设置 → 屏蔽列表」中解除。'],
+                ['可以建群聊吗？', '可以。在私信页点击「新建群聊」，邀请好友加入，多人一起聊天。'],
+            ]],
+        ];
+        var list = document.getElementById('faq-list');
+        list.innerHTML = FAQS.map(function (g, gi) {
+            return '<div class="faq-group"><h2>' + esc(g[0]) + '</h2>' + g[1].map(function (qa, qi) {
+                return '<div class="faq-item"><button class="faq-q" data-g="' + gi + '" data-q="' + qi + '">' +
+                    '<span>' + esc(qa[0]) + '</span><span class="arrow">▶</span></button>' +
+                    '<div class="faq-a">' + qa[1] + '</div></div>';
+            }).join('') + '</div>';
+        }).join('');
+        /* 手风琴：点击展开/收起 */
+        list.addEventListener('click', function (e) {
+            var btn = e.target.closest('.faq-q');
+            if (!btn) return;
+            btn.parentNode.classList.toggle('open');
+        });
+    })();
+    </script>
+</body>
+</html>

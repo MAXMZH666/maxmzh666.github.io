@@ -805,3 +805,79 @@ async function sendMentions(text, actorId, refId, refType) {
         }
     } catch (e) {}
 }
+
+/* ===== 🏷️ 话题标签 ===== */
+/* 解析标签输入：逗号/空格分隔，最多5个，每个≤10字 */
+function parseTags(input) {
+    var names = [];
+    String(input || '').split(/[,，\s]+/).forEach(function (n) {
+        n = n.trim();
+        if (n && n.length <= 10 && names.indexOf(n) < 0) names.push(n);
+    });
+    return names.slice(0, 5);
+}
+/* 获取作品的标签名列表 */
+async function getWorkTags(workId) {
+    try {
+        var r = await window.sb.from('work_tags').select('tag_id').eq('work_id', workId);
+        var ids = (r.data || []).map(function (x) { return x.tag_id; });
+        if (!ids.length) return [];
+        var tr = await window.sb.from('tags').select('name').in('id', ids);
+        return (tr.data || []).map(function (t) { return t.name; });
+    } catch (e) { return []; }
+}
+/* 批量获取多个作品的标签：返回 {workId: [name]} */
+async function getWorksTags(workIds) {
+    var map = {};
+    try {
+        if (!workIds.length) return map;
+        var r = await window.sb.from('work_tags').select('work_id,tag_id').in('work_id', workIds);
+        var rows = r.data || [];
+        if (!rows.length) return map;
+        var tagIds = Array.from(new Set(rows.map(function (x) { return x.tag_id; })));
+        var tr = await window.sb.from('tags').select('id,name').in('id', tagIds);
+        var nameMap = {};
+        (tr.data || []).forEach(function (t) { nameMap[t.id] = t.name; });
+        rows.forEach(function (x) {
+            if (!map[x.work_id]) map[x.work_id] = [];
+            if (nameMap[x.tag_id]) map[x.work_id].push(nameMap[x.tag_id]);
+        });
+    } catch (e) {}
+    return map;
+}
+/* 保存作品标签：先清旧关联，tag 不存在则创建（失败不阻断） */
+async function saveWorkTags(workId, tagNames) {
+    try {
+        await window.sb.from('work_tags').delete().eq('work_id', workId);
+        for (var i = 0; i < tagNames.length; i++) {
+            var nm = tagNames[i];
+            var tagId = null;
+            var tr = await window.sb.from('tags').select('id').eq('name', nm).limit(1);
+            if (tr.data && tr.data[0]) tagId = tr.data[0].id;
+            if (!tagId) {
+                var cr = await window.sb.from('tags').insert({ name: nm }).select('id').single();
+                if (cr.error) {
+                    var tr2 = await window.sb.from('tags').select('id').eq('name', nm).limit(1);
+                    if (tr2.data && tr2.data[0]) tagId = tr2.data[0].id;
+                } else tagId = cr.data.id;
+            }
+            if (tagId) await window.sb.from('work_tags').insert({ work_id: workId, tag_id: tagId });
+        }
+    } catch (e) { /* 标签失败不阻断发布 */ }
+}
+/* 渲染标签 chips，点击跳标签聚合页 */
+function tagChips(names) {
+    return (names || []).map(function (n) {
+        return '<a class="tag tag-link" href="community-tag.html?name=' + encodeURIComponent(n) + '">🏷️ ' + esc(n) + '</a>';
+    }).join('');
+}
+/* ===== 🚫 屏蔽用户 ===== */
+/* 获取我屏蔽的用户 id 列表 */
+async function getBlockedIds() {
+    try {
+        var me = await currentUser();
+        if (!me) return [];
+        var r = await window.sb.from('blocks').select('blocked_id').eq('blocker_id', me.id);
+        return (r.data || []).map(function (x) { return x.blocked_id; });
+    } catch (e) { return []; }
+}

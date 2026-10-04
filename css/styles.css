@@ -1754,3 +1754,22 @@ img, video, iframe { max-width: 100%; }
     vertical-align: 2px;
     letter-spacing: 0.5px;
 }
+
+/* 楼中楼回复 */
+.comment-reply { margin-left: 28px; border-left: 3px solid var(--accent, #4d7cfe); }
+@media (max-width: 640px) { .comment-reply { margin-left: 16px; } }
+.reply-btn { background: none; border: none; color: var(--accent, #4d7cfe); cursor: pointer; font-size: .82rem; padding: 0 4px; }
+.reply-btn:hover { text-decoration: underline; }
+.post-reply { margin-left: 28px; border-left: 3px solid var(--accent, #4d7cfe); }
+@media (max-width: 640px) { .post-reply { margin-left: 16px; } }
+
+/* 🏷️ 话题标签 */
+.tag-link { text-decoration: none; cursor: pointer; }
+.tag-link:hover { border-color: var(--accent, #4d7cfe); color: var(--accent, #4d7cfe); }
+.chips-label { color: var(--muted); font-size: .9rem; margin-right: 4px; align-self: center; }
+a.filter-chip { text-decoration: none; }
+
+/* 用户行（屏蔽列表等） */
+.user-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 12px; margin-bottom: 8px; text-decoration: none; color: inherit; background: var(--card, rgba(255,255,255,.02)); }
+.user-row:hover { border-color: var(--accent, #4d7cfe); }
+.user-row a { color: inherit; text-decoration: none; font-weight: 600; }

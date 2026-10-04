@@ -94,6 +94,8 @@
                 <select id="f-cat">
                     <option>游戏</option><option>动画</option><option>工具</option><option>音乐</option><option>其他</option>
                 </select>
+                <label for="f-tags">🏷️ 标签 <span class="form-hint">（逗号或空格分隔，最多5个，每个≤10字）</span></label>
+                <input type="text" id="f-tags" maxlength="80" placeholder="如：射击 冒险 多人">
                 <label for="f-desc">作品简介 <span class="form-hint">（支持 Markdown：**加粗**、*斜体*、[链接](url)、- 列表）</span></label>
                 <textarea id="f-desc" maxlength="2000" placeholder="玩法介绍、操作说明…（选填，支持 Markdown）"></textarea>
 
@@ -228,6 +230,7 @@
             <a href="about.html">个人简介</a>
             <a href="blog.html">博客</a>
             <a href="community-home.html">社区</a>
+            <a href="community-help.html">❓ 帮助</a>
             <a href="community-forum.html">论坛</a>
             <a href="contact.html">联系方式</a>
             <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
@@ -254,7 +257,7 @@
         #web-preview { width: 100%; height: 420px; border: 1px solid var(--border, rgba(255,255,255,.12)); border-radius: 12px; background: #fff; }
         @media (max-width: 760px) { .web-editor-grid { grid-template-columns: 1fr; } }
     </style>
-    <script src="js/community.js?v=20261004g"></script>
+    <script src="js/community.js?v=20261004h"></script>
     <script>
     function fmtMB(n) { return (n / 1048576).toFixed(1) + 'MB'; }
 
@@ -415,6 +418,11 @@
             document.getElementById('f-title').value = editWork.title || '';
             document.getElementById('f-desc').value = editWork.description || '';
             document.getElementById('f-cat').value = editWork.category || '游戏';
+            /* 编辑时加载已有标签 */
+            try {
+                var _etags = await getWorkTags(editWork.id);
+                document.getElementById('f-tags').value = _etags.join(' ');
+            } catch (e) {}
             document.getElementById('f-opensource').checked = !!editWork.is_open_source;
             document.getElementById('pub-btn').textContent = '保存修改';
             document.getElementById('type-locked').style.display = '';
@@ -676,6 +684,8 @@
                     } catch (se) { console.warn('版本快照失败', se); }
                     var ur = await sb.from('works').update(payload).eq('id', editWork.id);
                     if (ur.error) throw ur.error;
+                    /* 保存标签 */
+                    await saveWorkTags(editWork.id, parseTags(document.getElementById('f-tags').value));
                     setNote('保存成功，正在跳转…', 'ok');
                     location.href = 'community-play.html?id=' + editWork.id;
                 } else {
@@ -683,6 +693,8 @@
                     payload.author_id = me.id;
                     var ins = await sb.from('works').insert(payload).select('id').single();
                     if (ins.error) throw ins.error;
+                    /* 保存标签 */
+                    await saveWorkTags(ins.data.id, parseTags(document.getElementById('f-tags').value));
                     /* 从草稿发布的：删除草稿（文件已作为作品文件保留） */
                     if (window._preDraftId) {
                         try { await sb.from('drafts').delete().eq('id', window._preDraftId).eq('user_id', me.id); } catch (e) {}
