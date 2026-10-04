@@ -14,7 +14,7 @@
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
-    <link rel="stylesheet" href="css/styles.min.css?v=20261004o">
+    <link rel="stylesheet" href="css/styles.min.css?v=20261004p">
     <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
     <style>
         .points-banner { text-align: center; padding: 24px 16px; border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 14px; background: linear-gradient(135deg, rgba(77,124,254,.12), rgba(156,77,254,.08)); margin-bottom: 8px; }
@@ -83,6 +83,7 @@
             <div class="filter-row" id="shop-tabs">
                 <button class="filter-chip active" data-stab="tasks">📋 任务</button>
                 <button class="filter-chip" data-stab="shop">🛍️ 商城</button>
+                <button class="filter-chip" data-stab="invite">🎁 邀请</button>
             </div>
             <div id="need-login" class="works-note" style="display:none">请先<a href="community-auth.html">登录</a>后逛商城。</div>
             <div id="stab-tasks">
@@ -134,6 +135,26 @@
                 <p class="inv-note" style="margin-top:24px">已购买的物品会显示在个人主页，头像框/称号同时只能装备一个，徽章可多选展示。</p>
             </div>
             </div><!-- /stab-shop -->
+            <div id="stab-invite" style="display:none">
+                <div id="need-login-invite" class="works-note" style="display:none">请先<a href="community-auth.html">登录</a>后查看邀请码。</div>
+                <div id="invite-wrap" style="display:none">
+                    <div class="points-banner">
+                        <div class="pb-num" id="my-points-invite">0</div>
+                        <div class="pb-label">我的积分</div>
+                    </div>
+                    <h2 class="feat-title">🎁 我的邀请码</h2>
+                    <div class="invite-box">
+                        <div class="invite-code-row">
+                            <span class="invite-code" id="invite-code-text"></span>
+                            <button class="btn btn-ghost btn-sm" id="invite-copy-btn">📋 复制</button>
+                            <button class="btn btn-blue btn-sm" id="invite-share-btn">📤 分享</button>
+                        </div>
+                        <p class="stat-line" id="invite-desc"></p>
+                        <p class="stat-line" id="invite-count-line"></p>
+                        <div class="ms-list" id="invite-ms-list"></div>
+                    </div>
+                </div>
+            </div><!-- /stab-invite -->
         </section>
     </main>
 
@@ -154,7 +175,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.min.js?v=20261004o"></script>
+    <script src="js/community.min.js?v=20261004p"></script>
     <div class="modal-backdrop" id="buy-modal" style="display:none">
         <div class="modal"><h3>确认购买</h3>
             <p class="form-hint" id="buy-modal-name"></p>
@@ -447,6 +468,75 @@
             });
         });
     }
+    /* ===== 🎁 邀请标签页 ===== */
+    async function loadInvite() {
+        var me = await currentUser();
+        if (!me) { document.getElementById('need-login-invite').style.display = ''; return; }
+        document.getElementById('invite-wrap').style.display = '';
+        document.getElementById('my-points-invite').textContent = await myPoints();
+        try {
+            /* 我的邀请码 */
+            var pr = await sb.from('profiles').select('invite_code').eq('id', me.id).single();
+            var myCode = (pr.data && pr.data.invite_code) || '';
+            document.getElementById('invite-code-text').textContent = myCode;
+            document.getElementById('invite-desc').innerHTML =
+                '我在MAX社区等你！用我的邀请码 <b>' + esc(myCode) + '</b> 注册，我们各得100积分';
+            /* 已邀请人数 */
+            var invR = await sb.from('invitations').select('id', { count: 'exact', head: true }).eq('inviter_id', me.id);
+            var inviteCount = invR.count || 0;
+            document.getElementById('invite-count-line').innerHTML =
+                '已邀请 <b>' + inviteCount + '</b> 人，邀请越多奖励越多';
+            /* 里程碑：人数 → 额外奖励积分 */
+            var msR = await sb.from('invite_milestones').select('milestone').eq('inviter_id', me.id);
+            var achieved = {};
+            (msR.data || []).forEach(function (x) { achieved[x.milestone] = true; });
+            var milestones = [
+                { n: 3, bonus: 150 },
+                { n: 5, bonus: 300 },
+                { n: 10, bonus: 800 },
+                { n: 20, bonus: 2000 },
+                { n: 50, bonus: 5000 }
+            ];
+            document.getElementById('invite-ms-list').innerHTML = milestones.map(function (m) {
+                var done = !!achieved[m.n];
+                var prog = Math.min(inviteCount, m.n);
+                return '<div class="ms-item' + (done ? ' done' : '') + '">' +
+                    '<span class="ms-n">邀请 ' + m.n + ' 人</span>' +
+                    '<span class="ms-bonus">+' + m.bonus + ' 积分</span>' +
+                    (done ? '<span class="ms-status ok">✅ 已达成</span>'
+                           : '<span class="ms-status">' + prog + '/' + m.n + '</span>') +
+                    '</div>';
+            }).join('');
+            /* 复制按钮 */
+            document.getElementById('invite-copy-btn').addEventListener('click', function () {
+                var done = function () { alert('邀请码已复制：' + myCode); };
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(myCode).then(done).catch(function () { fallbackCopy(myCode); done(); });
+                } else { fallbackCopy(myCode); done(); }
+                function fallbackCopy(t) {
+                    var ta = document.createElement('textarea');
+                    ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
+                    document.body.appendChild(ta); ta.select();
+                    try { document.execCommand('copy'); } catch (e) {}
+                    document.body.removeChild(ta);
+                }
+            });
+            /* 分享按钮 */
+            document.getElementById('invite-share-btn').addEventListener('click', function () {
+                var text = '我在MAX社区等你！用我的邀请码 ' + myCode + ' 注册，我们各得100积分';
+                var url = location.origin + '/community-auth.html?invite=' + encodeURIComponent(myCode);
+                if (navigator.share) {
+                    navigator.share({ title: 'MAX社区邀请', text: text, url: url }).catch(function () {});
+                } else if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text + ' ' + url).then(function () { alert('分享文案已复制，去粘贴给朋友吧'); });
+                } else {
+                    alert(text + ' ' + url);
+                }
+            });
+        } catch (e) {
+            document.getElementById('invite-wrap').innerHTML = '<p class="works-note">加载失败，请刷新重试</p>';
+        }
+    }
     /* 标签页切换 */
     (function () {
         var tabs = document.querySelectorAll('#shop-tabs [data-stab]');
@@ -454,12 +544,15 @@
             tabs.forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-stab') === t); });
             document.getElementById('stab-tasks').style.display = t === 'tasks' ? '' : 'none';
             document.getElementById('stab-shop').style.display = t === 'shop' ? '' : 'none';
+            document.getElementById('stab-invite').style.display = t === 'invite' ? '' : 'none';
             try { history.replaceState(null, '', location.pathname + '#' + t); } catch (e) {}
         }
         tabs.forEach(function (b) { b.addEventListener('click', function () { showTab(b.getAttribute('data-stab')); }); });
         document.addEventListener('DOMContentLoaded', function () {
             loadTasks();
+            loadInvite();
             if (location.hash === '#shop') showTab('shop');
+            else if (location.hash === '#invite') showTab('invite');
         });
     })();
     </script>
