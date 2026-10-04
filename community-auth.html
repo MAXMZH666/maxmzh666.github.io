@@ -76,12 +76,11 @@
                         <input type="email" id="a-email" required placeholder="you@example.com">
                     </div>
                     <div id="row-email-code" style="display:none">
-                        <label>邮箱验证码</label>
+                        <label>邮箱验证</label>
                         <div class="captcha-row">
-                            <input type="text" id="a-otp" maxlength="6" placeholder="6 位数字" autocomplete="off" style="flex:1">
-                            <button type="button" id="send-otp" class="btn btn-ghost btn-sm" style="white-space:nowrap">发送验证码</button>
+                            <button type="button" id="send-otp" class="btn btn-ghost btn-sm" style="white-space:nowrap">发送验证邮件</button>
                         </div>
-                        <p class="form-hint">先填好用户名、邮箱、密码和下面的图形验证码再发送；验证码 10 分钟内有效（邮件为英文模板，找到 6 位数字即可）</p>
+                        <p class="form-hint">先填好用户名、邮箱和下面的图形验证码再发送；去邮箱点击验证链接完成注册（10 分钟内有效）</p>
                     </div>
                     <div id="row-invite" style="display:none">
                         <label for="a-invite">邀请码（选填）</label>
@@ -135,6 +134,7 @@
         await renderSubHeader();
         var params = new URLSearchParams(location.search);
         var next = params.get('next') || 'community.html';
+        var verified = params.get('verified') === '1';
         var urlMode = params.get('mode');
         var isRecovery = /type=recovery/.test(location.hash) || params.get('type') === 'recovery' || urlMode === 'recover';
 
@@ -142,7 +142,7 @@
         try { sess0 = (await sb.auth.getSession()).data.session; } catch (e) {}
         var me = sess0 ? sess0.user : (await currentUser());
 
-        if (me && !isRecovery) {
+        if (me && !verified && !isRecovery) {
             var p = await currentProfile();
             document.getElementById('auth-box').style.display = 'none';
             document.getElementById('already').style.display = 'block';
@@ -156,6 +156,7 @@
         }
 
         var mode = 'login';
+        var signupStep2 = false;
         var tabLogin = document.getElementById('tab-login');
         var tabSignup = document.getElementById('tab-signup');
         var rowUser = document.getElementById('row-username');
@@ -170,21 +171,43 @@
             rowUser.style.display = isSignup ? 'block' : 'none';
             document.getElementById('row-email').style.display = 'block';
             document.getElementById('row-email-code').style.display = isSignup ? 'block' : 'none';
-            /* 邀请码输入框：仅注册显示 */
-            document.getElementById('row-invite').style.display = isSignup ? 'block' : 'none';
+            /* 邀请码输入框：仅注册步骤1显示 */
+            document.getElementById('row-invite').style.display = (isSignup && !signupStep2) ? 'block' : 'none';
             document.getElementById('row-captcha').style.display = 'block';
-            /* 注册：用户名/邮箱/密码/验证码一次填完，点发送验证码后输入 6 位码完成注册 */
-            document.getElementById('row-password').style.display = 'block';
+            /* 注册步骤1：只填用户名/邮箱/验证码并发送验证邮件，密码在点邮件链接回来后设置 */
+            document.getElementById('row-password').style.display = isSignup ? 'none' : 'block';
             document.getElementById('forgot-row').style.display = isSignup ? 'none' : 'block';
             document.getElementById('row-legal').style.display = 'block';
-            btn.style.display = 'block';
-            btn.textContent = isSignup ? '完成注册' : '登录';
+            btn.style.display = isSignup ? 'none' : 'block';
+            btn.textContent = '登录';
             note.textContent = '';
             note.className = 'form-note';
             drawCaptcha();
             document.getElementById('a-captcha').value = '';
         }
 
+        /* 注册步骤2：从邮件链接回来，设置登录密码 */
+        function enterSignupStep2() {
+            signupStep2 = true;
+            setMode('signup');
+            ['row-username', 'row-email', 'row-email-code', 'row-captcha', 'row-invite'].forEach(function (id) {
+                document.getElementById(id).style.display = 'none';
+            });
+            document.getElementById('row-password').style.display = 'block';
+            document.getElementById('row-legal').style.display = 'block';
+            document.getElementById('a-legal').checked = false;
+            btn.style.display = 'block';
+            btn.textContent = '完成注册';
+            note.textContent = '邮箱验证成功！设置登录密码即可完成注册';
+            note.className = 'form-note ok';
+            /* 邀请码 URL 兜底：邮件链接可能用其他浏览器打开，localStorage 会丢失 */
+            try {
+                var urlInvite = new URLSearchParams(location.search).get('invite');
+                if (urlInvite && !localStorage.getItem('mmc_invite_code')) {
+                    localStorage.setItem('mmc_invite_code', urlInvite.toUpperCase().trim());
+                }
+            } catch (e) {}
+        }
         tabLogin.addEventListener('click', function () { setMode('login'); });
         tabSignup.addEventListener('click', function () { setMode('signup'); });
 
@@ -229,18 +252,15 @@
             if (inviteParam) document.getElementById('a-invite').value = inviteParam.toUpperCase().trim();
         } catch (e) {}
 
-        /* 注册：发送 6 位邮箱验证码（Supabase 自带邮件服务） */
+        /* 注册步骤1：发送验证邮件（免费版邮件模板不可自定义，改点链接验证，不用 6 位码） */
         var otpBtn = document.getElementById('send-otp');
         var otpTimer = null;
-        var otpSent = false;
         otpBtn.addEventListener('click', async function () {
             var email = document.getElementById('a-email').value.trim();
             var username = document.getElementById('a-username').value.trim();
-            var password = document.getElementById('a-password').value;
             var captchaInput = document.getElementById('a-captcha').value.trim();
-            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { note.textContent = '请填写正确的邮箱'; note.className = 'form-note err'; return; }
-            if (!username || username.length < 2) { note.textContent = '用户名至少 2 个字符'; note.className = 'form-note err'; return; }
-            if (!password || password.length < 6) { note.textContent = '密码至少 6 位'; note.className = 'form-note err'; return; }
+            if (!email) { note.textContent = '请先填写邮箱'; note.className = 'form-note err'; return; }
+            if (!username) { note.textContent = '请先填写用户名'; note.className = 'form-note err'; return; }
             if (captchaInput.toLowerCase() !== captchaCode.toLowerCase()) {
                 note.textContent = '图形验证码不对，换一张再试试';
                 note.className = 'form-note err';
@@ -254,33 +274,34 @@
                 return;
             }
             otpBtn.disabled = true;
-            note.textContent = '正在检查用户名…';
+            note.textContent = '正在发送验证邮件…';
             note.className = 'form-note sending';
             try {
-                /* 用户名预检查，避免浪费一次发码 */
-                var uq = await withTimeout(sb.from('profiles').select('id').eq('username', username).limit(1).maybeSingle(), 15000, '检查超时');
-                if (uq.data) throw new Error('这个用户名已被占用，换一个吧');
-                note.textContent = '正在发送验证码…';
-                var r = await withTimeout(sb.auth.signInWithOtp({
+                var inviteForUrl = document.getElementById('a-invite').value.trim().toUpperCase();
+                var redirectTo = 'https://maxmzh666.github.io/community-auth.html?mode=signup&verified=1&next=' + encodeURIComponent(next) +
+                    (inviteForUrl ? '&invite=' + encodeURIComponent(inviteForUrl) : '');
+                var r = await sb.auth.signInWithOtp({
                     email: email,
-                    options: { data: { username: username } }
-                }), 25000, '发送超时，请检查网络后重试');
+                    options: { data: { username: username }, emailRedirectTo: redirectTo }
+                });
                 if (r.error) throw r.error;
-                otpSent = true;
-                note.textContent = '验证码已发送到 ' + email + '，请查收邮件输入 6 位数字（10 分钟内有效）';
+                /* 邀请码存入 localStorage，步骤2完成注册后使用 */
+                try {
+                    var inviteCode = document.getElementById('a-invite').value.trim();
+                    if (inviteCode) localStorage.setItem('mmc_invite_code', inviteCode);
+                    else localStorage.removeItem('mmc_invite_code');
+                } catch (e) {}
+                note.textContent = '验证邮件已发送到 ' + email + '，请去邮箱点击链接完成注册（10 分钟内有效）';
                 note.className = 'form-note ok';
-                document.getElementById('a-otp').focus();
                 var sec = 60;
                 otpBtn.textContent = sec + 's 后重发';
                 otpTimer = setInterval(function () {
                     sec--;
-                    if (sec <= 0) { clearInterval(otpTimer); otpBtn.disabled = false; otpBtn.textContent = '重新发送'; }
+                    if (sec <= 0) { clearInterval(otpTimer); otpBtn.disabled = false; otpBtn.textContent = '发送验证邮件'; }
                     else otpBtn.textContent = sec + 's 后重发';
                 }, 1000);
             } catch (err) {
-                var em = err.message || '请稍后再试';
-                if (/rate limit|too many|over_email_send_rate_limit/i.test(em)) em = '发送太频繁，请稍后再试（每小时限发）';
-                note.textContent = '发送失败：' + em;
+                note.textContent = '发送失败：' + (err.message || '请稍后再试');
                 note.className = 'form-note err';
                 otpBtn.disabled = false;
             }
@@ -308,16 +329,10 @@
                 }
                 return;
             }
-            /* 注册：校验 6 位验证码 → 设密码 → 建档案 → 邀请奖励 */
-            if (mode === 'signup') {
-                var emailS = document.getElementById('a-email').value.trim();
-                var usernameS = document.getElementById('a-username').value.trim();
-                var pwS = document.getElementById('a-password').value;
-                var codeS = document.getElementById('a-otp').value.trim();
-                var inviteS = document.getElementById('a-invite').value.trim().toUpperCase();
-                if (!otpSent) { note.textContent = '请先点击「发送验证码」'; note.className = 'form-note err'; return; }
-                if (!/^\d{6}$/.test(codeS)) { note.textContent = '请输入 6 位数字验证码'; note.className = 'form-note err'; return; }
-                if (!pwS || pwS.length < 6) { note.textContent = '密码至少 6 位'; note.className = 'form-note err'; return; }
+            /* 注册步骤2：从邮件链接回来，只需设置密码 */
+            if (signupStep2) {
+                var pw2 = document.getElementById('a-password').value;
+                if (!pw2 || pw2.length < 6) { note.textContent = '密码至少 6 位'; note.className = 'form-note err'; return; }
                 if (!document.getElementById('a-legal').checked) {
                     note.textContent = '请先阅读并同意《用户协议》和《隐私政策》';
                     note.className = 'form-note err';
@@ -325,35 +340,21 @@
                 }
                 if (btn.disabled) return;
                 btn.disabled = true;
-                showLoading('正在验证…');
-                note.textContent = '正在验证…';
+                showLoading('正在完成注册…');
+                note.textContent = '正在完成注册…';
                 note.className = 'form-note sending';
                 try {
-                    var vr = await withTimeout(sb.auth.verifyOtp({ email: emailS, token: codeS, type: 'email' }), 25000, '验证超时，请检查网络后重试');
-                    if (vr.error) throw vr.error;
-                    var vuser = vr.data && vr.data.user;
-                    /* 区分新老用户：15 分钟内创建的算新注册 */
-                    var isNew = true;
-                    try {
-                        var cAt = vuser && vuser.created_at ? new Date(vuser.created_at).getTime() : 0;
-                        isNew = (Date.now() - cAt) < 15 * 60 * 1000;
-                    } catch (e5) {}
-                    if (!isNew) {
-                        showLoading('该邮箱已注册，已直接为你登录，跳转中…');
-                        try { await withTimeout(ensureProfile(), 15000, '加载档案超时'); } catch (e6) {}
-                        location.href = next;
-                        return;
-                    }
-                    showLoading('正在完成注册…');
-                    var upw = await withTimeout(sb.auth.updateUser({ password: pwS }), 25000, '设置密码超时，请检查网络后重试');
-                    if (upw.error) throw upw.error;
+                    var u = await withTimeout(sb.auth.updateUser({ password: pw2 }), 25000, '设置密码超时，请检查网络后重试');
+                    if (u.error) throw u.error;
                     try { await withTimeout(ensureProfile(), 15000, '创建档案超时'); } catch (e2) {}
-                    /* 邀请码：双方各得 100 积分（失败不阻塞注册） */
+                    /* 邀请码：profile 建好后处理，双方各得 100 积分（失败不阻塞注册） */
                     var inviteMsg = '';
                     try {
-                        if (inviteS) {
+                        var savedCode = localStorage.getItem('mmc_invite_code');
+                        localStorage.removeItem('mmc_invite_code');
+                        if (savedCode) {
                             showLoading('正在领取邀请奖励…');
-                            var ir = await withTimeout(sb.rpc('process_invite', { p_invite_code: inviteS }), 15000, '领取邀请奖励超时');
+                            var ir = await withTimeout(sb.rpc('process_invite', { p_invite_code: savedCode }), 15000, '领取邀请奖励超时');
                             if (!ir.error && ir.data && ir.data.invited) {
                                 inviteMsg = '🎉 邀请成功！你和邀请人各得 100 积分';
                             } else if (ir.error) {
@@ -368,9 +369,7 @@
                     location.href = next;
                 } catch (err) {
                     hideLoading();
-                    var emsg = err.message || '请稍后再试';
-                    if (/expired|invalid/i.test(emsg)) emsg = '验证码不对或已过期，请重新发送';
-                    note.textContent = '验证失败：' + emsg;
+                    note.textContent = '设置密码失败：' + (err.message || '请稍后再试');
                     note.className = 'form-note err';
                     btn.disabled = false;
                 }
@@ -409,9 +408,15 @@
             }
         });
 
-        /* 支持 ?mode=signup 直达注册 */
-        setMode(urlMode === 'signup' ? 'signup' : 'login');
-        if (isRecovery && me) { enterRecover(); }
+        /* 从验证邮件链接回来：已自动登录 */
+        if (me && verified) {
+            var createdAt = me.created_at ? new Date(me.created_at).getTime() : 0;
+            var isNew = (Date.now() - createdAt) < 30 * 60 * 1000;
+            if (isNew) { enterSignupStep2(); return; }
+            try { await ensureProfile(); } catch (e2) {}
+            location.href = next;
+            return;
+        }
 
         /* 忘记密码：发重置邮件 */
         document.getElementById('forgot-link').addEventListener('click', async function () {
@@ -452,6 +457,10 @@
 
         /* 支持 ?mode=signup 直达注册 */
         setMode(urlMode === 'signup' ? 'signup' : 'login');
+        if (verified && !me) {
+            note.textContent = '验证链接无效或已过期，请重新发送验证邮件';
+            note.className = 'form-note err';
+        }
         if (isRecovery && me) { enterRecover(); }
     })();
     </script>
