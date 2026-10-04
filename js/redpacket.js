@@ -117,11 +117,15 @@ async function renderRedPacket(packetId) {
         }
         var status = done ? '已抢完' : ('剩 ' + p.remaining_count + '/' + p.total_count + ' 份');
         if (claimed) status = '已抢 ' + myGot + ' 积分';
+        /* 发送日期 */
+        var sendDate = '';
+        try { sendDate = fmtDate(p.created_at); } catch (e) {}
         return '<div class="red-packet' + (done ? ' done' : '') + '" data-rp-id="' + esc(packetId) + '">' +
             '<div class="rp-icon">🧧</div>' +
             '<div class="rp-info"><div class="rp-sender">' + esc(senderName) + ' 的红包</div>' +
             '<div class="rp-msg">' + esc(p.message || '恭喜发财') + '</div>' +
             '<div class="rp-status">' + esc(status) +
+            (sendDate ? ' · ' + esc(sendDate) : '') +
             ' · <a href="javascript:void(0)" class="rp-detail-link" data-rp-detail="' + esc(packetId) + '">领取详情</a></div></div></div>';
     } catch (e) {
         return '';
@@ -177,7 +181,10 @@ async function showRedPacketDetail(packetId) {
             html += '<p class="works-note">还没有人领取，赶紧抢！</p>';
         } else {
             html += '<div class="rp-claim-list">' + claims.map(function (c) {
-                return '<div class="rp-claim-item"><span>' + esc(unames[c.user_id] || '神秘人') + '</span>' +
+                var ctime = '';
+                try { ctime = fmtDate(c.claimed_at); } catch (e) {}
+                return '<div class="rp-claim-item"><div><div>' + esc(unames[c.user_id] || '神秘人') + '</div>' +
+                    (ctime ? '<div class="rp-claim-time">' + esc(ctime) + ' 领取</div>' : '') + '</div>' +
                     '<span class="rp-claim-pts">+' + c.points + ' 积分</span></div>';
             }).join('') + '</div>';
         }
@@ -236,7 +243,8 @@ var REDPACKET_CSS = [
     '.rp-claim-list{display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;}',
     '.rp-claim-item{display:flex;justify-content:space-between;align-items:center;',
     ' padding:8px 12px;background:var(--surface-2,#2a2a35);border-radius:8px;}',
-    '.rp-claim-pts{color:#ffd43b;font-weight:700;}'
+    '.rp-claim-pts{color:#ffd43b;font-weight:700;}',
+    '.rp-claim-time{font-size:11px;color:var(--muted);margin-top:2px;}'
 ].join('\n');
 function injectRedPacketCSS() {
     if (document.getElementById('redpacket-css')) return;
