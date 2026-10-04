@@ -1730,3 +1730,13 @@ img, video, iframe { max-width: 100%; }
     background: var(--blue);
     color: #fff;
 }
+
+/* 个人主页：关注/粉丝左右并排 */
+.profile-duo {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 24px;
+}
+@media (max-width: 640px) {
+    .profile-duo { grid-template-columns: 1fr; }
+}

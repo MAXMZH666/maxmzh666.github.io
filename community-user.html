@@ -74,7 +74,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261004f"></script>
+    <script src="js/community.js?v=20261004g"></script>
     <script>
     (async function () {
         await renderSubHeader();
@@ -285,9 +285,6 @@
                 (!isSelf && me ? ' <a class="btn btn-ghost" href="community-dm.html?to=' + uid + '">💬 私信</a>' : '') +
                 (!isSelf && !me ? '<a class="btn btn-blue" href="community-auth.html">登录后关注</a>' : '') +
                 '</div>' +
-                '<h2 class="feat-title">关注的人</h2>' + userListHtml(followingList) +
-                '<h2 class="feat-title">粉丝</h2>' + userListHtml(followerList) +
-                studioHtml +
                 '<h2 class="feat-title">TA 的作品</h2>' +
                 (works.length
                     ? '<div class="card-grid">' + works.map(function (w) {
@@ -303,7 +300,10 @@
                             '</div></a>';
                     }).join('') + '</div>'
                     : '<p class="works-note">TA 还没有发布作品。</p>') +
-                draftHtml + favHtml + colHtml + portfolioHtml +
+                colHtml + studioHtml + favHtml + draftHtml + portfolioHtml +
+                '<div class="profile-duo">' +
+                '<div><h2 class="feat-title">关注的人</h2>' + userListHtml(followingList) + '</div>' +
+                '<div><h2 class="feat-title">粉丝</h2>' + userListHtml(followerList) + '</div></div>' +
                 '<h2 class="feat-title">💬 留言板</h2><div id="gb-list"><p class="works-note">加载中…</p></div><div id="gb-form" style="margin-top:12px"></div>';
             /* 个人背景 */
             function applyBg(bg) {

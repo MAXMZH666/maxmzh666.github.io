@@ -203,7 +203,7 @@ async function renderSubHeader() {
                 '<a href="community-feed.html" data-subitem="feed" role="menuitem">💬 动态</a>' +
                 '<a href="community-dm.html" data-subitem="dm" role="menuitem">✉️ 私信</a>' +
                 '<a href="community-stats.html" data-subitem="stats" role="menuitem">📊 数据</a>' +
-                '<a href="community-user.html?mine=1#collections" data-subitem="collections" role="menuitem">📚 合集</a>' +
+                
                 '<a href="community-user.html?id=' + p.id + '" data-subitem="profile" role="menuitem">👤 个人主页</a>' +
                 '<a href="community-settings.html" data-subitem="settings" role="menuitem">⚙️ 设置</a>' +
                 '</div></div>' +
