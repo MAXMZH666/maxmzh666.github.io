@@ -142,7 +142,7 @@ async function renderSubHeader() {
     } catch (e) {}
     /* 账号下拉菜单（登录后）：用户名 ▾，含动态/私信/数据/合集/主页/设置 */
     var dropMenu = null, dropBtn = null;
-    (function initDrop() {
+    function initDrop() {
         var drop = document.getElementById('sub-account');
         if (!drop) return;
         dropMenu = drop.querySelector('.sub-drop-menu');
@@ -179,7 +179,7 @@ async function renderSubHeader() {
         window.addEventListener('resize', function () {
             if (drop.classList.contains('open')) positionDropMenu();
         });
-    })();
+    }
     function positionDropMenu() {
         /* 用 fixed 定位，避免被子导航的横向滚动裁掉 */
         var menu = dropMenu;
@@ -213,6 +213,7 @@ async function renderSubHeader() {
                 await window.sb.auth.signOut();
                 location.reload();
             });
+            initDrop(); /* 账号菜单已生成，现在绑定下拉点击 */
             /* 子项高亮 */
             document.querySelectorAll('.sub-drop-menu a[data-subitem]').forEach(function (a) {
                 a.classList.toggle('active', a.getAttribute('data-subitem') === subitemMap[page]);
