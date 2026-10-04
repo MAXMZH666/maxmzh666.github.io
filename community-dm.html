@@ -638,7 +638,12 @@
                     await loadConvs();
                     openGroup(gid);
                 } catch (e) {
-                    alert('创建失败：' + (e.message || ''));
+                    var errEl = document.getElementById('dm-group-err');
+                    if (!errEl) {
+                        btn.insertAdjacentHTML('beforebegin', '<p id="dm-group-err" style="color:#ff6b6b"></p>');
+                        errEl = document.getElementById('dm-group-err');
+                    }
+                    errEl.textContent = '创建失败：' + (e.message || JSON.stringify(e));
                     btn.disabled = false; btn.textContent = '创建';
                 }
             });
