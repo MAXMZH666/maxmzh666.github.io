@@ -101,6 +101,12 @@ async function renderRedPacket(packetId) {
         if (r.error || !r.data) return '';
         var p = r.data;
         var done = p.remaining_count <= 0;
+        /* 查发送者昵称 */
+        var senderName = '神秘人';
+        try {
+            var sr = await sb.from('profiles').select('username').eq('id', p.sender_id).single();
+            if (sr.data && sr.data.username) senderName = sr.data.username;
+        } catch (e) {}
         /* 查我是否抢过 */
         var me = await currentUser();
         var claimed = false, myGot = 0;
@@ -113,16 +119,85 @@ async function renderRedPacket(packetId) {
         if (claimed) status = '已抢 ' + myGot + ' 积分';
         return '<div class="red-packet' + (done ? ' done' : '') + '" data-rp-id="' + esc(packetId) + '">' +
             '<div class="rp-icon">🧧</div>' +
-            '<div class="rp-info"><div class="rp-msg">' + esc(p.message || '恭喜发财') + '</div>' +
-            '<div class="rp-status">' + esc(status) + '</div></div></div>';
+            '<div class="rp-info"><div class="rp-sender">' + esc(senderName) + ' 的红包</div>' +
+            '<div class="rp-msg">' + esc(p.message || '恭喜发财') + '</div>' +
+            '<div class="rp-status">' + esc(status) +
+            ' · <a href="javascript:void(0)" class="rp-detail-link" data-rp-detail="' + esc(packetId) + '">领取详情</a></div></div></div>';
     } catch (e) {
         return '';
+    }
+}
+
+/* 红包领取详情弹窗 */
+async function showRedPacketDetail(packetId) {
+    /* 建弹窗 */
+    var modal = document.getElementById('rp-detail-modal');
+    if (!modal) {
+        document.body.insertAdjacentHTML('beforeend',
+            '<div class="modal-backdrop" id="rp-detail-modal" style="display:none">' +
+            '<div class="modal" style="max-width:380px"><h3>🧧 红包详情</h3>' +
+            '<div id="rp-detail-body"><p class="works-note">加载中…</p></div>' +
+            '<div class="modal-actions"><button class="btn" id="rp-detail-close" type="button">关闭</button></div></div></div>');
+        modal = document.getElementById('rp-detail-modal');
+        document.getElementById('rp-detail-close').addEventListener('click', function () {
+            modal.style.display = 'none';
+        });
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) modal.style.display = 'none';
+        });
+    }
+    var body = document.getElementById('rp-detail-modal').querySelector('#rp-detail-body');
+    body.innerHTML = '<p class="works-note">加载中…</p>';
+    modal.style.display = 'flex';
+    try {
+        var pr = await sb.from('red_packets').select('*').eq('id', packetId).single();
+        if (pr.error || !pr.data) throw new Error('红包不存在');
+        var p = pr.data;
+        var senderName = '神秘人';
+        try {
+            var sr = await sb.from('profiles').select('username').eq('id', p.sender_id).single();
+            if (sr.data && sr.data.username) senderName = sr.data.username;
+        } catch (e) {}
+        /* 领取记录 + 用户名 */
+        var cr = await sb.from('red_packet_claims').select('points,claimed_at,user_id')
+            .eq('packet_id', packetId).order('claimed_at', { ascending: true });
+        var claims = cr.data || [];
+        var uids = claims.map(function (c) { return c.user_id; });
+        var unames = {};
+        if (uids.length) {
+            var ur = await sb.from('profiles').select('id,username').in('id', uids);
+            (ur.data || []).forEach(function (u) { unames[u.id] = u.username; });
+        }
+        var gotTotal = claims.reduce(function (s, c) { return s + c.points; }, 0);
+        var html = '<div style="text-align:center;margin-bottom:12px"><div style="font-size:40px">🧧</div>' +
+            '<div><b>' + esc(senderName) + '</b> 的红包</div>' +
+            '<div class="works-note">' + esc(p.message || '') + '</div>' +
+            '<div class="works-note">共 ' + p.total_points + ' 积分 / ' + p.total_count + ' 份，已领 ' + claims.length + ' 份（' + gotTotal + ' 积分）</div></div>';
+        if (!claims.length) {
+            html += '<p class="works-note">还没有人领取，赶紧抢！</p>';
+        } else {
+            html += '<div class="rp-claim-list">' + claims.map(function (c) {
+                return '<div class="rp-claim-item"><span>' + esc(unames[c.user_id] || '神秘人') + '</span>' +
+                    '<span class="rp-claim-pts">+' + c.points + ' 积分</span></div>';
+            }).join('') + '</div>';
+        }
+        body.innerHTML = html;
+    } catch (e) {
+        body.innerHTML = '<p class="works-note">加载失败：' + esc(e.message || '') + '</p>';
     }
 }
 
 /* 抢红包点击（全局委托） */
 function bindRedPacketClaim(container) {
     (container || document).addEventListener('click', async function (e) {
+        /* 先处理"领取详情"链接 */
+        var detailLink = e.target.closest('[data-rp-detail]');
+        if (detailLink) {
+            e.preventDefault();
+            e.stopPropagation();
+            showRedPacketDetail(detailLink.getAttribute('data-rp-detail'));
+            return;
+        }
         var el = e.target.closest('.red-packet');
         if (!el) return;
         e.preventDefault();
@@ -154,8 +229,14 @@ var REDPACKET_CSS = [
     '.red-packet:hover{transform:scale(1.03);}',
     '.red-packet.done{background:linear-gradient(135deg,#868e96,#adb5bd);box-shadow:none;}',
     '.red-packet .rp-icon{font-size:36px;}',
+    '.red-packet .rp-sender{font-size:12px;opacity:.85;}',
     '.red-packet .rp-msg{font-weight:600;font-size:15px;}',
-    '.red-packet .rp-status{font-size:12px;opacity:.9;margin-top:2px;}'
+    '.red-packet .rp-status{font-size:12px;opacity:.9;margin-top:2px;}',
+    '.red-packet .rp-detail-link{color:#fff;text-decoration:underline;opacity:.9;}',
+    '.rp-claim-list{display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;}',
+    '.rp-claim-item{display:flex;justify-content:space-between;align-items:center;',
+    ' padding:8px 12px;background:var(--surface-2,#2a2a35);border-radius:8px;}',
+    '.rp-claim-pts{color:#ffd43b;font-weight:700;}'
 ].join('\n');
 function injectRedPacketCSS() {
     if (document.getElementById('redpacket-css')) return;
