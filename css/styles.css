@@ -1721,6 +1721,47 @@ img, video, iframe { max-width: 100%; }
     vertical-align: 1px;
 }
 #mine-dot { top: 0; right: 2px; }
+/* 🎁 邀请码板块 */
+.invite-box {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+    margin: 8px 0 4px;
+}
+.invite-code-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+.invite-code {
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: 6px;
+    color: var(--gold);
+    background: var(--surface-2);
+    border: 1px dashed var(--gold);
+    border-radius: 10px;
+    padding: 8px 18px;
+}
+.ms-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.ms-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: .85rem;
+}
+.ms-item .ms-n { font-weight: 700; }
+.ms-item .ms-bonus { color: var(--gold); font-weight: 700; }
+.ms-item .ms-status { color: var(--muted); }
+.ms-item.done { border-color: var(--gold); background: rgba(255, 212, 59, .08); }
+.ms-item.done .ms-status.ok { color: #51cf66; }
 @media (max-width: 640px) {
     .sub-drop-btn { padding: 8px 10px; font-size: .85rem; min-height: 44px; }
 }

@@ -14,7 +14,7 @@
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
-    <link rel="stylesheet" href="css/styles.min.css?v=20261004n">
+    <link rel="stylesheet" href="css/styles.min.css?v=20261004o">
     <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
 </head>
 <body>
@@ -82,6 +82,11 @@
                         </div>
                         <p class="form-hint">先填好用户名、邮箱和下面的图形验证码再发送；去邮箱点击验证链接完成注册（10 分钟内有效）</p>
                     </div>
+                    <div id="row-invite" style="display:none">
+                        <label for="a-invite">邀请码（选填）</label>
+                        <input type="text" id="a-invite" maxlength="20" placeholder="填写好友的邀请码">
+                        <p class="form-hint">填写好友的邀请码，你和邀请人各得 100 积分</p>
+                    </div>
                     <div id="row-password">
                         <label for="a-password">密码</label>
                         <input type="password" id="a-password" minlength="6" placeholder="至少 6 位">
@@ -123,7 +128,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.min.js?v=20261004n"></script>
+    <script src="js/community.min.js?v=20261004o"></script>
     <script>
     (async function () {
         await renderSubHeader();
@@ -166,6 +171,8 @@
             rowUser.style.display = isSignup ? 'block' : 'none';
             document.getElementById('row-email').style.display = 'block';
             document.getElementById('row-email-code').style.display = isSignup ? 'block' : 'none';
+            /* 邀请码输入框：仅注册步骤1显示 */
+            document.getElementById('row-invite').style.display = (isSignup && !signupStep2) ? 'block' : 'none';
             document.getElementById('row-captcha').style.display = 'block';
             /* 注册步骤1：只填用户名/邮箱/验证码并发送验证邮件，密码在点邮件链接回来后设置 */
             document.getElementById('row-password').style.display = isSignup ? 'none' : 'block';
@@ -183,7 +190,7 @@
         function enterSignupStep2() {
             signupStep2 = true;
             setMode('signup');
-            ['row-username', 'row-email', 'row-email-code', 'row-captcha'].forEach(function (id) {
+            ['row-username', 'row-email', 'row-email-code', 'row-captcha', 'row-invite'].forEach(function (id) {
                 document.getElementById(id).style.display = 'none';
             });
             document.getElementById('row-password').style.display = 'block';
@@ -232,6 +239,12 @@
         drawCaptcha();
         captchaCanvas.addEventListener('click', drawCaptcha);
 
+        /* 分享链接 ?invite=XXXX 预填邀请码 */
+        try {
+            var inviteParam = new URLSearchParams(location.search).get('invite');
+            if (inviteParam) document.getElementById('a-invite').value = inviteParam.toUpperCase().trim();
+        } catch (e) {}
+
         /* 注册步骤1：发送验证邮件（免费版邮件模板不可自定义，改点链接验证，不用 6 位码） */
         var otpBtn = document.getElementById('send-otp');
         var otpTimer = null;
@@ -263,6 +276,12 @@
                     options: { data: { username: username }, emailRedirectTo: redirectTo }
                 });
                 if (r.error) throw r.error;
+                /* 邀请码存入 localStorage，步骤2完成注册后使用 */
+                try {
+                    var inviteCode = document.getElementById('a-invite').value.trim();
+                    if (inviteCode) localStorage.setItem('mmc_invite_code', inviteCode);
+                    else localStorage.removeItem('mmc_invite_code');
+                } catch (e) {}
                 note.textContent = '验证邮件已发送到 ' + email + '，请去邮箱点击链接完成注册（10 分钟内有效）';
                 note.className = 'form-note ok';
                 var sec = 60;
@@ -319,8 +338,22 @@
                     var u = await withTimeout(sb.auth.updateUser({ password: pw2 }), 25000, '设置密码超时，请检查网络后重试');
                     if (u.error) throw u.error;
                     try { await withTimeout(ensureProfile(), 15000, '创建档案超时'); } catch (e2) {}
+                    /* 邀请码：profile 建好后处理，双方各得 100 积分（失败不阻塞注册） */
+                    var inviteMsg = '';
+                    try {
+                        var savedCode = localStorage.getItem('mmc_invite_code');
+                        localStorage.removeItem('mmc_invite_code');
+                        if (savedCode) {
+                            var ir = await sb.rpc('process_invite', { p_invite_code: savedCode });
+                            if (!ir.error && ir.data && ir.data.invited) {
+                                inviteMsg = '🎉 邀请成功！你和邀请人各得 100 积分';
+                            } else if (ir.error) {
+                                inviteMsg = '（邀请码无效：' + (ir.error.message || '') + '）';
+                            }
+                        }
+                    } catch (e4) {}
                     hideLoading();
-                    showLoading('注册成功，跳转中…');
+                    showLoading('注册成功，跳转中…' + (inviteMsg ? ' ' + inviteMsg : ''));
                     location.href = next;
                 } catch (err) {
                     hideLoading();
