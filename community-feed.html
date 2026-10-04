@@ -398,6 +398,8 @@
                 else if (n.type === 'reply') { text = who + ' 回复了你的帖子《' + tt + '》'; link = 'community-thread.html?id=' + n.thread_id; }
                 else if (n.type === 'contest_entry') { text = '🏁 ' + who + ' 报名参加了你的赛事「' + esc(n.content || '') + '」'; link = 'community-contest.html?id=' + n.ref_id; }
                 else if (n.type === 'contest_reward') { text = '🏆 ' + esc(n.content || ''); link = 'community-contest.html?id=' + n.ref_id; }
+                else if (n.type === 'invite_reward') { text = esc(n.content || '🎉 邀请奖励到账'); link = 'community-shop.html#invite'; }
+                else if (n.type === 'invite_milestone') { text = esc(n.content || '🎉 邀请里程碑达成'); link = 'community-shop.html#invite'; }
                 else { text = who + ' 关注了你'; link = 'community-user.html?id=' + n.from_user_id; }
                 return '<a class="' + cls + '" href="' + link + '">' +
                     '<div>' + text + '</div>' + tm + '</a>';
