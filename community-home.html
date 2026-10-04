@@ -188,23 +188,26 @@
         await Promise.all([
         (async function () {
         /* 公告栏：站点公告 */
-        try {
-            var ar = await sb.from('site_announcements').select('id,title,content,link_url,created_at')
-                .eq('is_active', true).order('created_at', { ascending: false }).limit(3);
-            var announces = (ar.data && ar.data.length) ? ar.data : [{
-                title: '🎉 欢迎来到 MAX社区',
-                content: '分享你的作品，在线试玩、评论点赞，结识同好！',
-                link_url: 'community-publish.html',
-                created_at: null
-            }];
+        var defaultAnnounce = [{
+            title: '🎉 欢迎来到 MAX社区',
+            content: '分享你的作品，在线试玩、评论点赞，结识同好！',
+            link_url: 'community-publish.html',
+            created_at: null
+        }];
+        function renderAnnounce(list) {
             document.getElementById('sec-announce').style.display = '';
-            document.getElementById('announce-list').innerHTML = announces.map(function (a) {
+            document.getElementById('announce-list').innerHTML = list.map(function (a) {
                 var inner = '<div class="t-title">📢 ' + esc(a.title) + '</div>' +
                     (a.content ? '<div class="t-meta">' + esc(a.content) + '</div>' : '') +
                     (a.created_at ? '<div class="t-meta">' + fmtDate(a.created_at) + '</div>' : '');
                 return a.link_url ? '<a class="thread-row announce" href="' + esc(a.link_url) + '">' + inner + '</a>'
                     : '<div class="thread-row announce">' + inner + '</div>';
             }).join('');
+        }
+        try {
+            var ar = await sb.from('site_announcements').select('id,title,content,link_url,created_at')
+                .eq('is_active', true).order('created_at', { ascending: false }).limit(3);
+            renderAnnounce((ar.data && ar.data.length) ? ar.data : defaultAnnounce);
         } catch (e) {
             try {
                 var pr2 = await sb.from('forum_threads').select('id,title,author_id,created_at,reply_count')
@@ -218,8 +221,11 @@
                             '<div class="t-meta">' + esc(nameMap[t.author_id] || '未知') + ' · ' + fmtDate(t.created_at) +
                         ' · 💬 ' + (t.reply_count || 0) + '</div></a>';
                 }).join('');
-            }
-        } catch (e) {}
+                return;
+                }
+            } catch (e2) {}
+            renderAnnounce(defaultAnnounce);
+        }
 
         })(),
         (async function () {
