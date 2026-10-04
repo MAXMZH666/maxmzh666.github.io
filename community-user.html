@@ -14,7 +14,7 @@
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
-    <link rel="stylesheet" href="css/styles.min.css?v=20261004n">
+    <link rel="stylesheet" href="css/styles.min.css?v=20261004o">
     <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
 </head>
 <body>
@@ -75,7 +75,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.min.js?v=20261004n"></script>
+    <script src="js/community.min.js?v=20261004o"></script>
     <script>
     (async function () {
         await renderSubHeader();
@@ -92,7 +92,7 @@
         }
         if (!uid) { wrap.innerHTML = '<p class="works-note">用户不存在。<a href="community.html">返回社区</a></p>'; return; }
         try {
-            var pr = await sb.from('profiles').select('username,created_at,avatar_url,bio,background_url').eq('id', uid).single();
+            var pr = await sb.from('profiles').select('username,created_at,avatar_url,bio,background_url,invite_code').eq('id', uid).single();
             if (pr.error || !pr.data) throw new Error('用户不存在');
             var works = (await sb.from('works').select('id,title,cover_url,created_at,category,views,work_type')
                 .eq('author_id', uid).order('created_at', { ascending: false })).data || [];
@@ -266,6 +266,47 @@
                         }).join('') + '</div>'
                         : '<p class="works-note">' + (isSelf ? '还没有合集，<a href="community-collections.html">去创建一个</a>吧。' : 'TA 还没有创建合集。') + '</p>');
             } catch (e) {}
+            /* 🎁 我的邀请码（仅自己可见） */
+            var inviteHtml = '';
+            if (isSelf) {
+                try {
+                    var myCode = pr.data.invite_code || '';
+                    var invR = await sb.from('invitations').select('id', { count: 'exact', head: true }).eq('inviter_id', uid);
+                    var inviteCount = invR.count || 0;
+                    var msR = await sb.from('invite_milestones').select('milestone').eq('inviter_id', uid);
+                    var achieved = {};
+                    (msR.data || []).forEach(function (x) { achieved[x.milestone] = true; });
+                    /* 里程碑：人数 → 额外奖励积分 */
+                    var milestones = [
+                        { n: 3, bonus: 150 },
+                        { n: 5, bonus: 300 },
+                        { n: 10, bonus: 800 },
+                        { n: 20, bonus: 2000 },
+                        { n: 50, bonus: 5000 }
+                    ];
+                    var msHtml = milestones.map(function (m) {
+                        var done = !!achieved[m.n];
+                        var prog = Math.min(inviteCount, m.n);
+                        return '<div class="ms-item' + (done ? ' done' : '') + '">' +
+                            '<span class="ms-n">邀请 ' + m.n + ' 人</span>' +
+                            '<span class="ms-bonus">+' + m.bonus + ' 积分</span>' +
+                            (done ? '<span class="ms-status ok">✅ 已达成</span>'
+                                   : '<span class="ms-status">' + prog + '/' + m.n + '</span>') +
+                            '</div>';
+                    }).join('');
+                    inviteHtml = '<h2 class="feat-title">🎁 我的邀请码</h2>' +
+                        '<div class="invite-box">' +
+                        '<div class="invite-code-row">' +
+                        '<span class="invite-code">' + esc(myCode) + '</span>' +
+                        '<button class="btn btn-ghost btn-sm" id="invite-copy-btn">📋 复制</button>' +
+                        '<button class="btn btn-blue btn-sm" id="invite-share-btn">📤 分享</button>' +
+                        '</div>' +
+                        '<p class="stat-line">我在MAX社区等你！用我的邀请码 <b>' + esc(myCode) + '</b> 注册，我们各得100积分</p>' +
+                        '<p class="stat-line">已邀请 <b>' + inviteCount + '</b> 人，邀请越多奖励越多</p>' +
+                        '<div class="ms-list">' + msHtml + '</div>' +
+                        '</div>';
+                } catch (e) {}
+            }
             wrap.innerHTML =
                 '<p class="article-back"><a href="community.html">← 返回社区</a></p>' +
                 '<div class="profile-bg-wrap" id="profile-head">' +
@@ -287,6 +328,7 @@
                 (!isSelf && me ? ' <button class="btn btn-ghost" id="u-block-btn">🚫 屏蔽</button>' : '') +
                 (!isSelf && !me ? '<a class="btn btn-blue" href="community-auth.html">登录后关注</a>' : '') +
                 '</div>' +
+                inviteHtml +
                 '<h2 class="feat-title">TA 的作品</h2>' +
                 (works.length
                     ? '<div class="card-grid">' + works.map(function (w) {
@@ -436,6 +478,41 @@
         });
 
         /* 关注 / 取关 */
+        /* 🎁 邀请码：复制 / 分享 */
+        var inviteCopyBtn = document.getElementById('invite-copy-btn');
+        if (inviteCopyBtn) {
+            inviteCopyBtn.addEventListener('click', function () {
+                var code = pr.data.invite_code || '';
+                var done = function () { alert('邀请码已复制：' + code); };
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(code).then(done).catch(function () { fallbackCopy(code); done(); });
+                } else {
+                    fallbackCopy(code); done();
+                }
+                function fallbackCopy(t) {
+                    var ta = document.createElement('textarea');
+                    ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
+                    document.body.appendChild(ta); ta.select();
+                    try { document.execCommand('copy'); } catch (e) {}
+                    document.body.removeChild(ta);
+                }
+            });
+        }
+        var inviteShareBtn = document.getElementById('invite-share-btn');
+        if (inviteShareBtn) {
+            inviteShareBtn.addEventListener('click', function () {
+                var code = pr.data.invite_code || '';
+                var text = '我在MAX社区等你！用我的邀请码 ' + code + ' 注册，我们各得100积分';
+                var url = location.origin + '/community-auth.html?invite=' + encodeURIComponent(code);
+                if (navigator.share) {
+                    navigator.share({ title: 'MAX社区邀请', text: text, url: url }).catch(function () {});
+                } else if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text + ' ' + url).then(function () { alert('分享文案已复制，去粘贴给朋友吧'); });
+                } else {
+                    alert(text + ' ' + url);
+                }
+            });
+        }
         var uFollowBtn = document.getElementById('u-follow-btn');
         if (uFollowBtn && me && !isSelf) {
             var uFollowing = false;

@@ -428,6 +428,11 @@ var SHOP_FRAME_CSS = [
     '.frame-gold{border:3px solid #ffd43b;box-shadow:0 0 14px rgba(255,212,59,.65);}',
     '.frame-cyber{border:3px solid #00e5ff;box-shadow:0 0 14px rgba(0,229,255,.6);}',
     '.frame-rainbow{border:3px solid transparent;background:linear-gradient(45deg,#ff5f5f,#ffb84d,#f9f871,#7bf59b,#5fb8ff,#c07bff,#ff7bd5) border-box;animation:frameSpin 3s linear infinite;background-size:300% 300%;}',
+    /* 橙色传奇边框 */
+    '.frame-legend{border:3px solid #ff922b;box-shadow:0 0 18px rgba(255,146,43,.8),0 0 4px rgba(255,146,43,.9);}',
+    /* 钻石边框：强发光 + 呼吸动画 */
+    '.frame-diamond{border:3px solid #a5f3fc;box-shadow:0 0 20px rgba(165,243,252,.85),0 0 6px rgba(165,243,252,1);animation:frameDiamond 2.4s ease-in-out infinite;}',
+    '@keyframes frameDiamond{0%,100%{box-shadow:0 0 12px rgba(165,243,252,.5);}50%{box-shadow:0 0 26px rgba(165,243,252,1);}}',
     '@keyframes frameSpin{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}'
 ].join('\n');
 function injectFrameCSS() {
