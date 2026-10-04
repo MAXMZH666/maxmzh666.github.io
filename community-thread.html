@@ -80,6 +80,7 @@
                     <textarea id="reply-content" maxlength="5000" placeholder="说点什么…（支持 Markdown）"></textarea>
                     <p class="form-hint" id="reply-mdhelp"></p>
                     <p><button class="btn-submit" id="reply-submit" style="padding:10px 28px;border-radius:10px;border:none;background:var(--accent,#4d7cfe);color:#fff;cursor:pointer">发表回帖</button>
+                    <span id="rp-btn-wrap"></span>
                     <span id="reply-msg" class="works-note" style="display:inline"></span></p>
                 </div>
             </div>
@@ -103,6 +104,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/community.min.js?v=20261004m"></script>
+    <script src="js/redpacket.js"></script>
     <script src="js/scripts.js"></script>
     <script>
     (async function () {
@@ -214,7 +216,44 @@
                 });
             } catch (e) { list.innerHTML = '<p class="works-note">回帖加载失败：' + esc(e.message) + '</p>'; }
         }
+        /* 🧧 积分红包 */
+        injectRedPacketCSS();
+        initRedPacketModal();
+        /* 红包按钮（仅登录可见） */
+        if (me) document.getElementById('rp-btn-wrap').innerHTML = redPacketButton('comment', id);
+        /* 红包发送成功回调：在回帖列表顶部插入红包卡片 */
+        function onRedPacketSent(packetId) {
+            renderRedPacket(packetId).then(function (html) {
+                if (!html) return;
+                var list = document.getElementById('post-list');
+                var wrap = document.createElement('div');
+                wrap.innerHTML = html;
+                list.insertBefore(wrap.firstChild, list.firstChild);
+            });
+        }
+        bindRedPacketButtons(document, onRedPacketSent);
+        bindRedPacketClaim(document);
+        /* 加载该帖子的红包，渲染在回帖列表顶部 */
+        async function loadRedPackets() {
+            var list = document.getElementById('post-list');
+            if (!list) return;
+            try {
+                var r = await sb.from('red_packets').select('id')
+                    .eq('context_type', 'comment').eq('context_id', id)
+                    .order('created_at', { ascending: false }).limit(20);
+                if (r.error || !r.data || !r.data.length) return;
+                var ids = r.data.map(function (x) { return x.id; });
+                var htmls = await Promise.all(ids.map(function (pid) { return renderRedPacket(pid); }));
+                var html = htmls.filter(function (h) { return h; }).join('');
+                if (html) {
+                    var wrap = document.createElement('div');
+                    wrap.innerHTML = html;
+                    list.insertBefore(wrap, list.firstChild);
+                }
+            } catch (e) {}
+        }
         await loadPosts();
+        await loadRedPackets();
         /* 点击提示可取消回复目标 */
         document.getElementById('reply-msg').addEventListener('click', function () {
             if (replyToPost) {
