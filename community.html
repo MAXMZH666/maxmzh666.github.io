@@ -54,6 +54,10 @@
 
     <main>
         <section class="portfolio">
+            <form class="discover-search reveal" id="global-search-form" action="community-search.html" method="get">
+                <input type="text" name="q" id="global-q" placeholder="🔎 全站搜索：作品、用户、帖子…" maxlength="60" autocomplete="off">
+                <button class="btn btn-blue" type="submit">搜索</button>
+            </form>
             <div class="community-head reveal">
                 <div>
                     <h1 class="section-title" style="margin:0">🎮 作品</h1>
@@ -76,17 +80,17 @@
 
             <div id="feat-wrap" style="display:none">
                 <h2 class="feat-title">🔥 热门推荐</h2>
-                <div class="card-grid" id="feat-grid"></div>
+                <div class="card-grid" id="feat-grid"><div class="skeleton-card"><div class="skeleton skeleton-cover"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div><div class="skeleton-card"><div class="skeleton skeleton-cover"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div><div class="skeleton-card"><div class="skeleton skeleton-cover"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div><div class="skeleton-card"><div class="skeleton skeleton-cover"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div><div class="skeleton-card"><div class="skeleton skeleton-cover"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div><div class="skeleton-card"><div class="skeleton skeleton-cover"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div></div>
             </div>
 
             <div id="random-wrap">
                 <h2 class="feat-title">🎲 随机发现 <button class="btn btn-ghost btn-sm" id="random-btn" type="button">换一批</button></h2>
-                <div class="card-grid" id="random-grid"><p class="works-note">加载中…</p></div>
+                <div class="card-grid" id="random-grid"><div class="skeleton-card"><div class="skeleton skeleton-cover"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div><div class="skeleton-card"><div class="skeleton skeleton-cover"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div><div class="skeleton-card"><div class="skeleton skeleton-cover"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div><div class="skeleton-card"><div class="skeleton skeleton-cover"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div><div class="skeleton-card"><div class="skeleton skeleton-cover"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div><div class="skeleton-card"><div class="skeleton skeleton-cover"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div></div>
             </div>
 
             <h2 class="feat-title" id="list-title">全部作品</h2>
             <p id="works-note" class="works-note">加载中…</p>
-            <div class="card-grid" id="works-grid"></div>
+            <div class="card-grid" id="works-grid"><div class="skeleton-card"><div class="skeleton skeleton-cover"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div><div class="skeleton-card"><div class="skeleton skeleton-cover"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div><div class="skeleton-card"><div class="skeleton skeleton-cover"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div><div class="skeleton-card"><div class="skeleton skeleton-cover"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div><div class="skeleton-card"><div class="skeleton skeleton-cover"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div><div class="skeleton-card"><div class="skeleton skeleton-cover"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div><div class="skeleton-card"><div class="skeleton skeleton-cover"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div><div class="skeleton-card"><div class="skeleton skeleton-cover"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div></div>
         </section>
     </main>
 
@@ -290,8 +294,10 @@
     async function loadFeatured() {
         var wrap = document.getElementById('feat-wrap');
         try {
-            var res = await sb.from('works').select('id,title,cover_url,created_at,author_id,category,views,work_type')
-                .order('created_at', { ascending: false }).limit(50);
+            var res = await cachedQuery('works_feat50', function () {
+                return sb.from('works').select('id,title,cover_url,created_at,author_id,category,views,work_type')
+                    .order('created_at', { ascending: false }).limit(50);
+            });
             var works = res.data || [];
             if (!works.length) return;
             var counts = await countLikes(works.map(function (w) { return w.id; }));

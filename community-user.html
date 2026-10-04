@@ -40,17 +40,23 @@
             <nav class="sub-links" aria-label="社区导航">
                 <a href="community-home.html" data-sub="home">首页</a>
                 <a href="community.html" data-sub="works">🔍 发现</a>
-                <a href="community-search.html" data-sub="search">🔎 搜索</a>
                 <a href="community-forum.html" data-sub="forum">💬 论坛</a>
+                <a href="community-studios.html" data-sub="studios">🏢 工作室</a>
                 <a href="community-shop.html" data-sub="shop">🎁 任务商城</a>
                 <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
                 <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
-                <a href="community-studios.html" data-sub="studios">🏢 工作室</a>
                 <a href="community-publish.html" data-sub="publish">🚀 发布</a>
-                <a href="community-stats.html" data-sub="stats">📊 数据</a>
-                <a href="community-collections.html" data-sub="collections">📚 合集</a>
-                <a href="community-feed.html" data-sub="feed" id="sub-bell">💬 动态</a>
-                <a href="community-dm.html" data-sub="dm">✉️ 私信<span id="dm-dot" style="display:none;color:#ff6b6b"> ●</span></a>
+                <div class="sub-drop" id="sub-mine">
+                    <button type="button" class="sub-drop-btn" data-sub="mine" aria-haspopup="true" aria-expanded="false">👤 我的 ▾<span id="mine-dot" class="bell-badge" style="display:none"></span></button>
+                    <div class="sub-drop-menu" role="menu">
+                        <a href="community-feed.html" data-subitem="feed" role="menuitem">💬 动态</a>
+                        <a href="community-dm.html" data-subitem="dm" role="menuitem">✉️ 私信</a>
+                        <a href="community-stats.html" data-subitem="stats" role="menuitem">📊 数据</a>
+                        <a href="community-collections.html" data-subitem="collections" role="menuitem">📚 合集</a>
+                        <a href="community-user.html?mine=1" data-subitem="profile" role="menuitem">👤 个人主页</a>
+                        <a href="community-settings.html" data-subitem="settings" role="menuitem">⚙️ 设置</a>
+                    </div>
+                </div>
                 <span id="sub-auth"><a href="community-auth.html">登录</a></span>
             </nav>
         </div>
@@ -79,7 +85,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261004a"></script>
+    <script src="js/community.js?v=20261004c"></script>
     <script>
     (async function () {
         await renderSubHeader();
@@ -89,6 +95,10 @@
         if (!uid && qs0.get('username')) {
             var ur = await sb.from('profiles').select('id').eq('username', qs0.get('username')).single();
             if (ur.data) uid = ur.data.id;
+        }
+        if (!uid && qs0.get('mine')) {
+            var me0 = await currentUser();
+            if (me0) uid = me0.id;
         }
         if (!uid) { wrap.innerHTML = '<p class="works-note">用户不存在。<a href="community.html">返回社区</a></p>'; return; }
         try {
@@ -424,7 +434,7 @@
                     var a = amap[m.user_id] || {};
                     var canDel = (me && me.id === m.user_id) || isSelf || siteAdmin;
                     var av = a.avatar_url
-                        ? '<img src="' + esc(a.avatar_url) + '" alt="头像" style="width:36px;height:36px;border-radius:50%;object-fit:cover">'
+                        ? '<img src="' + esc(a.avatar_url) + '" alt="头像" style="width:36px;height:36px;border-radius:50%;object-fit:cover" loading="lazy">'
                         : '<span style="width:36px;height:36px;border-radius:50%;background:var(--surface-2);display:inline-flex;align-items:center;justify-content:center;font-size:1.1rem">👤</span>';
                     return '<div class="card" style="margin-bottom:10px"><div class="card-body">' +
                         '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">' +
