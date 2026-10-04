@@ -170,15 +170,13 @@
         /* ---- 按类型渲染预览区 ---- */
         var previewHtml = '';
         if (wtype === 'scratch') {
-            var embedUrl = 'https://turbowarp.org/embed?project_url=' + encodeURIComponent(w.sb3_url) +
-                '&project_title=' + encodeURIComponent(w.title) + '&autoplay';
-            /* 点击加载：先显示封面，点"试玩"才加载播放器，页面打开更快 */
+            /* sb3 走代理播放：点击时取 token，不暴露文件直链 */
             var coverImg = w.cover_url ? '<img src="' + esc(w.cover_url) + '" alt="' + esc(w.title) + '" loading="lazy">' : '<span class="monogram">🎮</span>';
-            previewHtml = '<div class="player-wrap player-lazy" data-embed="' + esc(embedUrl) + '">' +
+            previewHtml = '<div class="player-wrap player-lazy" data-work-id="' + esc(id) + '" data-title="' + esc(w.title) + '">' +
                 '<div class="player-cover">' + coverImg +
                 '<button class="btn btn-blue btn-lg" id="player-start">▶ 点击试玩</button></div></div>' +
                 ((w.is_open_source || isAuthor || (me && isAdminFlag)) && w.sb3_url
-                    ? '<p style="margin-top:8px"><a class="btn btn-ghost btn-sm" href="' + esc(w.sb3_url) + '" download>⬇ 下载源码 .sb3</a></p>'
+                    ? '<p style="margin-top:8px"><a class="btn btn-ghost btn-sm" href="#" id="dl-sb3">⬇ 下载源码 .sb3</a></p>'
                     : '') +
                 (isAuthor && wtype === 'scratch' ? '<p class="form-hint" style="margin-top:10px">💻 <a href="community-code.html?edit=' + id + '">在在线编程里继续编辑这个作品</a></p>' : '');
         } else if (wtype === 'python' || wtype === 'cpp') {
@@ -395,7 +393,7 @@
                 else prompt('复制下面的链接分享给朋友：', location.href);
             }
         });
-        /* 播放器点击加载 */
+        /* 播放器点击加载：scratch 走代理取 token */
         (function () {
             var lazy = document.querySelector('.player-lazy');
             if (!lazy) return;
@@ -403,8 +401,43 @@
                 lazy.innerHTML = '<iframe src="' + src + '" allowtransparency="true" scrolling="no" allowfullscreen title="' + esc(w.title) + '"></iframe>';
                 lazy.classList.remove('player-lazy');
             }
-            document.getElementById('player-start').addEventListener('click', function () {
-                loadPlayer(lazy.getAttribute('data-embed'));
+            document.getElementById('player-start').addEventListener('click', async function () {
+                var btn = this;
+                btn.disabled = true;
+                btn.textContent = '加载中…';
+                try {
+                    if (wtype === 'scratch') {
+                        /* 取播放 token，走代理 */
+                        var tk = await sb3PlayToken(id);
+                        if (!tk) throw new Error('获取播放凭证失败，请先登录');
+                        var proxyUrl = sb3ProxyUrl(id, tk);
+                        var embedUrl = 'https://turbowarp.org/embed?project_url=' + encodeURIComponent(proxyUrl) +
+                            '&project_title=' + encodeURIComponent(lazy.getAttribute('data-title') || w.title) + '&autoplay';
+                        loadPlayer(embedUrl);
+                    } else {
+                        loadPlayer(lazy.getAttribute('data-embed'));
+                    }
+                } catch (e) {
+                    btn.disabled = false;
+                    btn.textContent = '▶ 点击试玩';
+                    alert('加载失败：' + (e.message || e));
+                }
+            });
+            /* 下载按钮：走代理（带 token） */
+            var dlBtn = document.getElementById('dl-sb3');
+            if (dlBtn) {
+                dlBtn.addEventListener('click', async function (e) {
+                    e.preventDefault();
+                    var tk = await sb3PlayToken(id);
+                    if (!tk) { alert('获取下载凭证失败，请先登录'); return; }
+                    var a = document.createElement('a');
+                    a.href = sb3ProxyUrl(id, tk);
+                    a.download = (w.title || 'project') + '.sb3';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                });
+            }
             });
             /* 历史版本试玩：若还没点"试玩"，先加载再换版本 */
             lazy._loadVersion = function (src) { loadPlayer(src); };
