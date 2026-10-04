@@ -46,6 +46,15 @@ img { max-width: 100%; height: auto; }
     -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--border);
+    transition: transform 0.3s ease;
+}
+/* 向下滚动时主站页眉自动隐藏 */
+.site-header.site-header-hidden {
+    transform: translateY(-100%);
+}
+/* 主站页眉隐藏时，社区页眉贴顶 */
+body.site-header-hidden .sub-header {
+    top: 0;
 }
 
 .nav {
@@ -1114,7 +1123,7 @@ form input[type="file"]:focus {
     z-index: 90;
     background: var(--surface);
     border-bottom: 1px solid var(--border);
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, top 0.3s ease;
 }
 /* 向下滚动时自动隐藏 */
 .sub-header.sub-header-hidden {

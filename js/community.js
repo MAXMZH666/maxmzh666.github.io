@@ -904,31 +904,34 @@ async function getBlockedIds() {
         return (r.data || []).map(function (x) { return x.blocked_id; });
     } catch (e) { return []; }
 }
-/* ===== 社区页眉滚动自动隐藏：下滚隐藏，上滚显示 ===== */
+/* ===== 页眉滚动自动隐藏：下滚隐藏，上滚显示 ===== */
 (function () {
     var ticking = false;
     var lastY = 0;
     function onScroll() {
         if (!ticking) {
             window.requestAnimationFrame(function () {
-                var header = document.querySelector('.sub-header');
-                if (header) {
-                    var y = window.scrollY || window.pageYOffset;
-                    /* 下滚超过 120px 隐藏，上滚或回到顶部显示 */
-                    if (y > 120 && y > lastY) {
-                        header.classList.add('sub-header-hidden');
-                    } else {
-                        header.classList.remove('sub-header-hidden');
-                    }
-                    lastY = y;
+                var y = window.scrollY || window.pageYOffset;
+                var goingDown = y > 120 && y > lastY;
+                /* 社区页眉 */
+                var subHeader = document.querySelector('.sub-header');
+                if (subHeader) {
+                    subHeader.classList.toggle('sub-header-hidden', goingDown);
                 }
+                /* 主站页眉 */
+                var siteHeader = document.querySelector('.site-header');
+                if (siteHeader) {
+                    siteHeader.classList.toggle('site-header-hidden', goingDown);
+                    document.body.classList.toggle('site-header-hidden', goingDown);
+                }
+                lastY = y;
                 ticking = false;
             });
             ticking = true;
         }
     }
-    /* 只在有社区页眉的页面启用 */
-    if (document.querySelector('.sub-header')) {
+    /* 有页眉的页面启用 */
+    if (document.querySelector('.site-header') || document.querySelector('.sub-header')) {
         window.addEventListener('scroll', onScroll, { passive: true });
     }
 })();
