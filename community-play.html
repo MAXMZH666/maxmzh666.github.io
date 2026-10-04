@@ -63,6 +63,7 @@
             <a href="about.html">个人简介</a>
             <a href="blog.html">博客</a>
             <a href="community-home.html">社区</a>
+            <a href="community-help.html">❓ 帮助</a>
             <a href="community-forum.html">论坛</a>
             <a href="contact.html">联系方式</a>
             <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
@@ -76,7 +77,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
-    <script src="js/community.js?v=20261004g"></script>
+    <script src="js/community.js?v=20261004h"></script>
     <script>
     function runnerHtml() {
         return '<div class="runner">' +
@@ -226,6 +227,7 @@
             '<p class="work-meta">' + typeBadge(wtype) +
             ' 作者：<a href="community-user.html?id=' + w.author_id + '">' + esc(authorName) + '</a>' +
             ' · ' + fmtDate(w.created_at) + ' · 👁 <span id="view-count">' + (w.views || 0) + '</span></p>' +
+            '<div class="card-tags" id="work-tags" style="margin:8px 0"></div>' +
             previewHtml +
             (w.description ? '<div class="work-desc markdown-body">' + renderMarkdown(w.description) + '</div>' : '') +
             '<div class="work-actions">' +
@@ -255,6 +257,15 @@
             '<div id="addcol-list"><p class="works-note">加载中…</p></div>' +
             '<p class="form-hint">没有合集？<a href="community-collections.html">去创建一个 →</a></p>' +
             '<div class="modal-actions"><button class="btn" id="addcol-cancel" type="button">关闭</button></div></div></div>';
+
+        /* 🏷️ 加载作品标签 */
+        (async function () {
+            try {
+                var tags = await getWorkTags(id);
+                var box = document.getElementById('work-tags');
+                if (box) box.innerHTML = tags.length ? tagChips(tags) : '';
+            } catch (e) {}
+        })();
 
         /* 代码高亮（python/cpp） */
         if ((wtype === 'python' || wtype === 'cpp') && w.code) {
@@ -512,11 +523,12 @@
             });
         }
 
-        /* 评论列表 */
+        /* 评论列表（含楼中楼回复） */
+        var replyTo = null; /* {id, name} 正在回复的评论 */
         async function loadComments() {
             var list = document.getElementById('comment-list');
-            var r = await sb.from('comments').select('id,content,created_at,author_id')
-                .eq('work_id', id).order('created_at', { ascending: true }).limit(100);
+            var r = await sb.from('comments').select('id,content,created_at,author_id,parent_id')
+                .eq('work_id', id).order('created_at', { ascending: true }).limit(200);
             if (r.error) { list.innerHTML = '<p class="works-note">评论加载失败</p>'; return; }
             var cs = r.data || [];
             var nameMap = {};
@@ -527,17 +539,32 @@
                     (pr.data || []).forEach(function (p) { nameMap[p.id] = p.username; });
                 }
             } catch (e) {}
+            /* 建树：最多2层缩进，第3层起平铺在第2层下 */
+            var byId = {};
+            cs.forEach(function (c) { c.children = []; byId[c.id] = c; });
+            var roots = [];
+            cs.forEach(function (c) {
+                if (c.parent_id && byId[c.parent_id]) byId[c.parent_id].children.push(c);
+                else roots.push(c);
+            });
             var adminDel = await isAdmin();
-            list.innerHTML = cs.length ? cs.map(function (c) {
+            function renderOne(c, depth) {
                 var canDel = (me && c.author_id === me.id) || adminDel;
-                return '<div class="comment"><div class="comment-meta">' +
+                var cls = depth > 0 ? 'comment comment-reply' : 'comment';
+                var h = '<div class="' + cls + '" data-cid="' + c.id + '"><div class="comment-meta">' +
                     esc(nameMap[c.author_id] || '未知') + ' · ' + fmtDate(c.created_at) +
                     (canDel ? ' <button class="remove-btn" data-del-comment="' + c.id + '">删除</button>' : '') +
+                    (me ? ' <button class="reply-btn" data-reply-id="' + c.id + '" data-reply-name="' + esc(nameMap[c.author_id] || '未知') + '">回复</button>' : '') +
                     '</div><div class="comment-body">' + md(c.content) + '</div></div>';
-            }).join('') : '<p class="works-note">还没有评论，来抢沙发！</p>';
+                /* 子评论：depth+1，但视觉最多缩进1层 */
+                (c.children || []).forEach(function (ch) { h += renderOne(ch, depth + 1); });
+                return h;
+            }
+            list.innerHTML = roots.length ? roots.map(function (c) { return renderOne(c, 0); }).join('')
+                : '<p class="works-note">还没有评论，来抢沙发！</p>';
             list.querySelectorAll('[data-del-comment]').forEach(function (b) {
                 b.addEventListener('click', async function () {
-                    if (!confirm('删除这条评论？')) return;
+                    if (!confirm('删除这条评论？子回复也会一起删除。')) return;
                     showLoading('删除中…');
                     try {
                         var r = await withTimeout(sb.from('comments').delete().eq('id', b.getAttribute('data-del-comment')), 15000, '删除超时');
@@ -545,6 +572,20 @@
                     } catch (e) { alert('删除失败：' + (e.message || '')); }
                     hideLoading();
                     await loadComments();
+                });
+            });
+            /* 回复按钮：设置回复目标 */
+            list.querySelectorAll('[data-reply-id]').forEach(function (b) {
+                b.addEventListener('click', function () {
+                    if (!me) { authRequiredRedirect(); return; }
+                    replyTo = { id: b.getAttribute('data-reply-id'), name: b.getAttribute('data-reply-name') };
+                    var ta = document.getElementById('c-text');
+                    ta.placeholder = '回复 @' + replyTo.name + '：';
+                    ta.focus();
+                    try { ta.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+                    var note = document.getElementById('c-note');
+                    note.textContent = '正在回复 @' + replyTo.name + '（点击发表框外的取消可取消）';
+                    note.className = 'form-note';
                 });
             });
         }
@@ -673,7 +714,15 @@
             } catch (e) { box.innerHTML = '<p class="works-note">加载失败</p>'; }
         })();
 
-        /* 发表评论 */
+        /* 发表评论（含回复楼中楼） */
+        /* 取消回复：点击输入框旁的提示可取消 */
+        document.getElementById('c-note').addEventListener('click', function () {
+            if (replyTo) {
+                replyTo = null;
+                document.getElementById('c-text').placeholder = me ? '友善评论，理性交流（支持 Markdown）' : '登录后发表评论';
+                this.textContent = '';
+            }
+        });
         document.getElementById('comment-form').addEventListener('submit', async function (e) {
             e.preventDefault();
             if (!me) { authRequiredRedirect(); return; }
@@ -681,11 +730,18 @@
             var note = document.getElementById('c-note');
             var text = ta.value.trim();
             if (!text) { note.textContent = '评论内容不能为空'; note.className = 'form-note err'; return; }
+            /* 回复时自动 @ 被回复者（触发提及通知） */
+            var pid = replyTo ? replyTo.id : null;
+            if (replyTo && text.indexOf('@' + replyTo.name) === -1) text = '@' + replyTo.name + ' ' + text;
             note.textContent = '发表中…'; note.className = 'form-note sending';
-            var r = await sb.from('comments').insert({ work_id: id, author_id: me.id, content: text });
+            var payload = { work_id: id, author_id: me.id, content: text };
+            if (pid) payload.parent_id = pid;
+            var r = await sb.from('comments').insert(payload);
             try { await recordTaskProgress('comment', 1); } catch (e) {}
             if (r.error) { note.textContent = '发表失败：' + r.error.message; note.className = 'form-note err'; return; }
             ta.value = '';
+            replyTo = null;
+            ta.placeholder = '友善评论，理性交流（支持 Markdown）';
             note.textContent = '发表成功'; note.className = 'form-note ok';
             try { await sendMentions(text, me.id, id, 'work'); } catch (e) {}
             await loadComments();

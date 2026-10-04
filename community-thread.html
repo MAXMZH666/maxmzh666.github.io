@@ -92,6 +92,7 @@
             <a href="about.html">个人简介</a>
             <a href="blog.html">博客</a>
             <a href="community-home.html">社区</a>
+            <a href="community-help.html">❓ 帮助</a>
             <a href="community-forum.html">论坛</a>
             <a href="contact.html">联系方式</a>
             <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
@@ -101,7 +102,7 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261004g"></script>
+    <script src="js/community.js?v=20261004h"></script>
     <script src="js/scripts.js"></script>
     <script>
     (async function () {
@@ -156,7 +157,8 @@
                 });
             });
         } catch (e) { wrap.innerHTML = '<p class="works-note">帖子不存在或加载失败。</p>'; return; }
-        /* 回帖列表 */
+        /* 回帖列表（含楼中楼回复） */
+        var replyToPost = null; /* {id, name} 正在回复的回帖 */
         async function loadPosts() {
             var list = document.getElementById('post-list');
             try {
@@ -168,26 +170,59 @@
                 var unames = {};
                 var ur2 = await sb.from('profiles').select('id,username').in('id', aids);
                 (ur2.data || []).forEach(function (p) { unames[p.id] = p.username; });
-                list.innerHTML = posts.map(function (p, i) {
+                /* 建树：顶层楼按时间排楼层，子回复嵌套展示 */
+                var byId = {};
+                posts.forEach(function (p) { p.children = []; byId[p.id] = p; });
+                var roots = [];
+                posts.forEach(function (p) {
+                    if (p.parent_id && byId[p.parent_id]) byId[p.parent_id].children.push(p);
+                    else roots.push(p);
+                });
+                function renderPost(p, floor, depth) {
                     var canDel = isAdmin || (me && me.id === p.author_id);
-                    return '<div class="post' + (i === 0 ? ' op' : '') + '"><div class="post-head">' +
-                        '<span class="floor">' + (i + 1) + '楼</span>' +
+                    var cls = 'post' + (depth > 0 ? ' post-reply' : '') + (floor === 1 && depth === 0 ? ' op' : '');
+                    var h = '<div class="' + cls + '"><div class="post-head">' +
+                        (depth === 0 ? '<span class="floor">' + floor + '楼</span>' : '<span class="floor">↳ 回复</span>') +
                         '<span class="uname">' + esc(unames[p.author_id] || '未知') + '</span>' +
                         '<span>' + fmtDate(p.created_at) + '</span></div>' +
                         '<div class="post-body">' + md(p.content) + '</div>' +
-                        (canDel ? '<div class="post-actions"><a data-del="' + p.id + '">删除</a></div>' : '') + '</div>';
-                }).join('');
+                        '<div class="post-actions">' +
+                        (me ? '<a data-reply-post="' + p.id + '" data-reply-name="' + esc(unames[p.author_id] || '未知') + '">回复</a>' : '') +
+                        (canDel ? '<a data-del="' + p.id + '">删除</a>' : '') + '</div></div>';
+                    (p.children || []).forEach(function (ch) { h += renderPost(ch, 0, depth + 1); });
+                    return h;
+                }
+                list.innerHTML = roots.map(function (p, i) { return renderPost(p, i + 1, 0); }).join('');
                 list.querySelectorAll('[data-del]').forEach(function (a) {
                     a.addEventListener('click', async function () {
-                        if (!confirm('确定删除这条回帖吗？')) return;
+                        if (!confirm('确定删除这条回帖吗？子回复也会一起删除。')) return;
                         var dr = await sb.from('forum_posts').delete().eq('id', a.getAttribute('data-del'));
                         if (dr.error) { alert('删除失败：' + dr.error.message); return; }
                         loadPosts();
                     });
                 });
+                /* 回复某楼 */
+                list.querySelectorAll('[data-reply-post]').forEach(function (a) {
+                    a.addEventListener('click', function () {
+                        replyToPost = { id: a.getAttribute('data-reply-post'), name: a.getAttribute('data-reply-name') };
+                        var ta = document.getElementById('reply-content');
+                        ta.placeholder = '回复 @' + replyToPost.name + '：';
+                        ta.focus();
+                        try { ta.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+                        document.getElementById('reply-msg').textContent = '正在回复 @' + replyToPost.name + '（点击可取消）';
+                    });
+                });
             } catch (e) { list.innerHTML = '<p class="works-note">回帖加载失败：' + esc(e.message) + '</p>'; }
         }
         await loadPosts();
+        /* 点击提示可取消回复目标 */
+        document.getElementById('reply-msg').addEventListener('click', function () {
+            if (replyToPost) {
+                replyToPost = null;
+                document.getElementById('reply-content').placeholder = '说点什么…（支持 Markdown）';
+                this.textContent = '';
+            }
+        });
         /* 回帖框 */
         if (!me) document.getElementById('reply-need-login').style.display = '';
         else if (thread.is_locked && !isAdmin) document.getElementById('reply-locked').style.display = '';
@@ -197,11 +232,18 @@
                 var c = document.getElementById('reply-content').value.trim();
                 var msg = document.getElementById('reply-msg');
                 if (!c) { msg.textContent = '请填写回帖内容'; return; }
+                /* 回复时自动 @ 被回复者 */
+                var ppid = replyToPost ? replyToPost.id : null;
+                if (replyToPost && c.indexOf('@' + replyToPost.name) === -1) c = '@' + replyToPost.name + ' ' + c;
                 this.disabled = true; msg.textContent = '发表中…';
                 try {
-                    var ir = await sb.from('forum_posts').insert({ thread_id: id, author_id: me.id, content: c });
+                    var payload = { thread_id: id, author_id: me.id, content: c };
+                    if (ppid) payload.parent_id = ppid;
+                    var ir = await sb.from('forum_posts').insert(payload);
                     if (ir.error) throw ir.error;
                     document.getElementById('reply-content').value = '';
+                    document.getElementById('reply-content').placeholder = '说点什么…（支持 Markdown）';
+                    replyToPost = null;
                     msg.textContent = '';
                     try { await sendMentions(c, me.id, id, 'thread'); } catch (e) {}
                     await loadPosts();

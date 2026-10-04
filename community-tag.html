@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAX社区话题标签：按标签浏览相关作品。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="MAXMZH - 话题标签">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>🏷️ 标签 - MAXMZH 社区</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="css/styles.css?v=20261004h">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">主页</a></li>
+                <li><a href="about.html">个人简介</a></li>
+                <li><a href="blog.html">博客</a></li>
+                <li><a href="community-home.html" class="active">社区</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="sub-header">
+        <div class="sub-header-inner">
+            <a class="sub-brand" href="community-home.html">🎮 <span>MAX社区</span></a>
+            <nav class="sub-links" aria-label="社区导航">
+                <a href="community-home.html" data-sub="home">首页</a>
+                <a href="community.html" data-sub="works">🔍 发现</a>
+                <a href="community-forum.html" data-sub="forum">💬 论坛</a>
+                <a href="community-studios.html" data-sub="studios">🏢 工作室</a>
+                <a href="community-shop.html" data-sub="shop">🎁 任务商城</a>
+                <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
+                <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
+                <a href="community-publish.html" data-sub="publish">🚀 发布</a>
+                <span id="sub-auth"><a href="community-auth.html">登录</a></span>
+            </nav>
+        </div>
+    </div>
+
+    <main>
+        <section class="portfolio">
+            <p class="article-back"><a href="community.html">← 返回发现</a></p>
+            <h1 class="section-title" id="tag-title">🏷️ 标签</h1>
+            <p class="section-sub" id="tag-note">加载中…</p>
+            <div class="filter-chips" id="related-tags" style="display:none"></div>
+            <div class="card-grid" id="tag-grid" style="margin-top:16px"></div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="community-home.html">社区</a>
+            <a href="community-help.html">❓ 帮助</a>
+            <a href="contact.html">联系方式</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+    </footer>
+    <script src="js/scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/community.js?v=20261004h"></script>
+    <script>
+    (async function () {
+        await renderSubHeader();
+        var sb = window.sb;
+        var tagName = '';
+        try { tagName = new URLSearchParams(location.search).get('name') || ''; } catch (e) {}
+        tagName = tagName.trim();
+        var title = document.getElementById('tag-title'), note = document.getElementById('tag-note');
+        var grid = document.getElementById('tag-grid');
+        if (!tagName) {
+            title.textContent = '🏷️ 标签';
+            note.textContent = '请指定标签名。';
+            return;
+        }
+        title.textContent = '🏷️ ' + tagName;
+        try {
+            showLoading('加载中…');
+            /* 查标签 id */
+            var tr = await sb.from('tags').select('id').eq('name', tagName).limit(1);
+            if (!tr.data || !tr.data.length) {
+                note.textContent = '还没有人使用这个标签。';
+                grid.innerHTML = '';
+                return;
+            }
+            var tagId = tr.data[0].id;
+            /* 该标签下的作品 */
+            var wr = await sb.from('work_tags').select('work_id').eq('tag_id', tagId);
+            var workIds = (wr.data || []).map(function (x) { return x.work_id; });
+            if (!workIds.length) {
+                note.textContent = '该标签下还没有作品。';
+                grid.innerHTML = '';
+                return;
+            }
+            var res = await sb.from('works')
+                .select('id,title,cover_url,created_at,author_id,category,views,work_type')
+                .in('id', workIds).order('created_at', { ascending: false });
+            if (res.error) throw res.error;
+            var works = res.data || [];
+            note.textContent = '共 ' + works.length + ' 件作品';
+            if (!works.length) { grid.innerHTML = ''; return; }
+            /* 作者名 + 点赞数 + 标签 */
+            var nameMap = {};
+            var pr = await sb.from('profiles').select('id,username').in('id', works.map(function (w) { return w.author_id; }));
+            (pr.data || []).forEach(function (p) { nameMap[p.id] = p.username; });
+            var lr = await sb.from('likes').select('work_id').in('work_id', workIds);
+            var counts = {};
+            (lr.data || []).forEach(function (l) { counts[l.work_id] = (counts[l.work_id] || 0) + 1; });
+            var tagMap = await getWorksTags(workIds);
+            grid.innerHTML = works.map(function (w) {
+                var cover = w.cover_url
+                    ? '<img src="' + esc(w.cover_url) + '" alt="' + esc(w.title) + '" loading="lazy">'
+                    : '<span class="monogram">' + esc((w.title || '游').charAt(0)) + '</span>';
+                var tagsHtml = (tagMap[w.id] || []).slice(0, 3).map(function (n) {
+                    return '<span class="tag">🏷️ ' + esc(n) + '</span>';
+                }).join('');
+                return '<a class="card" href="community-play.html?id=' + w.id + '">' +
+                    '<div class="card-cover">' + cover + '</div>' +
+                    '<div class="card-body"><h3>' + esc(w.title) + '</h3>' +
+                    '<p>' + esc(nameMap[w.author_id] || '未知') + ' · ' + fmtDate(w.created_at) + '</p>' +
+                    '<div class="card-tags"><span class="tag">❤ ' + (counts[w.id] || 0) + '</span>' +
+                    '<span class="tag">👁 ' + (w.views || 0) + '</span>' + typeBadge(workTypeOf(w)) +
+                    (w.category ? '<span class="tag blue">' + esc(w.category) + '</span>' : '') + tagsHtml + '</div>' +
+                    '</div></a>';
+            }).join('');
+            /* 相关标签：同作品的其他标签 */
+            var relNames = {};
+            Object.keys(tagMap).forEach(function (wid) {
+                (tagMap[wid] || []).forEach(function (n) { if (n !== tagName) relNames[n] = 1; });
+            });
+            var rel = Object.keys(relNames).slice(0, 10);
+            if (rel.length) {
+                var box = document.getElementById('related-tags');
+                box.style.display = '';
+                box.innerHTML = '<span class="chips-label">相关：</span>' + rel.map(function (n) {
+                    return '<a class="filter-chip" href="community-tag.html?name=' + encodeURIComponent(n) + '">' + esc(n) + '</a>';
+                }).join('');
+            }
+        } catch (e) {
+            note.textContent = '加载失败：' + e.message;
+        } finally {
+            hideLoading();
+        }
+    })();
+    </script>
+</body>
+</html>

@@ -63,6 +63,7 @@
             <a href="about.html">个人简介</a>
             <a href="blog.html">博客</a>
             <a href="community-home.html">社区</a>
+            <a href="community-help.html">❓ 帮助</a>
             <a href="community-forum.html">论坛</a>
             <a href="contact.html">联系方式</a>
             <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
@@ -74,7 +75,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261004g"></script>
+    <script src="js/community.js?v=20261004h"></script>
     <script>
     (async function () {
         await renderSubHeader();
@@ -152,6 +153,57 @@
                     '<span class="version-btns"><a class="btn btn-ghost btn-sm" href="community-user.html?id=' + u.id + '">查看</a></span></div>';
             }).join('');
         }
+        /* ===== 公告管理 ===== */
+        async function loadAnnounces() {
+            var r = await sb.from('site_announcements').select('*').order('created_at', { ascending: false }).limit(50);
+            if (r.error) return '<p class="works-note">公告表不存在，请先执行 supabase-maxrevamp9.sql</p>';
+            var rows = r.data || [];
+            var h = '<p><button class="btn btn-blue" id="announce-add">＋ 新增公告</button></p>';
+            if (!rows.length) return h + '<p class="works-note">暂无公告。</p>';
+            return h + rows.map(function (a) {
+                return '<div class="version-row">' +
+                    '<span class="version-meta">' + (a.is_active ? '🟢' : '⚪') + ' <b>' + esc(a.title) + '</b>' +
+                    (a.content ? '<br>' + esc(a.content).slice(0, 80) : '') +
+                    '<br><span class="works-note">' + fmtDate(a.created_at) + (a.link_url ? ' · 链接：' + esc(a.link_url) : '') + '</span></span>' +
+                    '<span class="version-btns">' +
+                    '<button class="btn btn-ghost btn-sm" data-aedit="' + a.id + '">编辑</button> ' +
+                    '<button class="btn btn-ghost btn-sm" data-atoggle="' + a.id + '" data-active="' + (a.is_active ? '1' : '0') + '">' + (a.is_active ? '停用' : '启用') + '</button> ' +
+                    '<button class="btn btn-ghost btn-sm" data-adel="' + a.id + '">删除</button>' +
+                    '</span></div>';
+            }).join('');
+        }
+        function openAnnounceModal(a) {
+            /* 新增/编辑公告弹窗，a 为空表示新增 */
+            var oldM = document.getElementById('announce-modal');
+            if (oldM) oldM.remove();
+            a = a || { title: '', content: '', link_url: '', is_active: true };
+            var mHtml = '<div class="modal-backdrop" id="announce-modal" style="display:flex">' +
+                '<div class="modal" style="max-width:520px"><h3>' + (a.id ? '✏️ 编辑公告' : '＋ 新增公告') + '</h3>' +
+                '<p><label>标题<br><input type="text" id="am-title" maxlength="100" style="width:100%" value="' + esc(a.title || '') + '"></label></p>' +
+                '<p><label>内容<br><textarea id="am-content" rows="3" style="width:100%">' + esc(a.content || '') + '</textarea></label></p>' +
+                '<p><label>链接（可选）<br><input type="text" id="am-link" maxlength="200" style="width:100%" placeholder="community-publish.html" value="' + esc(a.link_url || '') + '"></label></p>' +
+                '<p><label><input type="checkbox" id="am-active"' + (a.is_active ? ' checked' : '') + '> 启用显示</label></p>' +
+                '<div class="modal-actions"><button class="btn btn-blue" id="am-save">保存</button> ' +
+                '<button class="btn btn-ghost" id="am-cancel">取消</button></div></div></div>';
+            document.body.insertAdjacentHTML('beforeend', mHtml);
+            var modal = document.getElementById('announce-modal');
+            document.getElementById('am-cancel').addEventListener('click', function () { modal.remove(); });
+            modal.addEventListener('click', function (e) { if (e.target === modal) modal.remove(); });
+            document.getElementById('am-save').addEventListener('click', async function () {
+                var title = document.getElementById('am-title').value.trim();
+                var content = document.getElementById('am-content').value.trim();
+                var link = document.getElementById('am-link').value.trim();
+                var active = document.getElementById('am-active').checked;
+                if (!title) { alert('标题不能为空'); return; }
+                var payload = { title: title, content: content, link_url: link || null, is_active: active };
+                var r;
+                if (a.id) r = await sb.from('site_announcements').update(payload).eq('id', a.id);
+                else r = await sb.from('site_announcements').insert(payload);
+                if (r.error) { alert('保存失败：' + r.error.message); return; }
+                modal.remove();
+                await render();
+            });
+        }
         async function render() {
             wrap.innerHTML =
                 '<p class="article-back"><a href="community.html">← 返回社区</a></p>' +
@@ -160,6 +212,7 @@
                 '<button class="filter-chip' + (tab === 'reports' ? ' active' : '') + '" data-tab="reports">举报处理</button>' +
                 '<button class="filter-chip' + (tab === 'works' ? ' active' : '') + '" data-tab="works">作品管理</button>' +
                 '<button class="filter-chip' + (tab === 'users' ? ' active' : '') + '" data-tab="users">用户列表</button>' +
+                '<button class="filter-chip' + (tab === 'announce' ? ' active' : '') + '" data-tab="announce">📢 公告管理</button>' +
                 '</div>' +
                 (tab === 'works' ? '<p><input type="text" id="admin-q" placeholder="搜索作品标题…" style="max-width:300px"></p>' : '') +
                 '<div id="admin-list"><p class="works-note">加载中…</p></div>';
@@ -174,6 +227,7 @@
                     timer = setTimeout(async function () { list.innerHTML = await loadWorks(qi.value.trim()); }, 400);
                 });
             }
+            else if (tab === 'announce') list.innerHTML = await loadAnnounces();
             else list.innerHTML = await loadUsers();
         }
         wrap.addEventListener('click', async function (e) {
@@ -197,6 +251,26 @@
                 if (!confirm('删除这条评论？')) return;
                 await sb.from('comments').delete().eq('id', dc.getAttribute('data-rdel-comment'));
                 await sb.from('reports').delete().eq('id', dc.getAttribute('data-rid'));
+                await render(); return;
+            }
+            var aad = e.target.closest('#announce-add');
+            if (aad) { openAnnounceModal(null); return; }
+            var ae = e.target.closest('button[data-aedit]');
+            if (ae) {
+                var ar = await sb.from('site_announcements').select('*').eq('id', ae.getAttribute('data-aedit')).single();
+                if (ar.data) openAnnounceModal(ar.data);
+                return;
+            }
+            var atg = e.target.closest('button[data-atoggle]');
+            if (atg) {
+                var toActive = atg.getAttribute('data-active') !== '1';
+                await sb.from('site_announcements').update({ is_active: toActive }).eq('id', atg.getAttribute('data-atoggle'));
+                await render(); return;
+            }
+            var ad = e.target.closest('button[data-adel]');
+            if (ad) {
+                if (!confirm('删除这条公告？')) return;
+                await sb.from('site_announcements').delete().eq('id', ad.getAttribute('data-adel'));
                 await render(); return;
             }
             var aw = e.target.closest('button[data-adel-work]');
