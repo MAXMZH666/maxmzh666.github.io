@@ -7,6 +7,41 @@
 })();
 
 /* HTML 转义，防止 XSS */
+/* 卡片悬停预取：鼠标移到作品卡片上时预取试玩页 HTML */
+if (typeof document !== 'undefined') {
+    document.addEventListener('mouseover', function (e) {
+        var a = e.target && e.target.closest ? e.target.closest('a.card[href*="community-play.html"]') : null;
+        if (a && a.href && !a._pf) {
+            a._pf = true;
+            var l = document.createElement('link');
+            l.rel = 'prefetch'; l.href = a.href;
+            document.head.appendChild(l);
+        }
+    });
+}
+/* 60秒 sessionStorage 查询缓存：列表页高频查询用 */
+var _qcache = {};
+async function cachedQuery(key, fn, ttlSec) {
+    var ttl = (ttlSec || 60) * 1000, now = Date.now();
+    try {
+        var raw = sessionStorage.getItem('mmc_q_' + key);
+        if (raw) {
+            var o = JSON.parse(raw);
+            if (o && o.t && (now - o.t) < ttl) return o.d;
+        }
+    } catch (e) {}
+    var d = await fn();
+    try { sessionStorage.setItem('mmc_q_' + key, JSON.stringify({ t: now, d: d })); } catch (e) {}
+    return d;
+}
+function skeletonCards(n) {
+    var h = '', i, c = n || 4;
+    for (i = 0; i < c; i++) {
+        h += '<div class="skeleton-card"><div class="skeleton skeleton-cover"></div>' +
+            '<div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div>';
+    }
+    return h;
+}
 function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -46,11 +81,11 @@ async function isAdmin() {
 /* ===== 社区 v4：独立子页眉 ===== */
 async function renderSubHeader() {
     var authEl = document.getElementById('sub-auth');
-    var bellEl = document.getElementById('sub-bell');
     var page = location.pathname.split('/').pop();
     var map = {
         'community-home.html': 'home',
         'community.html': 'works',
+        'community-search.html': 'works',
         'community-shop.html': 'shop',
         'community-contests.html': 'contests',
         'community-contest.html': 'contests',
@@ -60,22 +95,37 @@ async function renderSubHeader() {
         'community-studio.html': 'studios',
         'community-studio-new.html': 'studios',
         'community-publish.html': 'publish',
-        'community-feed.html': 'feed',
-        'community-user.html': 'mine',
-        'community-auth.html': 'auth',
         'community-forum.html': 'forum',
         'community-thread.html': 'forum',
         'community-forum-new.html': 'forum',
-        'community-dm.html': 'dm',
-        'community-search.html': 'search',
+        'community-feed.html': 'mine',
+        'community-dm.html': 'mine',
+        'community-stats.html': 'mine',
+        'community-collections.html': 'mine',
+        'community-collection.html': 'mine',
+        'community-user.html': 'mine',
+        'community-settings.html': 'mine',
+        'community-profile-edit.html': 'mine',
+        'community-auth.html': 'auth'
+    };
+    /* 子项映射（下拉菜单内高亮） */
+    var subitemMap = {
         'community-feed.html': 'feed',
+        'community-dm.html': 'dm',
         'community-stats.html': 'stats',
         'community-collections.html': 'collections',
-        'community-collection.html': 'collections'
+        'community-collection.html': 'collections',
+        'community-user.html': 'profile',
+        'community-settings.html': 'settings',
+        'community-profile-edit.html': 'settings'
     };
-    document.querySelectorAll('.sub-links a[data-sub]').forEach(function (a) {
+    document.querySelectorAll('.sub-links a[data-sub], .sub-links .sub-drop-btn[data-sub]').forEach(function (a) {
         a.classList.toggle('active', a.getAttribute('data-sub') === map[page]);
     });
+    document.querySelectorAll('.sub-drop-menu a[data-subitem]').forEach(function (a) {
+        a.classList.toggle('active', a.getAttribute('data-subitem') === subitemMap[page]);
+    });
+    var p = await currentProfile();
     try {
         if (p && p.is_admin) {
             var nav = document.querySelector('.sub-links');
@@ -84,15 +134,70 @@ async function renderSubHeader() {
                 aa.href = 'community-admin.html';
                 aa.setAttribute('data-sub', 'admin');
                 aa.textContent = '🛡 管理';
-                if (map[page] === undefined && page === 'community-admin.html') aa.classList.add('active');
-                nav.appendChild(aa);
+                if (page === 'community-admin.html') aa.classList.add('active');
+                var authSpan = document.getElementById('sub-auth');
+                if (authSpan) nav.insertBefore(aa, authSpan); else nav.appendChild(aa);
             }
         }
     } catch (e) {}
-    var p = await currentProfile();
-    if (!p) {
-        document.querySelectorAll('.sub-links a[data-sub="stats"],.sub-links a[data-sub="collections"]')
-            .forEach(function (a) { a.style.display = 'none'; });
+    /* 下拉菜单：未登录只显示登录入口 */
+    var dropMenu = document.querySelector('.sub-drop-menu');
+    var dropBtn = document.querySelector('.sub-drop-btn');
+    if (dropMenu) {
+        if (!p) {
+            dropMenu.innerHTML = '<a href="community-auth.html" role="menuitem">🔑 登录 / 注册</a>';
+        }
+    }
+    /* 下拉菜单点击切换（移动端）；桌面端 hover 由 CSS 处理 */
+    (function initDrop() {
+        var drop = document.getElementById('sub-mine');
+        if (!drop || !dropBtn || drop.dataset.init) return;
+        drop.dataset.init = '1';
+        dropBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var open = drop.classList.toggle('open');
+            dropBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            if (open) positionDropMenu();
+        });
+        document.addEventListener('click', function (e) {
+            if (drop.classList.contains('open') && !drop.contains(e.target)) {
+                closeDrop();
+            }
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && drop.classList.contains('open')) {
+                closeDrop();
+            }
+        });
+        function closeDrop() {
+            drop.classList.remove('open');
+            dropBtn.setAttribute('aria-expanded', 'false');
+            /* 清除 fixed 定位，还原 CSS hover 定位 */
+            if (dropMenu) {
+                dropMenu.style.position = '';
+                dropMenu.style.top = '';
+                dropMenu.style.left = '';
+                dropMenu.style.right = '';
+            }
+        }
+        window.addEventListener('resize', function () {
+            if (drop.classList.contains('open')) positionDropMenu();
+        });
+    })();
+    function positionDropMenu() {
+        /* 用 fixed 定位，避免被子导航的横向滚动裁掉 */
+        var menu = dropMenu;
+        if (!menu) return;
+        var r = dropBtn.getBoundingClientRect();
+        menu.style.position = 'fixed';
+        menu.style.top = (r.bottom + 6) + 'px';
+        menu.style.left = '';
+        menu.style.right = '';
+        var w = menu.offsetWidth || 170;
+        var left = r.right - w;
+        if (left < 8) left = 8;
+        if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
+        menu.style.left = left + 'px';
     }
     if (authEl) {
         if (p) {
@@ -108,32 +213,26 @@ async function renderSubHeader() {
             authEl.innerHTML = '<a href="community-auth.html?next=' + next + '">登录</a>';
         }
     }
-    if (bellEl) {
-        if (!p) { bellEl.style.display = 'none'; }
+    /* 合并未读数：通知 + 私信，显示在"我的"按钮上 */
+    var mineDot = document.getElementById('mine-dot');
+    if (mineDot) {
+        if (!p) { mineDot.style.display = 'none'; }
         else {
             try {
-                var r = await window.sb.from('notifications')
+                var nr = await window.sb.from('notifications')
                     .select('id', { count: 'exact', head: true })
                     .eq('user_id', p.id).eq('is_read', false);
-                var n = r.count || 0;
-                bellEl.innerHTML = '💬 动态' + (n > 0 ? '<span class="bell-badge">' + (n > 99 ? '99+' : n) + '</span>' : '');
-                bellEl.style.display = '';
-            } catch (e) { bellEl.innerHTML = '💬 动态'; bellEl.style.display = ''; }
-        }
-    }
-    /* 私信未读红点 */
-    var dmLink = document.querySelector('.sub-links a[data-sub="dm"]');
-    if (dmLink) {
-        if (!p) { dmLink.style.display = 'none'; }
-        else {
-            try {
                 var dr = await window.sb.from('direct_messages')
                     .select('id', { count: 'exact', head: true })
                     .eq('receiver_id', p.id).is('read_at', null);
-                var dn = dr.count || 0;
-                dmLink.innerHTML = '✉️ 私信' + (dn > 0 ? '<span class="bell-badge">' + (dn > 99 ? '99+' : dn) + '</span>' : '');
-                dmLink.style.display = '';
-            } catch (e) { dmLink.innerHTML = '✉️ 私信'; dmLink.style.display = ''; }
+                var total = (nr.count || 0) + (dr.count || 0);
+                if (total > 0) {
+                    mineDot.textContent = total > 99 ? '99+' : String(total);
+                    mineDot.style.display = '';
+                } else {
+                    mineDot.style.display = 'none';
+                }
+            } catch (e) { mineDot.style.display = 'none'; }
         }
     }
 }

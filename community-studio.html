@@ -38,6 +38,12 @@
         .work-card .t { padding: 8px 10px; font-size: .85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .manage-box { border: 1px dashed var(--border, rgba(255,255,255,.15)); border-radius: 12px; padding: 16px; margin-top: 12px; }
         .manage-box input, .manage-box select { padding: 8px; border-radius: 8px; border: 1px solid var(--border, rgba(255,255,255,.12)); background: var(--card); color: inherit; margin-right: 8px; margin-bottom: 8px; }
+        .dc-cat { font-size: .7rem; padding: 2px 10px; border-radius: 10px; font-weight: 600; }
+        .dc-cat-综合 { background: rgba(77,124,254,.15); color: #8fb0ff; }
+        .dc-cat-公告 { background: rgba(255,212,59,.2); color: #ffd43b; }
+        .dc-cat-活动 { background: rgba(81,207,102,.15); color: #51cf66; }
+        .dc-cat-闲聊 { background: rgba(156,77,254,.2); color: #b197fc; }
+        .dc-filter { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 12px; }
         .remove-btn { font-size: .75rem; color: #ff6b6b; background: none; border: none; cursor: pointer; padding: 2px 4px; }
     </style>
 </head>
@@ -64,17 +70,23 @@
             <nav class="sub-links" aria-label="社区导航">
                 <a href="community-home.html" data-sub="home">首页</a>
                 <a href="community.html" data-sub="works">🔍 发现</a>
-                <a href="community-search.html" data-sub="search">🔎 搜索</a>
                 <a href="community-forum.html" data-sub="forum">💬 论坛</a>
+                <a href="community-studios.html" data-sub="studios">🏢 工作室</a>
                 <a href="community-shop.html" data-sub="shop">🎁 任务商城</a>
                 <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
                 <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
-                <a href="community-studios.html" data-sub="studios">🏢 工作室</a>
                 <a href="community-publish.html" data-sub="publish">🚀 发布</a>
-                <a href="community-stats.html" data-sub="stats">📊 数据</a>
-                <a href="community-collections.html" data-sub="collections">📚 合集</a>
-                <a href="community-feed.html" data-sub="feed" id="sub-bell">💬 动态</a>
-                <a href="community-dm.html" data-sub="dm">✉️ 私信<span id="dm-dot" style="display:none;color:#ff6b6b"> ●</span></a>
+                <div class="sub-drop" id="sub-mine">
+                    <button type="button" class="sub-drop-btn" data-sub="mine" aria-haspopup="true" aria-expanded="false">👤 我的 ▾<span id="mine-dot" class="bell-badge" style="display:none"></span></button>
+                    <div class="sub-drop-menu" role="menu">
+                        <a href="community-feed.html" data-subitem="feed" role="menuitem">💬 动态</a>
+                        <a href="community-dm.html" data-subitem="dm" role="menuitem">✉️ 私信</a>
+                        <a href="community-stats.html" data-subitem="stats" role="menuitem">📊 数据</a>
+                        <a href="community-collections.html" data-subitem="collections" role="menuitem">📚 合集</a>
+                        <a href="community-user.html?mine=1" data-subitem="profile" role="menuitem">👤 个人主页</a>
+                        <a href="community-settings.html" data-subitem="settings" role="menuitem">⚙️ 设置</a>
+                    </div>
+                </div>
                 <span id="sub-auth"><a href="community-auth.html">登录</a></span>
             </nav>
         </div>
@@ -103,7 +115,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261004a"></script>
+    <script src="js/community.js?v=20261004c"></script>
     <script>
     function getId() {
         var m = location.search.match(/[?&]id=([^&]+)/);
@@ -171,7 +183,7 @@
         html += '<h2 class="sec-title">👥 成员（' + members.length + '）</h2><div class="member-list">' +
             members.map(function (m) {
                 var u = users[m.user_id] || {};
-                var uav = u.avatar_url ? '<img src="' + esc(u.avatar_url) + '" alt="">' : '<img alt="">';
+                var uav = u.avatar_url ? '<img src="' + esc(u.avatar_url) + '" alt="" loading="lazy">' : '<img alt="">';
                 var rm = (isManager && m.role !== 'owner' && m.user_id !== me.id)
                     ? ' <button class="remove-btn" data-rm-member="' + m.user_id + '">移除</button>' : '';
                 var appt = '';
@@ -270,8 +282,14 @@
         if (isMember || siteAdmin) {
             html += '<h2 class="sec-title">💬 内部讨论室</h2>' +
                 '<p class="works-note" style="padding:0 0 8px">仅工作室成员可见，支持 Markdown 语法。</p>' +
+                '<div class="dc-filter" id="dc-filter">' +
+                ['全部', '综合', '公告', '活动', '闲聊'].map(function (c, i) {
+                    return '<button class="filter-chip' + (i === 0 ? ' active' : '') + '" data-dc-cat="' + c + '">' + c + '</button>';
+                }).join('') + '</div>' +
                 '<div id="discuss-list"><p class="works-note">加载中…</p></div>' +
                 '<div class="manage-box"><b>💬 发表讨论</b><br>' +
+                '<div style="margin-bottom:8px"><label style="font-size:.85rem;color:var(--muted)">分类：</label>' +
+                '<select id="dc-cat"><option>综合</option><option>公告</option><option>活动</option><option>闲聊</option></select></div>' +
                 '<textarea id="dc-text" rows="4" maxlength="2000" placeholder="说点什么…（支持 Markdown，最多 2000 字）" style="width:100%"></textarea>' +
                 mdHelpBtn('dc-text') +
                 '<div style="margin-top:8px"><button class="btn btn-blue" id="dc-send">发送</button></div></div>';
@@ -450,13 +468,16 @@
             else { document.getElementById('announce-input').value = ''; loadAnnounces(); }
         });
 
-        /* 💬 内部讨论室：加载 + 发表 + 删除 */
+        /* 💬 内部讨论室：加载 + 发表 + 删除（支持分类） */
+        var dcFilterCat = '全部';
         async function loadDiscussions() {
             var box = document.getElementById('discuss-list');
             if (!box) return;
             try {
+                var q = sb.from('studio_discussions').select('*').eq('studio_id', sid);
+                if (dcFilterCat !== '全部') q = q.eq('category', dcFilterCat);
                 var r = await withTimeout(
-                    sb.from('studio_discussions').select('*').eq('studio_id', sid).order('created_at', { ascending: false }).limit(100),
+                    q.order('created_at', { ascending: false }).limit(100),
                     25000, '讨论加载超时，请检查网络后重试');
                 var list = r.data || [];
                 var duids = list.map(function (d) { return d.user_id; });
@@ -469,12 +490,14 @@
                 members.forEach(function (m) { droles[m.user_id] = m.role; });
                 box.innerHTML = list.length ? list.map(function (d) {
                     var u = dusers[d.user_id] || {};
-                    var uav = u.avatar_url ? '<img src="' + esc(u.avatar_url) + '" alt="">' : '<img alt="">';
+                    var uav = u.avatar_url ? '<img src="' + esc(u.avatar_url) + '" alt="" loading="lazy">' : '<img alt="">';
                     var role = droles[d.user_id] || 'member';
                     var canDel = (me && d.user_id === me.id) || isManager;
+                    var dcCat = d.category || '综合';
                     return '<div class="comment"><div class="comment-meta">' +
                         '<span class="member-chip" style="border:none;padding:0;background:none">' + uav + esc(u.username || '未知') + '</span>' +
                         ' <span class="role-tag ' + role + '">' + ROLE_TEXT[role] + '</span>' +
+                        ' <span class="dc-cat dc-cat-' + esc(dcCat) + '">' + esc(dcCat) + '</span>' +
                         ' · ' + fmtDate(d.created_at) +
                         (canDel ? ' <button class="remove-btn" data-rm-dc="' + d.id + '">删除</button>' : '') +
                         '</div><div>' + md(d.content) + '</div></div>';
@@ -493,6 +516,15 @@
                 });
             } catch (e) { box.innerHTML = '<p class="works-note">加载失败</p>'; }
         }
+        document.getElementById('dc-filter').querySelectorAll('[data-dc-cat]').forEach(function (b) {
+            b.addEventListener('click', function () {
+                dcFilterCat = b.getAttribute('data-dc-cat');
+                document.getElementById('dc-filter').querySelectorAll('[data-dc-cat]').forEach(function (x) {
+                    x.classList.toggle('active', x === b);
+                });
+                loadDiscussions();
+            });
+        });
         await loadDiscussions();
         var dcBtn = document.getElementById('dc-send');
         if (dcBtn) dcBtn.addEventListener('click', async function () {
@@ -501,7 +533,8 @@
             if (tx.length > 2000) { alert('内容最多 2000 字'); return; }
             showLoading('发送中…');
             try {
-                var r = await withTimeout(sb.from('studio_discussions').insert({ studio_id: sid, user_id: me.id, content: tx }), 25000, '发送超时，请检查网络后重试');
+                var dcCatSel = document.getElementById('dc-cat');
+                var r = await withTimeout(sb.from('studio_discussions').insert({ studio_id: sid, user_id: me.id, content: tx, category: dcCatSel ? dcCatSel.value : '综合' }), 25000, '发送超时，请检查网络后重试');
                 if (r.error) alert('发送失败：' + r.error.message);
                 else { document.getElementById('dc-text').value = ''; try { await sendMentions(tx, me.id, sid, 'studio'); } catch (e) {} loadDiscussions(); }
             } catch (e) { alert(e.message || '发送失败'); }

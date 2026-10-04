@@ -40,8 +40,20 @@
         .dm-msg.theirs { align-self: flex-start; background: var(--surface-2, rgba(255,255,255,.06)); border-bottom-left-radius: 4px; }
         .dm-msg-time { font-size: .7rem; color: var(--muted); margin-top: 4px; }
         .dm-msg.mine .dm-msg-time { color: rgba(255,255,255,.7); text-align: right; }
-        .dm-input-bar { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--border, rgba(255,255,255,.08)); }
+        .dm-input-bar { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--border, rgba(255,255,255,.08)); position: relative; }
         .dm-input-bar input { flex: 1; min-height: 44px; }
+        .dm-tool-btn { background: none; border: none; font-size: 1.4rem; cursor: pointer; padding: 6px; border-radius: 8px; line-height: 1; }
+        .dm-tool-btn:hover { background: rgba(255,255,255,.08); }
+        .dm-emoji-panel { position: absolute; bottom: 60px; left: 12px; background: var(--surface, #1a1a1f); border: 1px solid var(--border, rgba(255,255,255,.12)); border-radius: 12px; padding: 10px; display: none; grid-template-columns: repeat(5, 1fr); gap: 4px; z-index: 50; box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+        .dm-emoji-panel.open { display: grid; }
+        .dm-emoji-panel button { background: none; border: none; font-size: 1.5rem; cursor: pointer; padding: 6px; border-radius: 8px; }
+        .dm-emoji-panel button:hover { background: rgba(255,255,255,.1); }
+        .dm-msg img.dm-img { max-width: 220px; max-height: 220px; border-radius: 10px; cursor: zoom-in; display: block; }
+        .dm-msg-del { display: none; font-size: .72rem; color: rgba(255,255,255,.6); cursor: pointer; margin-left: 6px; }
+        .dm-msg.mine:hover .dm-msg-del { display: inline; }
+        .dm-msg-del:hover { color: #ff6b6b; }
+        .dm-read { font-size: .68rem; color: rgba(255,255,255,.55); text-align: right; margin-top: 2px; }
+        .dm-toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,.8); color: #fff; padding: 10px 20px; border-radius: 20px; font-size: .85rem; z-index: 9999; display: none; }
         .dm-empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--muted); padding: 40px 20px; text-align: center; }
         @media (max-width: 760px) {
             .dm-wrap { flex-direction: column; }
@@ -73,17 +85,23 @@
             <nav class="sub-links" aria-label="社区导航">
                 <a href="community-home.html" data-sub="home">首页</a>
                 <a href="community.html" data-sub="works">🔍 发现</a>
-                <a href="community-search.html" data-sub="search">🔎 搜索</a>
                 <a href="community-forum.html" data-sub="forum">💬 论坛</a>
+                <a href="community-studios.html" data-sub="studios">🏢 工作室</a>
                 <a href="community-shop.html" data-sub="shop">🎁 任务商城</a>
                 <a href="community-contests.html" data-sub="contests">🏁 赛事</a>
                 <a href="community-moderation.html" data-sub="moderation">⚖️ 共建</a>
-                <a href="community-studios.html" data-sub="studios">🏢 工作室</a>
                 <a href="community-publish.html" data-sub="publish">🚀 发布</a>
-                <a href="community-stats.html" data-sub="stats">📊 数据</a>
-                <a href="community-collections.html" data-sub="collections">📚 合集</a>
-                <a href="community-feed.html" data-sub="feed" id="sub-bell">💬 动态</a>
-                <a href="community-dm.html" data-sub="dm">✉️ 私信<span id="dm-dot" style="display:none;color:#ff6b6b"> ●</span></a>
+                <div class="sub-drop" id="sub-mine">
+                    <button type="button" class="sub-drop-btn" data-sub="mine" aria-haspopup="true" aria-expanded="false">👤 我的 ▾<span id="mine-dot" class="bell-badge" style="display:none"></span></button>
+                    <div class="sub-drop-menu" role="menu">
+                        <a href="community-feed.html" data-subitem="feed" role="menuitem">💬 动态</a>
+                        <a href="community-dm.html" data-subitem="dm" role="menuitem">✉️ 私信</a>
+                        <a href="community-stats.html" data-subitem="stats" role="menuitem">📊 数据</a>
+                        <a href="community-collections.html" data-subitem="collections" role="menuitem">📚 合集</a>
+                        <a href="community-user.html?mine=1" data-subitem="profile" role="menuitem">👤 个人主页</a>
+                        <a href="community-settings.html" data-subitem="settings" role="menuitem">⚙️ 设置</a>
+                    </div>
+                </div>
                 <span id="sub-auth"><a href="community-auth.html">登录</a></span>
             </nav>
         </div>
@@ -103,9 +121,14 @@
                         <div class="dm-chat-head" id="dm-chat-head"></div>
                         <div class="dm-msgs" id="dm-msgs"></div>
                         <div class="dm-input-bar">
+                            <button class="dm-tool-btn" id="dm-emoji-btn" title="表情">😀</button>
+                            <button class="dm-tool-btn" id="dm-img-btn" title="发送图片">📷</button>
+                            <input type="file" id="dm-img-input" accept="image/*" style="display:none">
+                            <div class="dm-emoji-panel" id="dm-emoji-panel"></div>
                             <input type="text" id="dm-input" maxlength="500" placeholder="输入消息，Enter 发送…" autocomplete="off">
                             <button class="btn btn-blue" id="dm-send">发送</button>
                         </div>
+                        <div class="dm-toast" id="dm-toast"></div>
                     </div>
                 </div>
             </div>
@@ -130,7 +153,7 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261004a"></script>
+    <script src="js/community.js?v=20261004c"></script>
     <script>
     (function () {
         var me = null, convs = [], activeUid = null, nameMap = {}, pollTimer = null, sending = false;
@@ -141,7 +164,7 @@
 
         async function loadConvs() {
             var r = await withTimeout(sb.from('direct_messages')
-                .select('id,sender_id,receiver_id,content,created_at,read_at')
+                .select('id,sender_id,receiver_id,content,created_at,read_at,msg_type')
                 .or('sender_id.eq.' + me.id + ',receiver_id.eq.' + me.id)
                 .order('created_at', { ascending: false })
                 .limit(200), 15000, '加载超时');
@@ -175,7 +198,8 @@
             }
             box.innerHTML = convs.map(function (c) {
                 var nm = esc(nameMap[c.uid] || '未知用户');
-                var last = c.last.sender_id === me.id ? '我：' + c.last.content : c.last.content;
+                var lastText = c.last.msg_type === 'image' ? '[图片]' : c.last.content;
+                var last = c.last.sender_id === me.id ? '我：' + lastText : lastText;
                 return '<div class="dm-conv' + (c.uid === activeUid ? ' active' : '') + '" data-uid="' + c.uid + '">' +
                     '<div class="dm-avatar">' + esc(nm.charAt(0)) + '</div>' +
                     '<div class="dm-conv-main"><div class="dm-conv-name"><span>' + nm + '</span>' +
@@ -219,7 +243,7 @@
         async function loadMsgs() {
             if (!activeUid) return;
             var r = await withTimeout(sb.from('direct_messages')
-                .select('id,sender_id,content,created_at')
+                .select('id,sender_id,content,created_at,read_at,msg_type')
                 .or('and(sender_id.eq.' + me.id + ',receiver_id.eq.' + activeUid + '),and(sender_id.eq.' + activeUid + ',receiver_id.eq.' + me.id + ')')
                 .order('created_at', { ascending: true })
                 .limit(200), 15000, '加载超时');
@@ -227,11 +251,60 @@
             var box = document.getElementById('dm-msgs');
             box.innerHTML = (r.data || []).map(function (m) {
                 var mine = m.sender_id === me.id;
-                return '<div class="dm-msg ' + (mine ? 'mine' : 'theirs') + '">' +
-                    esc(m.content) +
-                    '<div class="dm-msg-time">' + fmtDate(m.created_at) + '</div></div>';
+                var isImg = m.msg_type === 'image';
+                var body = isImg
+                    ? '<img class="dm-img" src="' + esc(m.content) + '" alt="图片消息" loading="lazy" data-full="' + esc(m.content) + '">'
+                    : '<span class="dm-text">' + esc(m.content) + '</span>';
+                var readTag = (mine && m.read_at) ? '<div class="dm-read">已读</div>' : '';
+                return '<div class="dm-msg ' + (mine ? 'mine' : 'theirs') + '" data-mid="' + m.id + '">' +
+                    body +
+                    (mine ? '<span class="dm-msg-del" data-del-msg="' + m.id + '" title="删除">✕</span>' : '') +
+                    '<div class="dm-msg-time">' + fmtDate(m.created_at) + '</div>' + readTag + '</div>';
             }).join('') || '<div class="dm-empty">还没有消息，打个招呼吧 👋</div>';
             box.scrollTop = box.scrollHeight;
+            /* 图片点击放大 */
+            box.querySelectorAll('.dm-img').forEach(function (img) {
+                img.addEventListener('click', function () { window.open(img.getAttribute('data-full'), '_blank'); });
+            });
+            /* 删除自己的消息 */
+            box.querySelectorAll('[data-del-msg]').forEach(function (b) {
+                b.addEventListener('click', async function (e) {
+                    e.stopPropagation();
+                    if (!confirm('删除这条消息？')) return;
+                    try {
+                        var dr = await withTimeout(sb.from('direct_messages').delete().eq('id', b.getAttribute('data-del-msg')).eq('sender_id', me.id), 15000, '删除超时');
+                        if (dr.error) throw dr.error;
+                        await loadMsgs(); await loadConvs();
+                    } catch (err) { alert('删除失败：' + (err.message || '')); }
+                });
+            });
+            /* 右键复制文本 */
+            box.querySelectorAll('.dm-text').forEach(function (t) {
+                t.addEventListener('contextmenu', function (e) {
+                    e.preventDefault();
+                    copyText(t.textContent);
+                });
+            });
+        }
+
+        function copyText(s) {
+            function done() { toast('已复制'); }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(s).then(done, function () { fallback(); });
+            } else fallback();
+            function fallback() {
+                var ta = document.createElement('textarea');
+                ta.value = s; ta.style.position = 'fixed'; ta.style.opacity = '0';
+                document.body.appendChild(ta); ta.select();
+                try { document.execCommand('copy'); done(); } catch (e) {}
+                document.body.removeChild(ta);
+            }
+        }
+
+        function toast(s) {
+            var t = document.getElementById('dm-toast');
+            t.textContent = s; t.style.display = 'block';
+            setTimeout(function () { t.style.display = 'none'; }, 1500);
         }
 
         async function sendMsg() {
@@ -257,6 +330,45 @@
             input.focus();
         }
 
+        /* 📷 图片发送 */
+        async function sendImage(file) {
+            if (!activeUid || !file) return;
+            if (!file.type.startsWith('image/')) { alert('请选择图片文件'); return; }
+            if (file.size > 5 * 1024 * 1024) { alert('图片不能超过 5MB'); return; }
+            showLoading('图片上传中…');
+            try {
+                var ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+                var url = await uploadWithProgress('covers', 'dm/' + me.id + '_' + Date.now() + '.' + ext, file, file.type || 'image/jpeg', null);
+                var r = await withTimeout(sb.from('direct_messages').insert({
+                    sender_id: me.id, receiver_id: activeUid, content: url, msg_type: 'image'
+                }), 15000, '发送超时');
+                if (r.error) throw r.error;
+                await loadMsgs(); await loadConvs();
+            } catch (e) { alert('发送失败：' + (e.message || '')); }
+            hideLoading();
+        }
+
+        /* 😀 Emoji 面板 */
+        var EMOJIS = ['😀','😁','😂','🤣','😊','😍','😘','😎','🤔','😅','😭','😡','👍','👎','👏','🙏','💪','🎉','🔥','❤️'];
+        function buildEmojiPanel() {
+            var panel = document.getElementById('dm-emoji-panel');
+            panel.innerHTML = EMOJIS.map(function (e) {
+                return '<button type="button" data-emoji="' + e + '">' + e + '</button>';
+            }).join('');
+            panel.querySelectorAll('[data-emoji]').forEach(function (b) {
+                b.addEventListener('click', function () {
+                    var input = document.getElementById('dm-input');
+                    var s = input.selectionStart || 0, epos = input.selectionEnd || 0;
+                    var v = input.value;
+                    input.value = v.slice(0, s) + b.getAttribute('data-emoji') + v.slice(epos);
+                    input.focus();
+                    var pos = s + b.getAttribute('data-emoji').length;
+                    try { input.setSelectionRange(pos, pos); } catch (err) {}
+                    panel.classList.remove('open');
+                });
+            });
+        }
+
         function startPoll() {
             stopPoll();
             pollTimer = setInterval(function () {
@@ -275,6 +387,23 @@
             }
             document.getElementById('dm-wrap').style.display = '';
             document.getElementById('dm-send').addEventListener('click', sendMsg);
+            buildEmojiPanel();
+            var emojiBtn = document.getElementById('dm-emoji-btn');
+            var emojiPanel = document.getElementById('dm-emoji-panel');
+            emojiBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                emojiPanel.classList.toggle('open');
+            });
+            document.addEventListener('click', function (e) {
+                if (!emojiPanel.contains(e.target) && e.target !== emojiBtn) emojiPanel.classList.remove('open');
+            });
+            var imgBtn = document.getElementById('dm-img-btn');
+            var imgInput = document.getElementById('dm-img-input');
+            imgBtn.addEventListener('click', function () { imgInput.click(); });
+            imgInput.addEventListener('change', function () {
+                if (imgInput.files[0]) sendImage(imgInput.files[0]);
+                imgInput.value = '';
+            });
             document.getElementById('dm-input').addEventListener('keydown', function (e) {
                 if (e.key === 'Enter') { e.preventDefault(); sendMsg(); }
             });
