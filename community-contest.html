@@ -14,7 +14,7 @@
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
-    <link rel="stylesheet" href="css/styles.min.css?v=20261004p">
+    <link rel="stylesheet" href="css/styles.min.css?v=20261004q">
     <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
     <style>
         .contest-hero { border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 14px; padding: 24px; margin-bottom: 20px; background: linear-gradient(135deg, rgba(77,124,254,.08), rgba(156,77,254,.05)); }
@@ -105,7 +105,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.min.js?v=20261004p"></script>
+    <script src="js/community.min.js?v=20261004q"></script>
     <div class="modal-backdrop" id="vote-modal" style="display:none">
         <div class="modal"><h3>确认投票</h3>
             <p class="form-hint">每人每赛事限投 1 票，投票后不可更改，确认吗？</p>
@@ -173,8 +173,9 @@
             '<br>🗳️ 投票截止：' + fmtDT(c.vote_end) +
             '<br>🏆 奖励：冠军 +' + (c.reward_1st == null ? 100 : c.reward_1st) + ' 积分 / 亚军 +' + (c.reward_2nd == null ? 50 : c.reward_2nd) + ' / 季军 +' + (c.reward_3rd == null ? 30 : c.reward_3rd) +
             '<br>🏷️ 类别：' + esc(c.category || '综合') + '</div>' +
-            (canManage && st !== 'ended'
-                ? '<p style="margin-top:8px"><button class="btn btn-ghost btn-sm" id="edit-contest-btn">✏️ 修改赛事</button> ' +
+            (canManage
+                ? '<p style="margin-top:8px">' +
+                  (st !== 'ended' ? '<button class="btn btn-ghost btn-sm" id="edit-contest-btn">✏️ 修改赛事</button> ' : '') +
                   '<button class="btn btn-ghost btn-sm" id="del-contest-btn" style="color:#ff6b6b">🗑️ 删除赛事</button></p>' : '') +
             (st === 'ended' && canManage && !c.settled
                 ? '<p style="margin-top:12px"><button class="btn btn-blue" id="settle-btn">🏆 结算并发奖</button></p>' : '') +
