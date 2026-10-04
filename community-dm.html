@@ -137,6 +137,7 @@
                         <div class="dm-input-bar">
                             <button class="dm-tool-btn" id="dm-emoji-btn" title="表情">😀</button>
                             <button class="dm-tool-btn" id="dm-img-btn" title="发送图片">📷</button>
+                            <button class="dm-tool-btn" id="dm-rp-btn" title="发积分红包">🧧</button>
                             <input type="file" id="dm-img-input" accept="image/*" style="display:none">
                             <div class="dm-emoji-panel" id="dm-emoji-panel"></div>
                             <input type="text" id="dm-input" maxlength="500" placeholder="输入消息，Enter 发送…" autocomplete="off">
@@ -172,6 +173,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/community.min.js?v=20261004m"></script>
+    <script src="js/redpacket.js"></script>
     <script>
     (function () {
         var me = null, convs = [], activeUid = null, activeGroupId = null, nameMap = {}, groupMap = {}, pollTimer = null, sending = false;
@@ -275,7 +277,8 @@
             box.innerHTML = convs.map(function (c) {
                 if (c.isGroup) {
                     /* 群聊条目 */
-                    var gLastText = c.last.msg_type === 'image' ? '[图片]' : (c.last.content || '');
+                    var gLastText = c.last.msg_type === 'image' ? '[图片]'
+                        : (c.last.msg_type === 'redpacket' ? '[红包]' : (c.last.content || ''));
                     var gPrefix = c.last.sender_id ? ((c.last.sender_id === me.id ? '我' : (nameMap[c.last.sender_id] || '成员')) + '：') : '';
                     return '<div class="dm-conv' + (c.groupId === activeGroupId ? ' active' : '') + '" data-group="' + c.groupId + '">' +
                         '<div class="dm-avatar">👥</div>' +
@@ -285,7 +288,8 @@
                         '</div>';
                 }
                 var nm = esc(nameMap[c.uid] || '未知用户');
-                var lastText = c.last.msg_type === 'image' ? '[图片]' : c.last.content;
+                var lastText = c.last.msg_type === 'image' ? '[图片]'
+                    : (c.last.msg_type === 'redpacket' ? '[红包]' : c.last.content);
                 var last = c.last.sender_id === me.id ? '我：' + lastText : lastText;
                 return '<div class="dm-conv' + (c.uid === activeUid ? ' active' : '') + '" data-uid="' + c.uid + '">' +
                     '<div class="dm-avatar">' + esc(nm.charAt(0)) + '</div>' +
@@ -367,9 +371,16 @@
             box.innerHTML = (r.data || []).map(function (m) {
                 var mine = m.sender_id === me.id;
                 var isImg = m.msg_type === 'image';
-                var body = isImg
-                    ? '<img class="dm-img" src="' + esc(m.content) + '" alt="图片消息" loading="lazy" data-full="' + esc(m.content) + '">'
-                    : '<span class="dm-text">' + esc(m.content) + '</span>';
+                var isRp = m.msg_type === 'redpacket';
+                var body;
+                if (isRp) {
+                    /* 🧧 红包消息：先占位，异步渲染卡片 */
+                    body = '<div class="dm-rp-slot" data-rp-id="' + esc(m.content) + '">🧧 红包加载中…</div>';
+                } else if (isImg) {
+                    body = '<img class="dm-img" src="' + esc(m.content) + '" alt="图片消息" loading="lazy" data-full="' + esc(m.content) + '">';
+                } else {
+                    body = '<span class="dm-text">' + esc(m.content) + '</span>';
+                }
                 var readTag = (mine && m.read_at) ? '<div class="dm-read">已读</div>' : '';
                 return '<div class="dm-msg ' + (mine ? 'mine' : 'theirs') + '" data-mid="' + m.id + '">' +
                     body +
@@ -377,6 +388,8 @@
                     '<div class="dm-msg-time">' + fmtDate(m.created_at) + '</div>' + readTag + '</div>';
             }).join('') || '<div class="dm-empty">还没有消息，打个招呼吧 👋</div>';
             box.scrollTop = box.scrollHeight;
+            /* 🧧 异步渲染红包卡片 */
+            renderRpSlots(box);
             /* 图片点击放大 */
             box.querySelectorAll('.dm-img').forEach(function (img) {
                 img.addEventListener('click', function () { window.open(img.getAttribute('data-full'), '_blank'); });
@@ -425,9 +438,16 @@
             box.innerHTML = (r.data || []).map(function (m) {
                 var mine = m.sender_id === me.id;
                 var isImg = m.msg_type === 'image';
-                var body = isImg
-                    ? '<img class="dm-img" src="' + esc(m.content) + '" alt="图片消息" loading="lazy" data-full="' + esc(m.content) + '">'
-                    : '<span class="dm-text">' + esc(m.content) + '</span>';
+                var isRp = m.msg_type === 'redpacket';
+                var body;
+                if (isRp) {
+                    /* 🧧 红包消息：先占位，异步渲染卡片 */
+                    body = '<div class="dm-rp-slot" data-rp-id="' + esc(m.content) + '">🧧 红包加载中…</div>';
+                } else if (isImg) {
+                    body = '<img class="dm-img" src="' + esc(m.content) + '" alt="图片消息" loading="lazy" data-full="' + esc(m.content) + '">';
+                } else {
+                    body = '<span class="dm-text">' + esc(m.content) + '</span>';
+                }
                 var senderTag = mine ? '' : '<div class="dm-sender">' + esc(nameMap[m.sender_id] || '成员') + '</div>';
                 return '<div class="dm-msg ' + (mine ? 'mine' : 'theirs') + '" data-mid="' + m.id + '">' +
                     senderTag + body +
@@ -435,6 +455,8 @@
                     '<div class="dm-msg-time">' + fmtDate(m.created_at) + '</div></div>';
             }).join('') || '<div class="dm-empty">还没有消息，打个招呼吧 👋</div>';
             box.scrollTop = box.scrollHeight;
+            /* 🧧 异步渲染红包卡片 */
+            renderRpSlots(box);
             /* 图片点击放大 */
             box.querySelectorAll('.dm-img').forEach(function (img) {
                 img.addEventListener('click', function () { window.open(img.getAttribute('data-full'), '_blank'); });
@@ -478,6 +500,34 @@
             var t = document.getElementById('dm-toast');
             t.textContent = s; t.style.display = 'block';
             setTimeout(function () { t.style.display = 'none'; }, 1500);
+        }
+
+        /* 🧧 红包发完回调：把红包作为特殊消息插入 direct_messages */
+        async function onRedPacketSent(packetId, info) {
+            if (!packetId) return;
+            try {
+                var payload = activeGroupId
+                    ? { sender_id: me.id, receiver_id: null, group_id: activeGroupId, content: packetId, msg_type: 'redpacket' }
+                    : { sender_id: me.id, receiver_id: activeUid, content: packetId, msg_type: 'redpacket' };
+                var r = await withTimeout(sb.from('direct_messages').insert(payload), 15000, '发送超时');
+                if (r.error) throw r.error;
+                await loadMsgs();
+                await loadConvs();
+            } catch (e) {
+                alert('红包消息发送失败：' + (e.message || ''));
+            }
+        }
+
+        /* 🧧 异步渲染消息区内的红包卡片占位 */
+        function renderRpSlots(box) {
+            box.querySelectorAll('.dm-rp-slot').forEach(function (slot) {
+                var pid = slot.getAttribute('data-rp-id');
+                if (!pid) return;
+                renderRedPacket(pid).then(function (html) {
+                    if (html) slot.innerHTML = html;
+                    else slot.textContent = '🧧 红包';
+                });
+            });
         }
 
         async function sendMsg() {
@@ -740,6 +790,20 @@
                 return;
             }
             document.getElementById('dm-wrap').style.display = '';
+            /* 🧧 红包模块初始化 */
+            injectRedPacketCSS();
+            initRedPacketModal();
+            bindRedPacketClaim(document);
+            document.getElementById('dm-rp-btn').addEventListener('click', function () {
+                if (!activeUid && !activeGroupId) { toast('请先选择一个会话'); return; }
+                if (activeGroupId) {
+                    /* 群聊发红包 */
+                    window.openRedPacket('group', activeGroupId, onRedPacketSent);
+                } else {
+                    /* 私聊发红包 */
+                    window.openRedPacket('dm', activeUid, onRedPacketSent);
+                }
+            });
             document.getElementById('dm-send').addEventListener('click', sendMsg);
             document.getElementById('dm-create-group-btn').addEventListener('click', openCreateGroup);
             document.getElementById('dm-modal-backdrop').addEventListener('click', function (e) {

@@ -106,6 +106,7 @@
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/community.min.js?v=20261004m"></script>
+    <script src="js/redpacket.js"></script>
     <script>
     function getId() {
         var m = location.search.match(/[?&]id=([^&]+)/);
@@ -282,10 +283,31 @@
                 '<select id="dc-cat"><option>综合</option><option>公告</option><option>活动</option><option>闲聊</option></select></div>' +
                 '<textarea id="dc-text" rows="4" maxlength="2000" placeholder="说点什么…（支持 Markdown，最多 2000 字）" style="width:100%"></textarea>' +
                 mdHelpBtn('dc-text') +
-                '<div style="margin-top:8px"><button class="btn btn-blue" id="dc-send">发送</button></div></div>';
+                /* 🧧 讨论室发积分红包按钮 */
+                '<div style="margin-top:8px"><button class="btn btn-blue" id="dc-send">发送</button> ' + redPacketButton('studio', sid) + '</div></div>';
         }
 
         wrap.innerHTML = html;
+
+        /* 🧧 红包模块初始化：发红包成功后在讨论列表顶部插入红包卡片 */
+        function onRedPacketSent(packetId) {
+            var box = document.getElementById('discuss-list');
+            if (!box || !packetId) return;
+            renderRedPacket(packetId).then(function (rpCard) {
+                if (!rpCard) return;
+                var note = box.querySelector('.works-note');
+                if (note) note.remove();
+                box.insertAdjacentHTML('afterbegin', rpCard);
+            });
+        }
+        injectRedPacketCSS();
+        initRedPacketModal();
+        /* load() 可能被多次调用，document 级委托只绑一次，避免重复触发 */
+        if (!window._studioRpBound) {
+            window._studioRpBound = true;
+            bindRedPacketButtons(document, onRedPacketSent);
+            bindRedPacketClaim(document);
+        }
 
         /* 邀请 */
         var invBtn = document.getElementById('invite-btn');
@@ -478,7 +500,18 @@
                 }
                 var droles = {};
                 members.forEach(function (m) { droles[m.user_id] = m.role; });
-                box.innerHTML = list.length ? list.map(function (d) {
+                /* 🧧 查询该工作室的红包，并行渲染，插在讨论列表顶部 */
+                var rpHtml = '';
+                try {
+                    var rpr = await sb.from('red_packets').select('id').eq('context_type', 'studio').eq('context_id', sid)
+                        .order('created_at', { ascending: false }).limit(10);
+                    var rpRows = rpr.data || [];
+                    if (rpRows.length) {
+                        var rpParts = await Promise.all(rpRows.map(function (row) { return renderRedPacket(row.id); }));
+                        rpHtml = rpParts.join('');
+                    }
+                } catch (e) {}
+                box.innerHTML = rpHtml + (list.length ? list.map(function (d) {
                     var u = dusers[d.user_id] || {};
                     var uav = u.avatar_url ? '<img src="' + esc(u.avatar_url) + '" alt="" loading="lazy">' : '<img alt="">';
                     var role = droles[d.user_id] || 'member';
@@ -491,7 +524,7 @@
                         ' · ' + fmtDate(d.created_at) +
                         (canDel ? ' <button class="remove-btn" data-rm-dc="' + d.id + '">删除</button>' : '') +
                         '</div><div>' + md(d.content) + '</div></div>';
-                }).join('') : '<p class="works-note">还没有讨论，来发第一条吧！</p>';
+                }).join('') : (rpHtml ? '' : '<p class="works-note">还没有讨论，来发第一条吧！</p>'));
                 box.querySelectorAll('[data-rm-dc]').forEach(function (b) {
                     b.addEventListener('click', async function () {
                         if (!confirm('删除这条讨论？')) return;
