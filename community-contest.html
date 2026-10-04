@@ -174,10 +174,12 @@
             '<br>🏆 奖励：冠军 +' + (c.reward_1st == null ? 100 : c.reward_1st) + ' 积分 / 亚军 +' + (c.reward_2nd == null ? 50 : c.reward_2nd) + ' / 季军 +' + (c.reward_3rd == null ? 30 : c.reward_3rd) +
             '<br>🏷️ 类别：' + esc(c.category || '综合') + '</div>' +
             (canManage && st !== 'ended'
-                ? '<p style="margin-top:8px"><button class="btn btn-ghost btn-sm" id="edit-contest-btn">✏️ 修改赛事</button></p>' : '') +
+                ? '<p style="margin-top:8px"><button class="btn btn-ghost btn-sm" id="edit-contest-btn">✏️ 修改赛事</button> ' +
+                  '<button class="btn btn-ghost btn-sm" id="del-contest-btn" style="color:#ff6b6b">🗑️ 删除赛事</button></p>' : '') +
             (st === 'ended' && canManage && !c.settled
                 ? '<p style="margin-top:12px"><button class="btn btn-blue" id="settle-btn">🏆 结算并发奖</button></p>' : '') +
             (c.settled ? '<p style="margin-top:8px;color:#51cf66">✅ 已结算，奖金已发放</p>' : '') +
+            (!canManage ? '<p style="margin-top:8px"><button class="btn btn-ghost btn-sm" id="report-contest-btn">⚠️ 举报赛事</button></p>' : '') +
             '</div>';
 
         /* 投稿区 */
@@ -277,6 +279,50 @@
                 modal.remove(); load();
             });
         });
+
+        /* 删除赛事 */
+        var delBtn = document.getElementById('del-contest-btn');
+        if (delBtn) delBtn.addEventListener('click', async function () {
+            if (!confirm('确定删除赛事「' + c.title + '」吗？参赛作品和投票将一并删除，不可恢复！')) return;
+            delBtn.disabled = true; delBtn.textContent = '删除中…';
+            var r = await sb.from('contests').delete().eq('id', cid);
+            if (r.error) { alert('删除失败：' + r.error.message); delBtn.disabled = false; delBtn.textContent = '🗑️ 删除赛事'; return; }
+            alert('赛事已删除');
+            location.href = 'community-contests.html';
+        });
+
+        /* 举报赛事 */
+        var reportBtn = document.getElementById('report-contest-btn');
+        if (reportBtn) {
+            var rHtml = '<div class="modal-backdrop" id="report-contest-modal" style="display:none">' +
+                '<div class="modal"><h3>⚠️ 举报赛事</h3>' +
+                '<p class="form-hint">请填写举报原因，站长会尽快处理。</p>' +
+                '<textarea id="rc-reason" maxlength="200" placeholder="如：虚假赛事、诈骗等"></textarea>' +
+                '<p class="form-note" id="rc-note"></p>' +
+                '<div class="modal-actions"><button class="btn" id="rc-cancel" type="button">取消</button>' +
+                '<button class="btn btn-blue" id="rc-submit" type="button">提交举报</button></div></div></div>';
+            document.body.insertAdjacentHTML('beforeend', rHtml);
+            var rModal = document.getElementById('report-contest-modal');
+            reportBtn.addEventListener('click', function () {
+                if (!me) { alert('请先登录'); return; }
+                document.getElementById('rc-reason').value = '';
+                document.getElementById('rc-note').textContent = '';
+                rModal.style.display = 'flex';
+            });
+            document.getElementById('rc-cancel').addEventListener('click', function () { rModal.style.display = 'none'; });
+            rModal.addEventListener('click', function (e) { if (e.target === rModal) rModal.style.display = 'none'; });
+            document.getElementById('rc-submit').addEventListener('click', async function () {
+                var reason = document.getElementById('rc-reason').value.trim();
+                var rn = document.getElementById('rc-note');
+                if (!reason) { rn.textContent = '请填写举报原因'; rn.className = 'form-note err'; return; }
+                var r = await sb.from('reports').insert({
+                    reporter_id: me.id, target_type: 'contest', target_id: cid, reason: reason
+                });
+                if (r.error) { rn.textContent = '举报失败：' + r.error.message; rn.className = 'form-note err'; return; }
+                rModal.style.display = 'none';
+                alert('已收到举报，站长会尽快处理，感谢监督！');
+            });
+        }
 
         /* 结算 */
         var stBtn = document.getElementById('settle-btn');
