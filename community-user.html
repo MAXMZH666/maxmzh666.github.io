@@ -74,7 +74,7 @@
 
     <script src="js/scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.js?v=20261004e"></script>
+    <script src="js/community.js?v=20261004f"></script>
     <script>
     (async function () {
         await renderSubHeader();
@@ -213,6 +213,32 @@
                             : '<p class="works-note">还没有收藏，去社区逛逛吧。</p>');
                 } catch (e) {}
             }
+            /* 🏢 所属工作室 */
+            var studioHtml = '';
+            try {
+                var smr = await sb.from('studio_members').select('role,studio_id').eq('user_id', uid);
+                var myStudios = [];
+                if (smr.data && smr.data.length) {
+                    var sr = await sb.from('studios').select('id,name,description,avatar_url,category')
+                        .in('id', smr.data.map(function (x) { return x.studio_id; }));
+                    var roleMap = {};
+                    smr.data.forEach(function (x) { roleMap[x.studio_id] = x.role; });
+                    myStudios = (sr.data || []).map(function (s) { s._role = roleMap[s.id]; return s; });
+                }
+                studioHtml = '<h2 class="feat-title">🏢 所属工作室</h2>' +
+                    (myStudios.length
+                        ? '<div class="card-grid">' + myStudios.map(function (s) {
+                            var scover = s.avatar_url
+                                ? '<img src="' + esc(s.avatar_url) + '" alt="' + esc(s.name) + '" loading="lazy">'
+                                : '<span class="monogram">🏢</span>';
+                            var roleName = s._role === 'owner' ? '室长' : (s._role === 'admin' ? '管理员' : '成员');
+                            return '<a class="card" href="community-studio.html?id=' + s.id + '">' +
+                                '<div class="card-cover">' + scover + '</div>' +
+                                '<div class="card-body"><h3>' + esc(s.name) + '</h3>' +
+                                '<p>' + esc(roleName) + (s.category ? ' · ' + esc(s.category) : '') + '</p></div></a>';
+                        }).join('') + '</div>'
+                        : '<p class="works-note">' + (isSelf ? '还没有加入工作室，<a href="community-studios.html">去看看</a>吧。' : 'TA 还没有加入工作室。') + '</p>');
+            } catch (e) {}
             /* 📚 合集 */
             var colHtml = '';
             try {
@@ -225,7 +251,8 @@
                         .in('collection_id', cols.map(function (c) { return c.id; }));
                     (cwr.data || []).forEach(function (x) { colCounts[x.collection_id] = (colCounts[x.collection_id] || 0) + 1; });
                 }
-                colHtml = '<h2 class="feat-title">📚 合集</h2>' +
+                colHtml = '<h2 class="feat-title" id="collections">📚 合集' +
+                    (isSelf ? ' <a href="community-collections.html" class="btn btn-ghost" style="font-size:.8rem;padding:6px 14px;margin-left:8px">⚙️ 管理</a>' : '') + '</h2>' +
                     (cols.length
                         ? '<div class="card-grid">' + cols.map(function (c) {
                             var ccover = c.cover_url
@@ -260,6 +287,7 @@
                 '</div>' +
                 '<h2 class="feat-title">关注的人</h2>' + userListHtml(followingList) +
                 '<h2 class="feat-title">粉丝</h2>' + userListHtml(followerList) +
+                studioHtml +
                 '<h2 class="feat-title">TA 的作品</h2>' +
                 (works.length
                     ? '<div class="card-grid">' + works.map(function (w) {
