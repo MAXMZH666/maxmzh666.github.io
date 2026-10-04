@@ -140,18 +140,14 @@ async function renderSubHeader() {
             }
         }
     } catch (e) {}
-    /* 下拉菜单：未登录只显示登录入口 */
-    var dropMenu = document.querySelector('.sub-drop-menu');
-    var dropBtn = document.querySelector('.sub-drop-btn');
-    if (dropMenu) {
-        if (!p) {
-            dropMenu.innerHTML = '<a href="community-auth.html" role="menuitem">🔑 登录 / 注册</a>';
-        }
-    }
-    /* 下拉菜单点击切换（移动端）；桌面端 hover 由 CSS 处理 */
+    /* 账号下拉菜单（登录后）：用户名 ▾，含动态/私信/数据/合集/主页/设置 */
+    var dropMenu = null, dropBtn = null;
     (function initDrop() {
-        var drop = document.getElementById('sub-mine');
-        if (!drop || !dropBtn || drop.dataset.init) return;
+        var drop = document.getElementById('sub-account');
+        if (!drop) return;
+        dropMenu = drop.querySelector('.sub-drop-menu');
+        dropBtn = drop.querySelector('.sub-drop-btn');
+        if (!dropBtn || drop.dataset.init) return;
         drop.dataset.init = '1';
         dropBtn.addEventListener('click', function (e) {
             e.stopPropagation();
@@ -201,13 +197,28 @@ async function renderSubHeader() {
     }
     if (authEl) {
         if (p) {
-            authEl.innerHTML = '<a href="community-user.html?id=' + p.id + '">' + esc(p.username) + '</a>' +
+            authEl.innerHTML = '<div class="sub-drop" id="sub-account">' +
+                '<button type="button" class="sub-drop-btn" data-sub="mine" aria-haspopup="true" aria-expanded="false">' + esc(p.username) + ' ▾<span id="mine-dot" class="bell-badge" style="display:none"></span></button>' +
+                '<div class="sub-drop-menu" role="menu">' +
+                '<a href="community-feed.html" data-subitem="feed" role="menuitem">💬 动态</a>' +
+                '<a href="community-dm.html" data-subitem="dm" role="menuitem">✉️ 私信</a>' +
+                '<a href="community-stats.html" data-subitem="stats" role="menuitem">📊 数据</a>' +
+                '<a href="community-collections.html" data-subitem="collections" role="menuitem">📚 合集</a>' +
+                '<a href="community-user.html?id=' + p.id + '" data-subitem="profile" role="menuitem">👤 个人主页</a>' +
+                '<a href="community-settings.html" data-subitem="settings" role="menuitem">⚙️ 设置</a>' +
+                '</div></div>' +
                 '<a href="#" id="sub-logout">退出</a>';
             document.getElementById('sub-logout').addEventListener('click', async function (e) {
                 e.preventDefault();
                 await window.sb.auth.signOut();
                 location.reload();
             });
+            /* 子项高亮 */
+            document.querySelectorAll('.sub-drop-menu a[data-subitem]').forEach(function (a) {
+                a.classList.toggle('active', a.getAttribute('data-subitem') === subitemMap[page]);
+            });
+            var mineBtn = authEl.querySelector('.sub-drop-btn');
+            if (mineBtn && subitemMap[page]) mineBtn.classList.add('active');
         } else {
             var next = encodeURIComponent(page + location.search);
             authEl.innerHTML = '<a href="community-auth.html?next=' + next + '">登录</a>';
