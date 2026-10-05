@@ -142,7 +142,14 @@
         try { sess0 = (await sb.auth.getSession()).data.session; } catch (e) {}
         var me = sess0 ? sess0.user : (await currentUser());
 
-        if (me && !verified && !isRecovery) {
+        /* 刷新恢复：步骤2进行中但 verified 参数丢失时，凭 sessionStorage 标记恢复步骤2 */
+        var resumeStep2 = false;
+        try {
+            var _s2 = JSON.parse(sessionStorage.getItem('mmc_signup_step2') || 'null');
+            resumeStep2 = !!(_s2 && me && (Date.now() - _s2.t) < 30 * 60 * 1000);
+        } catch (e) {}
+
+        if (me && !verified && !isRecovery && !resumeStep2) {
             var p = await currentProfile();
             document.getElementById('auth-box').style.display = 'none';
             document.getElementById('already').style.display = 'block';
@@ -150,6 +157,7 @@
             document.getElementById('logout-btn').addEventListener('click', async function (e) {
                 e.preventDefault();
                 await sb.auth.signOut();
+                try { sessionStorage.removeItem('mmc_signup_step2'); } catch (e2) {}
                 location.reload();
             });
             return;
@@ -189,6 +197,8 @@
         /* 注册步骤2：从邮件链接回来，设置登录密码 */
         function enterSignupStep2() {
             signupStep2 = true;
+            /* 步骤2状态写入 sessionStorage：刷新页面导致 verified 参数丢失时可恢复，避免卡在"已登录"死胡同 */
+            try { sessionStorage.setItem('mmc_signup_step2', JSON.stringify({ t: Date.now() })); } catch (e) {}
             setMode('signup');
             ['row-username', 'row-email', 'row-email-code', 'row-captcha', 'row-invite'].forEach(function (id) {
                 document.getElementById(id).style.display = 'none';
@@ -371,6 +381,7 @@
                     }
                     hideLoading();
                     showLoading('注册成功，跳转中…' + (inviteMsg ? ' ' + inviteMsg : ''));
+                    try { sessionStorage.removeItem('mmc_signup_step2'); } catch (e5) {}
                     location.href = next;
                 } catch (err) {
                     hideLoading();
@@ -413,11 +424,11 @@
             }
         });
 
-        /* 从验证邮件链接回来：已自动登录 */
-        if (me && verified) {
+        /* 从验证邮件链接回来：已自动登录；刷新后凭 sessionStorage 标记恢复步骤2 */
+        if (me && (verified || resumeStep2)) {
             var createdAt = me.created_at ? new Date(me.created_at).getTime() : 0;
             var isNew = (Date.now() - createdAt) < 30 * 60 * 1000;
-            if (isNew) { enterSignupStep2(); return; }
+            if (isNew || resumeStep2) { enterSignupStep2(); return; }
             try { await ensureProfile(); } catch (e2) {}
             location.href = next;
             return;
