@@ -193,6 +193,11 @@
             ['row-username', 'row-email', 'row-email-code', 'row-captcha', 'row-invite'].forEach(function (id) {
                 document.getElementById(id).style.display = 'none';
             });
+            /* 隐藏的必填项会拦截表单原生校验导致 submit 不触发，移除 required（JS 里已有校验） */
+            ['a-email', 'a-captcha'].forEach(function (id) {
+                var el = document.getElementById(id);
+                if (el) el.removeAttribute('required');
+            });
             document.getElementById('row-password').style.display = 'block';
             document.getElementById('row-legal').style.display = 'block';
             document.getElementById('a-legal').checked = false;
@@ -443,6 +448,11 @@
             tabLogin.classList.add('active'); tabSignup.classList.remove('active');
             ['row-username', 'row-email', 'row-email-code', 'row-captcha'].forEach(function (id) {
                 document.getElementById(id).style.display = 'none';
+            });
+            /* 同步骤2：隐藏的必填项会拦截 submit，移除 required */
+            ['a-email', 'a-captcha'].forEach(function (id) {
+                var el = document.getElementById(id);
+                if (el) el.removeAttribute('required');
             });
             document.getElementById('row-password').style.display = 'block';
             document.getElementById('forgot-row').style.display = 'none';
