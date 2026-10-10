@@ -2082,3 +2082,125 @@ body {
     text-shadow: 0 4px 24px rgba(255,255,255,.08);
     margin-bottom: 2px;
 }
+
+/* ========== v3.1 全站主题优化：蓝主金辅 + 装饰 + 页眉排版 ========== */
+:root {
+    --blue-deep: #2f5fe0;
+    --blue-soft: rgba(77,124,254,.12);
+    --violet: #7c5cff;
+    --gold-soft: rgba(255,204,0,.12);
+}
+/* --- 主按钮统一为蓝色渐变 --- */
+.btn-primary {
+    background: linear-gradient(135deg, #4d7cfe, #6d5cff);
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(77,124,254,.35);
+}
+.btn-primary:hover { background: linear-gradient(135deg, #5d8bff, #7d6bff); }
+.btn-ghost:hover { border-color: var(--blue); color: var(--blue); }
+/* --- 导航激活态统一为蓝色 --- */
+.nav-links a.active {
+    color: #fff;
+    background: linear-gradient(135deg, #4d7cfe, #6d5cff);
+    font-weight: 700;
+    box-shadow: 0 4px 14px rgba(77,124,254,.35);
+}
+/* --- hero 标题渐变统一蓝紫 --- */
+.hero h1 .grad {
+    background: linear-gradient(100deg, #6d9bff 10%, var(--blue) 45%, var(--violet) 90%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* ---------- 页眉排版优化 ---------- */
+.site-header {
+    border-bottom: none;
+    box-shadow: 0 1px 0 var(--border);
+}
+.site-header::after {
+    content: "";
+    position: absolute;
+    bottom: -1px; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(77,124,254,.55) 30%, rgba(124,92,255,.55) 70%, transparent);
+    opacity: .7;
+}
+.nav { gap: 16px; }
+.brand img {
+    height: 38px; width: 38px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(77,124,254,.25);
+}
+.nav-links { gap: 4px; align-items: center; }
+.nav-links a {
+    padding: 9px 16px;
+    font-weight: 500;
+    position: relative;
+}
+.nav-links a:not(.active):hover {
+    color: var(--blue);
+    background: var(--blue-soft);
+}
+.theme-toggle {
+    border-radius: 12px;
+    transition: transform .18s, border-color .18s, background .18s;
+}
+.theme-toggle:hover { border-color: var(--blue); background: var(--blue-soft); }
+
+/* ---------- 装饰：板块标题 ---------- */
+.section-title {
+    position: relative;
+    display: inline-block;
+}
+.section-title::before {
+    content: "";
+    display: block;
+    width: 34px; height: 4px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--blue), var(--violet));
+    margin: 0 auto 12px;
+}
+/* ---------- 装饰：卡片顶部光线 ---------- */
+.quick-card { position: relative; overflow: hidden; }
+.quick-card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 10%; right: 10%;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, rgba(77,124,254,.6), transparent);
+    opacity: 0;
+    transition: opacity .25s;
+}
+.quick-card:hover::before { opacity: 1; }
+/* ---------- 装饰：页脚顶部分隔 ---------- */
+footer {
+    position: relative;
+    border-top: 1px solid var(--border);
+}
+footer::before {
+    content: "";
+    position: absolute;
+    top: -1px; left: 50%;
+    transform: translateX(-50%);
+    width: min(560px, 80%);
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(77,124,254,.5), rgba(255,204,0,.4), transparent);
+}
+/* ---------- 装饰：新闻卡片左侧色条 ---------- */
+.news-item { position: relative; overflow: hidden; }
+.news-item::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 12px; bottom: 12px;
+    width: 3px;
+    border-radius: 3px;
+    background: linear-gradient(180deg, var(--blue), var(--violet));
+    opacity: .85;
+}
+.news-item { padding-left: 22px; }
+/* ---------- 装饰：时间线节点光晕 ---------- */
+.tl-item::before {
+    box-shadow: 0 0 0 4px var(--blue-soft), 0 0 12px rgba(77,124,254,.5);
+}
