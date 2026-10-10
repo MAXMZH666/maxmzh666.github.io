@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAXMZH 的实用工具：Scratch 打包、在线编程等小工具集合。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="MAXMZH - 实用工具">
+    <meta property="og:description" content="Scratch 打包、在线编程等实用小工具。">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>MAXMZH - 实用工具</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/styles.css?v=20261004h">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">主页</a></li>
+                <li><a href="about.html">个人简介</a></li>
+                <li><a href="blog.html">博客</a></li>
+                <li><a href="community-home.html">社区</a></li>
+                <li><a href="tools.html" class="active">工具</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="portfolio">
+            <h1 class="section-title reveal">🧰 实用工具</h1>
+            <p class="section-sub reveal">为创作者准备的小工具，全部免费。</p>
+
+            <div class="card-grid">
+                <div class="card reveal">
+                    <div class="card-cover"><span class="monogram">包</span></div>
+                    <div class="card-body">
+                        <h3>📦 Scratch 打包</h3>
+                        <p>把 Scratch 作品打包成 HTML 网页、ZIP 或 Windows/macOS/Linux 可执行文件，离线也能玩，发给朋友更方便。</p>
+                        <ol class="steps">
+                            <li>打开 <a href="https://packager.turbowarp.org/" target="_blank" rel="noopener">TurboWarp Packager →</a></li>
+                            <li>粘贴 Scratch 作品链接，或上传本地 .sb3 文件</li>
+                            <li>选 HTML / ZIP / 可执行文件，一键导出</li>
+                        </ol>
+                        <p style="margin-top:12px"><a class="btn btn-primary" href="https://packager.turbowarp.org/" target="_blank" rel="noopener">打开打包工具 →</a></p>
+                        <p class="form-hint">打包工具由 TurboWarp 提供，本站仅做导航。</p>
+                    </div>
+                </div>
+
+                <div class="card reveal">
+                    <div class="card-cover"><span class="monogram">码</span></div>
+                    <div class="card-body">
+                        <h3>💻 在线编程</h3>
+                        <p>不用装任何软件，浏览器里直接写代码：Scratch 图形化、Python、C++、网页三件套（HTML/CSS/JS），写完一键发布到 MAX社区。</p>
+                        <div class="card-tags"><span class="tag">Scratch</span><span class="tag">Python</span><span class="tag">C++</span><span class="tag blue">网页</span></div>
+                        <p style="margin-top:12px"><a class="btn btn-primary" href="community-publish.html">开始编程 →</a></p>
+                    </div>
+                </div>
+
+                <div class="card reveal">
+                    <div class="card-cover"><span class="monogram">下</span></div>
+                    <div class="card-body">
+                        <h3>⬇️ 作品源码下载</h3>
+                        <p>在 MAX社区 里，开源作品的试玩页提供"下载源码"按钮（.sb3 文件），拿回去自己改、自己学。</p>
+                        <p style="margin-top:12px"><a class="btn btn-ghost" href="community.html">去社区找开源作品 →</a></p>
+                        <p class="form-hint">仅作者标记为开源的作品可下载，请尊重原作者。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="blog.html">博客</a>
+            <a href="community-home.html">社区</a>
+            <a href="community-forum.html">论坛</a>
+            <a href="tools.html">工具</a>
+            <a href="contact.html">联系方式</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
+        <p class="foot-stats"><span id="busuanzi_container_site_pv">本站总访问量 <span id="busuanzi_value_site_pv">统计中…</span> 次</span><span> · </span><span id="busuanzi_container_page_pv">本页访问 <span id="busuanzi_value_page_pv">统计中…</span> 次</span></p>
+    </footer>
+    <script src="js/scripts.js"></script>
+    <script defer src="https://vercount.one/js"></script>
+</body>
+</html>
