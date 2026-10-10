@@ -35,8 +35,8 @@
             var url = r.data.url;
             if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
             msg.textContent = '即将跳转到 ' + url;
-            try { sb.rpc('increment_link_clicks', { p_code: code }); } catch (e) {}
-            setTimeout(function () { location.replace(url); }, 600);
+            try { await sb.rpc('increment_link_clicks', { p_code: code }); } catch (e) { console.warn('click count failed', e); }
+            location.replace(url);
         } catch (e) {
             msg.textContent = '短链不存在或已失效';
         }
