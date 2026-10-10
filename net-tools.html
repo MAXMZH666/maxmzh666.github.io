@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAXMZH 网络工具：DNS 解析查询、IP 归属查询，免费在线工具。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="MAXMZH - 网络工具">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>MAXMZH - 网络工具</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/styles.css?v=20261004h">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+    <style>
+        .tool-panel { background: var(--card, rgba(255,255,255,.02)); border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .tool-panel h2 { margin: 0 0 12px; font-size: 1.1rem; }
+        .tool-row { display: flex; gap: 8px; margin-bottom: 12px; }
+        .tool-row input { flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: inherit; }
+        .tool-result { font-family: monospace; font-size: .85rem; background: rgba(0,0,0,.25); border-radius: 8px; padding: 12px; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; display: none; }
+        .tool-result.show { display: block; }
+        .tool-result .ok { color: #51cf66; }
+        .tool-result .err { color: #ff6b6b; }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">主页</a></li>
+                <li><a href="about.html">个人简介</a></li>
+                <li><a href="blog.html">博客</a></li>
+                <li><a href="community-home.html">社区</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="portfolio" style="max-width:760px">
+            <h1 class="section-title reveal">🌐 网络工具</h1>
+            <p class="section-sub reveal">DNS 解析、IP 归属查询，纯前端实现，免费使用。</p>
+
+            <div class="tool-panel reveal">
+                <h2>🔍 DNS 解析查询</h2>
+                <div class="tool-row">
+                    <input type="text" id="dns-input" placeholder="输入域名，如 maxmzh666.github.io" value="maxmzh666.github.io">
+                    <button class="btn btn-primary btn-sm" id="dns-btn" type="button">查询</button>
+                </div>
+                <div style="margin-bottom:12px">
+                    <select id="dns-type" style="padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:inherit">
+                        <option value="A">A 记录</option>
+                        <option value="AAAA">AAAA 记录</option>
+                        <option value="CNAME">CNAME 记录</option>
+                        <option value="MX">MX 记录</option>
+                        <option value="TXT">TXT 记录</option>
+                        <option value="NS">NS 记录</option>
+                    </select>
+                </div>
+                <div class="tool-result" id="dns-out"></div>
+            </div>
+
+            <div class="tool-panel reveal">
+                <h2>📍 IP 归属查询</h2>
+                <div class="tool-row">
+                    <input type="text" id="ip-input" placeholder="输入 IP 地址，留空查本机">
+                    <button class="btn btn-primary btn-sm" id="ip-btn" type="button">查询</button>
+                </div>
+                <div class="tool-result" id="ip-out"></div>
+            </div>
+
+            <p class="section-sub reveal">数据来源：Google DNS-over-HTTPS、ipapi.co 免费接口。</p>
+        </section>
+    </main>
+
+    <footer>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="blog.html">博客</a>
+            <a href="community-home.html">社区</a>
+            <a href="contact.html">联系方式</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
+    </footer>
+    <script src="js/scripts.js"></script>
+    <script>
+    (function () {
+        /* DNS 查询 */
+        var dnsBtn = document.getElementById('dns-btn');
+        var dnsInput = document.getElementById('dns-input');
+        var dnsType = document.getElementById('dns-type');
+        var dnsOut = document.getElementById('dns-out');
+        function dnsQuery() {
+            var domain = dnsInput.value.trim().replace(/^https?:\/\//, '').split('/')[0];
+            if (!domain) { dnsOut.innerHTML = '<span class="err">请输入域名</span>'; dnsOut.classList.add('show'); return; }
+            dnsOut.innerHTML = '查询中…'; dnsOut.classList.add('show');
+            fetch('https://dns.google/resolve?name=' + encodeURIComponent(domain) + '&type=' + dnsType.value)
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                    if (d.Status !== 0 || !d.Answer || !d.Answer.length) {
+                        dnsOut.innerHTML = '<span class="err">无 ' + dnsType.value + ' 记录（' + domain + '）</span>';
+                        return;
+                    }
+                    var html = '<span class="ok">' + d.Answer.length + ' 条 ' + dnsType.value + ' 记录：</span>\n';
+                    d.Answer.forEach(function (a) {
+                        html += a.name + '  TTL=' + a.TTL + '  →  ' + a.data + '\n';
+                    });
+                    dnsOut.textContent = '';
+                    dnsOut.innerHTML = html.replace(/\n/g, '<br>');
+                })
+                .catch(function () { dnsOut.innerHTML = '<span class="err">查询失败，请检查网络后重试</span>'; });
+        }
+        dnsBtn.addEventListener('click', dnsQuery);
+        dnsInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') dnsQuery(); });
+
+        /* IP 归属查询 */
+        var ipBtn = document.getElementById('ip-btn');
+        var ipInput = document.getElementById('ip-input');
+        var ipOut = document.getElementById('ip-out');
+        function ipQuery() {
+            var ip = ipInput.value.trim();
+            ipOut.innerHTML = '查询中…'; ipOut.classList.add('show');
+            var url = ip ? 'https://ipapi.co/' + encodeURIComponent(ip) + '/json/' : 'https://ipapi.co/json/';
+            fetch(url)
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                    if (d.error) { ipOut.innerHTML = '<span class="err">' + (d.reason || '查询失败') + '</span>'; return; }
+                    var html = '<span class="ok">查询结果：</span>\n' +
+                        'IP: ' + (d.ip || '-') + '\n' +
+                        '国家: ' + (d.country_name || '-') + ' (' + (d.country_code || '-') + ')\n' +
+                        '地区: ' + (d.region || '-') + '\n' +
+                        '城市: ' + (d.city || '-') + '\n' +
+                        '运营商: ' + (d.org || '-') + '\n' +
+                        '时区: ' + (d.timezone || '-');
+                    ipOut.textContent = '';
+                    ipOut.innerHTML = html.replace(/\n/g, '<br>');
+                })
+                .catch(function () { ipOut.innerHTML = '<span class="err">查询失败，请检查网络后重试</span>'; });
+        }
+        ipBtn.addEventListener('click', ipQuery);
+        ipInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') ipQuery(); });
+    })();
+    </script>
+    <script defer src="https://vercount.one/js"></script>
+</body>
+</html>
