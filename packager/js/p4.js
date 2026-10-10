@@ -4291,7 +4291,7 @@ const KNOWN_GOOD_LANGUAGES = ['en', 'es', 'ja', 'nl', 'it', 'sl'];
 const getInitialLocale = () => [
   navigator.language.toLowerCase(),
   navigator.language.toLowerCase().split('-')[0]
-].find(i => KNOWN_GOOD_LANGUAGES.includes(i) && allMessages[i]) || 'en';
+].find(i => KNOWN_GOOD_LANGUAGES.includes(i) && allMessages[i]) || 'zh-cn';
 
 const locale = Object(_p4_persistent_store__WEBPACK_IMPORTED_MODULE_1__["default"])('P4.locale', getInitialLocale());
 locale.subscribe((lang) => {
@@ -5823,14 +5823,14 @@ __webpack_require__.r(__webpack_exports__);
 
 
 function add_css(target) {
-	Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append_styles"])(target, "svelte-1mh4ji2", ":root{font-family:\"Helvetica Neue\", Helvetica, Arial, sans-serif;background:white;color:black}[theme=\"dark\"]{background:#111;color:#eee;color-scheme:dark}a{color:blue}[theme=\"dark\"] a{color:#56b2ff}a:active{color:red}input[type=\"text\"],input[type=\"number\"],textarea{padding:2px}input[type=\"text\"],input[type=\"number\"],textarea,.is-not-safari select{background-color:white;color:black;border:1px solid rgb(160, 160, 160);border-radius:2px}.is-not-safari select:hover{border-color:rgb(30, 30, 30)}[theme=\"dark\"] input[type=\"text\"],[theme=\"dark\"] input[type=\"number\"],[theme=\"dark\"] textarea,[theme=\"dark\"] .is-not-safari select{background-color:#333;color:white;border-color:#888}[theme=\"dark\"] .is-not-safari select:hover{border-color:#bbb}p,h1,h2,h3{margin:12px 0}summary{cursor:pointer}input{font-size:0.8em}main.svelte-1mh4ji2.svelte-1mh4ji2{padding-bottom:10px}footer.svelte-1mh4ji2.svelte-1mh4ji2{text-align:center}footer.svelte-1mh4ji2>div.svelte-1mh4ji2{margin-top:12px}.disclaimer.svelte-1mh4ji2.svelte-1mh4ji2{font-style:italic}.version.svelte-1mh4ji2.svelte-1mh4ji2{font-size:small;opacity:0.8}.version.svelte-1mh4ji2 a.svelte-1mh4ji2{color:inherit}");
+	Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append_styles"])(target, "svelte-95hs0", ":root{font-family:\"Helvetica Neue\", Helvetica, Arial, sans-serif;background:white;color:black}[theme=\"dark\"]{background:#111;color:#eee;color-scheme:dark}a{color:blue}[theme=\"dark\"] a{color:#56b2ff}a:active{color:red}input[type=\"text\"],input[type=\"number\"],textarea{padding:2px}input[type=\"text\"],input[type=\"number\"],textarea,.is-not-safari select{background-color:white;color:black;border:1px solid rgb(160, 160, 160);border-radius:2px}.is-not-safari select:hover{border-color:rgb(30, 30, 30)}[theme=\"dark\"] input[type=\"text\"],[theme=\"dark\"] input[type=\"number\"],[theme=\"dark\"] textarea,[theme=\"dark\"] .is-not-safari select{background-color:#333;color:white;border-color:#888}[theme=\"dark\"] .is-not-safari select:hover{border-color:#bbb}p,h1,h2,h3{margin:12px 0}summary{cursor:pointer}input{font-size:0.8em}main.svelte-95hs0.svelte-95hs0{padding-bottom:10px}footer.svelte-95hs0.svelte-95hs0{text-align:center}footer.svelte-95hs0>div.svelte-95hs0{margin-top:12px}.disclaimer.svelte-95hs0.svelte-95hs0{font-style:italic}.version.svelte-95hs0.svelte-95hs0{font-size:small;opacity:0.8}.version.svelte-95hs0 a.svelte-95hs0{color:inherit}.mmc-header.svelte-95hs0.svelte-95hs0{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:56px;background:#0b0b0e;border-bottom:1px solid rgba(255,255,255,.09)}.mmc-brand.svelte-95hs0.svelte-95hs0{font-weight:800;font-size:18px;color:#f4f4f6;text-decoration:none;letter-spacing:1px}.mmc-nav.svelte-95hs0.svelte-95hs0{display:flex;gap:18px}.mmc-nav.svelte-95hs0 a.svelte-95hs0{color:#a9a9b6;text-decoration:none;font-size:14px}.mmc-nav.svelte-95hs0 a.svelte-95hs0:hover{color:#4d7cfe}");
 }
 
 function get_then_context(ctx) {
 	ctx[14] = ctx[15].default;
 }
 
-// (137:6) {#if version}
+// (177:6) {#if version}
 function create_if_block_7(ctx) {
 	let p;
 	let t0;
@@ -5843,7 +5843,7 @@ function create_if_block_7(ctx) {
 			t0 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["text"])(_environment__WEBPACK_IMPORTED_MODULE_12__["version"]);
 			t1 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["space"])();
 			if (if_block) if_block.c();
-			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["attr"])(p, "class", "version svelte-1mh4ji2");
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["attr"])(p, "class", "version svelte-95hs0");
 		},
 		m(target, anchor) {
 			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["insert"])(target, p, anchor);
@@ -5861,7 +5861,7 @@ function create_if_block_7(ctx) {
 	};
 }
 
-// (140:10) {#if isStandalone}
+// (180:10) {#if isStandalone}
 function create_if_block_8(ctx) {
 	let t0;
 	let a;
@@ -5873,7 +5873,7 @@ function create_if_block_8(ctx) {
 			a = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["element"])("a");
 			t1 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["text"])(_packager_brand__WEBPACK_IMPORTED_MODULE_13__["WEBSITE"]);
 			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["attr"])(a, "href", _packager_brand__WEBPACK_IMPORTED_MODULE_13__["WEBSITE"]);
-			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["attr"])(a, "class", "svelte-1mh4ji2");
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["attr"])(a, "class", "svelte-95hs0");
 		},
 		m(target, anchor) {
 			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["insert"])(target, t0, anchor);
@@ -5888,7 +5888,7 @@ function create_if_block_8(ctx) {
 	};
 }
 
-// (134:2) <Section accent={ACCENT_COLOR}>
+// (174:2) <Section accent={ACCENT_COLOR}>
 function create_default_slot_4(ctx) {
 	let div;
 	let h1;
@@ -5958,7 +5958,7 @@ function create_default_slot_4(ctx) {
 			t6 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["space"])();
 			p3 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["element"])("p");
 			t7 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["text"])(t7_value);
-			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["attr"])(p3, "class", "disclaimer svelte-1mh4ji2");
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["attr"])(p3, "class", "disclaimer svelte-95hs0");
 		},
 		m(target, anchor) {
 			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["insert"])(target, div, anchor);
@@ -6031,7 +6031,7 @@ function create_default_slot_4(ctx) {
 	};
 }
 
-// (179:2) {#if !isStandalone}
+// (219:2) {#if !isStandalone}
 function create_if_block_6(ctx) {
 	let news;
 	let current;
@@ -6060,7 +6060,7 @@ function create_if_block_6(ctx) {
 	};
 }
 
-// (185:2) {:else}
+// (225:2) {:else}
 function create_else_block(ctx) {
 	let section;
 	let current;
@@ -6105,7 +6105,7 @@ function create_else_block(ctx) {
 	};
 }
 
-// (183:2) {#if isSupported}
+// (223:2) {#if isSupported}
 function create_if_block_5(ctx) {
 	let selectproject;
 	let updating_projectData;
@@ -6158,7 +6158,7 @@ function create_if_block_5(ctx) {
 	};
 }
 
-// (186:4) <Section accent="#4C97FF">
+// (226:4) <Section accent="#4C97FF">
 function create_default_slot_3(ctx) {
 	let h2;
 	let t0_value = /*$_*/ ctx[3]('p4.browserNotSupported') + "";
@@ -6195,7 +6195,7 @@ function create_default_slot_3(ctx) {
 	};
 }
 
-// (192:2) {#if projectData}
+// (232:2) {#if projectData}
 function create_if_block_4(ctx) {
 	let await_block_anchor;
 	let promise;
@@ -6253,7 +6253,7 @@ function create_if_block_4(ctx) {
 	};
 }
 
-// (204:4) {:catch}
+// (244:4) {:catch}
 function create_catch_block(ctx) {
 	let section;
 	let current;
@@ -6298,7 +6298,7 @@ function create_catch_block(ctx) {
 	};
 }
 
-// (205:6) <Section center>
+// (245:6) <Section center>
 function create_default_slot_2(ctx) {
 	let p;
 	let t_value = /*$_*/ ctx[3]('p4.unknownImportError') + "";
@@ -6322,7 +6322,7 @@ function create_default_slot_2(ctx) {
 	};
 }
 
-// (197:4) {:then { default: PackagerOptions }}
+// (237:4) {:then { default: PackagerOptions }}
 function create_then_block(ctx) {
 	get_then_context(ctx);
 	let div;
@@ -6391,7 +6391,7 @@ function create_then_block(ctx) {
 	};
 }
 
-// (193:42)        <Section center>         <Progress text={$_('p4.importingInterface')}
+// (233:42)        <Section center>         <Progress text={$_('p4.importingInterface')}
 function create_pending_block(ctx) {
 	let section;
 	let current;
@@ -6436,7 +6436,7 @@ function create_pending_block(ctx) {
 	};
 }
 
-// (194:6) <Section center>
+// (234:6) <Section center>
 function create_default_slot_1(ctx) {
 	let progress_1;
 	let current;
@@ -6475,7 +6475,7 @@ function create_default_slot_1(ctx) {
 	};
 }
 
-// (213:2) {#if $progress.visible}
+// (253:2) {#if $progress.visible}
 function create_if_block_3(ctx) {
 	let section;
 	let current;
@@ -6520,7 +6520,7 @@ function create_if_block_3(ctx) {
 	};
 }
 
-// (214:4) <Section center>
+// (254:4) <Section center>
 function create_default_slot(ctx) {
 	let progress_1;
 	let current;
@@ -6561,7 +6561,7 @@ function create_default_slot(ctx) {
 	};
 }
 
-// (221:6) {#if PRIVACY_POLICY && !isStandalone}
+// (261:6) {#if PRIVACY_POLICY && !isStandalone}
 function create_if_block_2(ctx) {
 	let a;
 	let t0_value = /*$_*/ ctx[3]('p4.privacy') + "";
@@ -6595,7 +6595,7 @@ function create_if_block_2(ctx) {
 	};
 }
 
-// (226:6) {#if SOURCE_CODE}
+// (266:6) {#if SOURCE_CODE}
 function create_if_block_1(ctx) {
 	let span;
 	let t1;
@@ -6629,7 +6629,7 @@ function create_if_block_1(ctx) {
 	};
 }
 
-// (230:6) {#if DONATE}
+// (270:6) {#if DONATE}
 function create_if_block(ctx) {
 	let span1;
 	let span0;
@@ -6669,33 +6669,35 @@ function create_fragment(ctx) {
 	let modals;
 	let updating_modalVisible;
 	let t0;
+	let header;
+	let t10;
 	let main;
 	let section;
-	let t1;
-	let t2;
-	let current_block_type_index;
-	let if_block1;
-	let t3;
-	let t4;
-	let t5;
-	let footer;
-	let div0;
-	let t6;
-	let a0;
-	let t7_value = /*$_*/ ctx[3]('p4.feedback') + "";
-	let t7;
-	let a0_href_value;
-	let t8;
-	let t9;
-	let t10;
-	let div1;
-	let a1;
-	let t11_value = /*$_*/ ctx[3]('p4.documentation') + "";
 	let t11;
 	let t12;
+	let current_block_type_index;
+	let if_block1;
+	let t13;
+	let t14;
+	let t15;
+	let footer;
+	let div0;
+	let t16;
+	let a5;
+	let t17_value = /*$_*/ ctx[3]('p4.feedback') + "";
+	let t17;
+	let a5_href_value;
+	let t18;
+	let t19;
+	let t20;
+	let div1;
+	let a6;
+	let t21_value = /*$_*/ ctx[3]('p4.documentation') + "";
+	let t21;
+	let t22;
 	let div2;
 	let selecttheme;
-	let t13;
+	let t23;
 	let div3;
 	let selectlocale;
 	let current;
@@ -6744,80 +6746,92 @@ function create_fragment(ctx) {
 		c() {
 			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["create_component"])(modals.$$.fragment);
 			t0 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["space"])();
+			header = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["element"])("header");
+
+			header.innerHTML = `<a href="https://maxmzh666.github.io/" class="mmc-brand svelte-95hs0">MAXMZH</a> 
+  <nav class="mmc-nav svelte-95hs0"><a href="https://maxmzh666.github.io/" class="svelte-95hs0">主页</a> 
+    <a href="https://maxmzh666.github.io/net-tools.html" class="svelte-95hs0">工具</a> 
+    <a href="https://maxmzh666.github.io/wiki.html" class="svelte-95hs0">百科</a> 
+    <a href="https://maxmzh666.github.io/community-home.html" class="svelte-95hs0">社区</a></nav>`;
+
+			t10 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["space"])();
 			main = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["element"])("main");
 			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["create_component"])(section.$$.fragment);
-			t1 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["space"])();
+			t11 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["space"])();
 			if (if_block0) if_block0.c();
-			t2 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["space"])();
+			t12 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["space"])();
 			if_block1.c();
-			t3 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["space"])();
+			t13 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["space"])();
 			if (if_block2) if_block2.c();
-			t4 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["space"])();
+			t14 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["space"])();
 			if (if_block3) if_block3.c();
-			t5 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["space"])();
+			t15 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["space"])();
 			footer = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["element"])("footer");
 			div0 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["element"])("div");
 			if (if_block4) if_block4.c();
-			t6 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["space"])();
-			a0 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["element"])("a");
-			t7 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["text"])(t7_value);
-			t8 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["space"])();
+			t16 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["space"])();
+			a5 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["element"])("a");
+			t17 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["text"])(t17_value);
+			t18 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["space"])();
 			if (if_block5) if_block5.c();
-			t9 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["space"])();
+			t19 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["space"])();
 			if (if_block6) if_block6.c();
-			t10 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["space"])();
+			t20 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["space"])();
 			div1 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["element"])("div");
-			a1 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["element"])("a");
-			t11 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["text"])(t11_value);
-			t12 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["space"])();
+			a6 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["element"])("a");
+			t21 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["text"])(t21_value);
+			t22 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["space"])();
 			div2 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["element"])("div");
 			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["create_component"])(selecttheme.$$.fragment);
-			t13 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["space"])();
+			t23 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["space"])();
 			div3 = Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["element"])("div");
 			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["create_component"])(selectlocale.$$.fragment);
-			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["attr"])(a0, "href", a0_href_value = _packager_brand__WEBPACK_IMPORTED_MODULE_13__["FEEDBACK_PRIMARY"].link);
-			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["attr"])(div0, "class", "svelte-1mh4ji2");
-			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["attr"])(a1, "href", "https://docs.turbowarp.org/packager");
-			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["attr"])(div1, "class", "svelte-1mh4ji2");
-			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["attr"])(div2, "class", "svelte-1mh4ji2");
-			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["attr"])(div3, "class", "svelte-1mh4ji2");
-			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["attr"])(footer, "class", "svelte-1mh4ji2");
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["attr"])(header, "class", "mmc-header svelte-95hs0");
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["attr"])(a5, "href", a5_href_value = _packager_brand__WEBPACK_IMPORTED_MODULE_13__["FEEDBACK_PRIMARY"].link);
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["attr"])(div0, "class", "svelte-95hs0");
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["attr"])(a6, "href", "https://docs.turbowarp.org/packager");
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["attr"])(div1, "class", "svelte-95hs0");
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["attr"])(div2, "class", "svelte-95hs0");
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["attr"])(div3, "class", "svelte-95hs0");
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["attr"])(footer, "class", "svelte-95hs0");
 			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["attr"])(main, "aria-hidden", /*modalVisible*/ ctx[2]);
-			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["attr"])(main, "class", "svelte-1mh4ji2");
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["attr"])(main, "class", "svelte-95hs0");
 			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["toggle_class"])(main, "is-not-safari", !_environment__WEBPACK_IMPORTED_MODULE_12__["isSafari"]);
 		},
 		m(target, anchor) {
 			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["mount_component"])(modals, target, anchor);
 			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["insert"])(target, t0, anchor);
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["insert"])(target, header, anchor);
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["insert"])(target, t10, anchor);
 			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["insert"])(target, main, anchor);
 			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["mount_component"])(section, main, null);
-			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(main, t1);
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(main, t11);
 			if (if_block0) if_block0.m(main, null);
-			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(main, t2);
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(main, t12);
 			if_blocks[current_block_type_index].m(main, null);
-			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(main, t3);
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(main, t13);
 			if (if_block2) if_block2.m(main, null);
-			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(main, t4);
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(main, t14);
 			if (if_block3) if_block3.m(main, null);
-			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(main, t5);
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(main, t15);
 			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(main, footer);
 			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(footer, div0);
 			if (if_block4) if_block4.m(div0, null);
-			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(div0, t6);
-			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(div0, a0);
-			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(a0, t7);
-			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(div0, t8);
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(div0, t16);
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(div0, a5);
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(a5, t17);
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(div0, t18);
 			if (if_block5) if_block5.m(div0, null);
-			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(div0, t9);
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(div0, t19);
 			if (if_block6) if_block6.m(div0, null);
-			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(footer, t10);
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(footer, t20);
 			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(footer, div1);
-			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(div1, a1);
-			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(a1, t11);
-			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(footer, t12);
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(div1, a6);
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(a6, t21);
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(footer, t22);
 			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(footer, div2);
 			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["mount_component"])(selecttheme, div2, null);
-			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(footer, t13);
+			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(footer, t23);
 			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["append"])(footer, div3);
 			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["mount_component"])(selectlocale, div3, null);
 			current = true;
@@ -6852,7 +6866,7 @@ function create_fragment(ctx) {
 					if_block2 = create_if_block_4(ctx);
 					if_block2.c();
 					Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["transition_in"])(if_block2, 1);
-					if_block2.m(main, t4);
+					if_block2.m(main, t14);
 				}
 			} else if (if_block2) {
 				Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["group_outros"])();
@@ -6875,7 +6889,7 @@ function create_fragment(ctx) {
 					if_block3 = create_if_block_3(ctx);
 					if_block3.c();
 					Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["transition_in"])(if_block3, 1);
-					if_block3.m(main, t5);
+					if_block3.m(main, t15);
 				}
 			} else if (if_block3) {
 				Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["group_outros"])();
@@ -6888,10 +6902,10 @@ function create_fragment(ctx) {
 			}
 
 			if (_packager_brand__WEBPACK_IMPORTED_MODULE_13__["PRIVACY_POLICY"] && !_environment__WEBPACK_IMPORTED_MODULE_12__["isStandalone"]) if_block4.p(ctx, dirty);
-			if ((!current || dirty & /*$_*/ 8) && t7_value !== (t7_value = /*$_*/ ctx[3]('p4.feedback') + "")) Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["set_data"])(t7, t7_value);
+			if ((!current || dirty & /*$_*/ 8) && t17_value !== (t17_value = /*$_*/ ctx[3]('p4.feedback') + "")) Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["set_data"])(t17, t17_value);
 			if (_packager_brand__WEBPACK_IMPORTED_MODULE_13__["SOURCE_CODE"]) if_block5.p(ctx, dirty);
 			if (_packager_brand__WEBPACK_IMPORTED_MODULE_13__["DONATE"]) if_block6.p(ctx, dirty);
-			if ((!current || dirty & /*$_*/ 8) && t11_value !== (t11_value = /*$_*/ ctx[3]('p4.documentation') + "")) Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["set_data"])(t11, t11_value);
+			if ((!current || dirty & /*$_*/ 8) && t21_value !== (t21_value = /*$_*/ ctx[3]('p4.documentation') + "")) Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["set_data"])(t21, t21_value);
 
 			if (!current || dirty & /*modalVisible*/ 4) {
 				Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["attr"])(main, "aria-hidden", /*modalVisible*/ ctx[2]);
@@ -6923,6 +6937,8 @@ function create_fragment(ctx) {
 		d(detaching) {
 			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["destroy_component"])(modals, detaching);
 			if (detaching) Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["detach"])(t0);
+			if (detaching) Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["detach"])(header);
+			if (detaching) Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["detach"])(t10);
 			if (detaching) Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["detach"])(main);
 			Object(svelte_internal__WEBPACK_IMPORTED_MODULE_0__["destroy_component"])(section);
 			if (if_block0) if_block0.d();
@@ -9379,25 +9395,23 @@ If this is set to an empty string, the link is removed.
 */
 
 module.exports = {
-  APP_NAME: 'TurboWarp Packager',
-  WEBSITE: 'https://packager.turbowarp.org/',
+  APP_NAME: 'MAX 打包工具',
+  WEBSITE: 'https://maxmzh666.github.io/packager/',
   COPYRIGHT_NOTICE: `Copyright (C) 2021-2024 Thomas Weber
-
-The Source Code Form of this program is available under the terms of the
-Mozilla Public License, v. 2.0. You can obtain a copy of the license at
-https://www.mozilla.org/en-US/MPL/2.0/.`,
-  ACCENT_COLOR: '#ff4c4c',
-  SOURCE_CODE: 'https://github.com/TurboWarp/packager',
+Based on TurboWarp Packager, licensed under Mozilla Public License, v. 2.0.
+MAXMZH customized version.`,
+  ACCENT_COLOR: '#4d7cfe',
+  SOURCE_CODE: 'https://github.com/MAXMZH666/maxmzh666.github.io',
   FEEDBACK_PRIMARY: {
-    name: 'Scratch',
-    link: 'https://scratch.mit.edu/users/GarboMuffin/#comments'
+    name: 'MAX社区',
+    link: 'https://maxmzh666.github.io/community-home.html'
   },
   FEEDBACK_SECONDARY: {
     name: 'GitHub',
-    link: 'https://github.com/TurboWarp/packager/issues'
+    link: 'https://github.com/MAXMZH666/maxmzh666.github.io/issues'
   },
   DONATE: '',
-  PRIVACY_POLICY: 'https://turbowarp.org/privacy.html',
+  PRIVACY_POLICY: '',
 };
 
 
