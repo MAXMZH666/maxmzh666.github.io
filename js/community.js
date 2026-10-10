@@ -126,6 +126,11 @@ async function renderSubHeader() {
         a.classList.toggle('active', a.getAttribute('data-subitem') === subitemMap[page]);
     });
     var p = await currentProfile();
+    if (!p) {
+        /* 会话可能还在从本地恢复中，800ms 后重试一次，避免已登录却显示"登录" */
+        try { await new Promise(function (r) { setTimeout(r, 800); }); } catch (e) {}
+        p = await currentProfile();
+    }
     try {
         if (p && p.is_admin) {
             var nav = document.querySelector('.sub-links');
