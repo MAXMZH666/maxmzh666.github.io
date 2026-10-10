@@ -364,6 +364,135 @@
             try { hideTopButtons(); } catch (e) {}
         }, 400);
     }
+    /* ============ 🤖 AI 编程助手面板（BYOK，用户自带 Key） ============ */
+    function buildAIPanel() {
+        if (document.getElementById('mmc-ai-btn')) return;
+        var css = document.createElement('style');
+        css.textContent = '#mmc-ai-btn{position:fixed;right:16px;bottom:16px;z-index:99999;width:52px;height:52px;border-radius:50%;' +
+            'background:linear-gradient(135deg,#4d7cfe,#9b59b6);border:none;color:#fff;font-size:24px;cursor:pointer;' +
+            'box-shadow:0 4px 16px rgba(0,0,0,.35);}' +
+            '#mmc-ai-panel{position:fixed;right:16px;bottom:80px;z-index:99999;width:340px;max-width:calc(100vw - 32px);' +
+            'height:460px;max-height:calc(100vh - 120px);background:#1e1e2e;border:1px solid #444;border-radius:12px;' +
+            'display:none;flex-direction:column;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.5);}' +
+            '#mmc-ai-panel.open{display:flex;}' +
+            '#mmc-ai-head{padding:10px 14px;background:#2a2a3e;font-weight:600;color:#fff;font-size:14px;' +
+            'display:flex;justify-content:space-between;align-items:center;}' +
+            '#mmc-ai-close{background:none;border:none;color:#aaa;font-size:18px;cursor:pointer;}' +
+            '#mmc-ai-msgs{flex:1;overflow-y:auto;padding:12px;font-size:13px;color:#ddd;line-height:1.6;}' +
+            '#mmc-ai-msgs .u{text-align:right;margin-bottom:8px;}' +
+            '#mmc-ai-msgs .u span{display:inline-block;background:#4d7cfe;border-radius:10px 10px 3px 10px;padding:6px 10px;max-width:85%;text-align:left;color:#fff;}' +
+            '#mmc-ai-msgs .a{margin-bottom:8px;}' +
+            '#mmc-ai-msgs .a span{display:inline-block;background:#2a2a3e;border-radius:10px 10px 10px 3px;padding:6px 10px;max-width:92%;}' +
+            '#mmc-ai-msgs pre{background:#111;border-radius:6px;padding:8px;overflow-x:auto;font-size:12px;margin:6px 0;}' +
+            '#mmc-ai-inputrow{display:flex;gap:6px;padding:10px;border-top:1px solid #444;}' +
+            '#mmc-ai-input{flex:1;background:#2a2a3e;border:1px solid #555;border-radius:8px;color:#fff;padding:8px 10px;font-size:13px;}' +
+            '#mmc-ai-send{background:#4d7cfe;border:none;border-radius:8px;color:#fff;padding:8px 14px;cursor:pointer;font-size:13px;}' +
+            '#mmc-ai-cfg{padding:8px 12px;border-top:1px solid #444;font-size:12px;color:#aaa;}' +
+            '#mmc-ai-cfg input{width:100%;background:#2a2a3e;border:1px solid #555;border-radius:6px;color:#fff;padding:6px 8px;font-size:12px;margin:2px 0;box-sizing:border-box;}' +
+            '#mmc-ai-analyze{width:100%;margin-top:6px;background:#2a2a3e;border:1px solid #4d7cfe;color:#8fb3ff;border-radius:8px;padding:7px;cursor:pointer;font-size:13px;}';
+        document.head.appendChild(css);
+        var btn = document.createElement('button');
+        btn.id = 'mmc-ai-btn';
+        btn.textContent = '🤖';
+        btn.title = 'AI 编程助手';
+        var panel = document.createElement('div');
+        panel.id = 'mmc-ai-panel';
+        panel.innerHTML = '<div id="mmc-ai-head"><span>🤖 AI 编程助手</span><button id="mmc-ai-close">✕</button></div>' +
+            '<div id="mmc-ai-msgs"><div class="a"><span>你好！我可以帮你看代码、找 bug、给思路。<br>点下方「🔍 分析当前项目」让我看看你的积木，或直接提问。<br><br>首次使用请在底部填写 API Key（OpenAI / DeepSeek 兼容）。</span></div></div>' +
+            '<div id="mmc-ai-inputrow"><input id="mmc-ai-input" placeholder="问个编程问题…"><button id="mmc-ai-send">发送</button></div>' +
+            '<div id="mmc-ai-cfg"><input id="mmc-ai-base" placeholder="API 地址，如 https://api.deepseek.com/v1">' +
+            '<input id="mmc-ai-key" type="password" placeholder="API Key（只存本地）">' +
+            '<input id="mmc-ai-model" placeholder="模型，如 deepseek-chat">' +
+            '<button id="mmc-ai-analyze">🔍 分析当前项目</button></div>';
+        document.body.appendChild(btn);
+        document.body.appendChild(panel);
+        btn.addEventListener('click', function () { panel.classList.toggle('open'); });
+        panel.querySelector('#mmc-ai-close').addEventListener('click', function () { panel.classList.remove('open'); });
+        var msgs = panel.querySelector('#mmc-ai-msgs');
+        var input = panel.querySelector('#mmc-ai-input');
+        var baseEl = panel.querySelector('#mmc-ai-base');
+        var keyEl = panel.querySelector('#mmc-ai-key');
+        var modelEl = panel.querySelector('#mmc-ai-model');
+        try {
+            baseEl.value = localStorage.getItem('mmc_ai_base') || '';
+            keyEl.value = localStorage.getItem('mmc_ai_key') || '';
+            modelEl.value = localStorage.getItem('mmc_ai_model') || '';
+        } catch (e) {}
+        function saveCfg() {
+            try {
+                localStorage.setItem('mmc_ai_base', baseEl.value.trim());
+                localStorage.setItem('mmc_ai_key', keyEl.value.trim());
+                localStorage.setItem('mmc_ai_model', modelEl.value.trim());
+            } catch (e) {}
+        }
+        [baseEl, keyEl, modelEl].forEach(function (el) { el.addEventListener('change', saveCfg); });
+        var hist = [{ role: 'system', content: '你是 Scratch 编程助手。用户在用 TurboWarp 编辑器。回答简洁中文，多给具体积木搭建步骤。' }];
+        function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+        function addMsg(role, text) {
+            var d = document.createElement('div');
+            d.className = role;
+            d.innerHTML = '<span>' + esc(text).replace(/\n/g, '<br>') + '</span>';
+            msgs.appendChild(d);
+            msgs.scrollTop = msgs.scrollHeight;
+        }
+        var busy = false;
+        async function ask(q, projectJson) {
+            var base = baseEl.value.trim().replace(/\/$/, '');
+            var key = keyEl.value.trim();
+            var model = modelEl.value.trim();
+            if (!key || !base) { addMsg('a', '请先在底部填写 API 地址和 Key。'); return; }
+            saveCfg();
+            if (busy) return;
+            busy = true;
+            addMsg('u', q);
+            var thinking = document.createElement('div');
+            thinking.className = 'a';
+            thinking.innerHTML = '<span style="color:#888">思考中…</span>';
+            msgs.appendChild(thinking);
+            msgs.scrollTop = msgs.scrollHeight;
+            var messages = hist.slice(-8);
+            messages.push({ role: 'user', content: projectJson ? (q + '\n\n当前项目 JSON（前 8000 字符）：\n' + projectJson.slice(0, 8000)) : q });
+            try {
+                var resp = await fetch(base + '/chat/completions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+                    body: JSON.stringify({ model: model || 'gpt-4o-mini', messages: messages, temperature: 0.7 })
+                });
+                var data = await resp.json();
+                if (!resp.ok) throw new Error((data && data.error && data.error.message) || ('HTTP ' + resp.status));
+                var ans = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '（无回复）';
+                hist.push({ role: 'user', content: q }, { role: 'assistant', content: ans });
+                thinking.innerHTML = '<span>' + esc(ans).replace(/\n/g, '<br>') + '</span>';
+            } catch (e) {
+                thinking.innerHTML = '<span style="color:#ff8888">出错：' + esc(e.message || '请求失败') + '</span>';
+            }
+            msgs.scrollTop = msgs.scrollHeight;
+            busy = false;
+        }
+        panel.querySelector('#mmc-ai-send').addEventListener('click', function () {
+            var q = input.value.trim();
+            if (q) { input.value = ''; ask(q); }
+        });
+        input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { var q = input.value.trim(); if (q) { input.value = ''; ask(q); } } });
+        panel.querySelector('#mmc-ai-analyze').addEventListener('click', async function () {
+            try {
+                var vm = null;
+                /* 尝试从全局找到 vm */
+                if (window.vm) vm = window.vm;
+                else {
+                    var iframes = document.querySelectorAll('iframe');
+                    for (var i = 0; i < iframes.length && !vm; i++) {
+                        try { if (iframes[i].contentWindow && iframes[i].contentWindow.vm) vm = iframes[i].contentWindow.vm; } catch (e) {}
+                    }
+                }
+                if (!vm) { addMsg('a', '没找到编辑器实例，请先打开一个项目。'); return; }
+                addMsg('a', '正在读取项目…');
+                var json = await vm.toJSON();
+                ask('请分析我当前的 Scratch 项目：指出可能的 bug、优化建议。', json);
+            } catch (e) { addMsg('a', '读取项目失败：' + e.message); }
+        });
+    }
+
     var obs = new MutationObserver(scheduleScan);
 
     function build() {
@@ -376,6 +505,8 @@
             'background:rgba(0,0,0,.55);color:#fff;font-size:12px;padding:6px 12px;border-radius:14px;' +
             'pointer-events:none;';
         document.body.appendChild(pill);
+        /* 🤖 AI 助手悬浮按钮 + 面板 */
+        try { buildAIPanel(); } catch (e) {}
         if (document.body) obs.observe(document.body, { childList: true, subtree: true });
         try { tryInjectMenu(); } catch (e) {}
         try { hideTopButtons(); } catch (e) {}
