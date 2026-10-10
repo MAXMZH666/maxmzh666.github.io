@@ -1937,3 +1937,133 @@ a.filter-chip { text-decoration: none; }
     background: rgba(77, 124, 254, .08);
     text-decoration: none;
 }
+
+/* ========== v3.0 主题统一 & 视觉升级 ========== */
+:root {
+    --grad-blue: linear-gradient(135deg, #4d7cfe 0%, #7c5cff 100%);
+    --grad-text: linear-gradient(120deg, #6d9bff 0%, #4d7cfe 40%, #9d7bff 100%);
+}
+/* 主体背景加细腻渐变，减少板块割裂 */
+body {
+    background:
+        radial-gradient(1200px 500px at 50% -80px, rgba(77,124,254,.10), transparent 60%),
+        var(--bg);
+}
+/* 板块之间用柔和分隔，统一节奏 */
+.section { position: relative; }
+.section + .section::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: min(720px, 86%);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+}
+/* 统一卡片悬停语言 */
+.quick-card { transition: transform .25s, border-color .25s, box-shadow .25s; }
+.quick-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(77,124,254,.45);
+    box-shadow: 0 12px 32px rgba(77,124,254,.12);
+}
+
+/* ---------- EVOLUTION 视觉横幅 ---------- */
+.evo-banner {
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    padding: 72px 16px 64px;
+    background:
+        radial-gradient(800px 320px at 50% 120%, rgba(77,124,254,.16), transparent 65%),
+        transparent;
+}
+.evo-kicker {
+    letter-spacing: .5em;
+    font-size: .8rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+.evo-text {
+    font-size: clamp(3rem, 12vw, 8.5rem);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: .04em;
+    background: var(--grad-text);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 6px 28px rgba(77,124,254,.35));
+    animation: evo-shine 6s ease-in-out infinite;
+    background-size: 200% auto;
+}
+@keyframes evo-shine {
+    0%,100% { background-position: 0% center; }
+    50% { background-position: 100% center; }
+}
+.evo-sub {
+    margin-top: 14px;
+    color: var(--muted);
+    font-size: 1.05rem;
+}
+.evo-sub b { color: var(--text); }
+
+/* ---------- 最新消息列表 ---------- */
+.news-list { display: flex; flex-direction: column; gap: 10px; margin-top: 26px; text-align: left; }
+.news-item {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    transition: border-color .2s, transform .2s;
+}
+.news-item:hover { border-color: rgba(77,124,254,.45); transform: translateY(-2px); }
+.news-date {
+    flex-shrink: 0;
+    font-size: .78rem;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px 8px;
+    margin-top: 2px;
+    white-space: nowrap;
+}
+.news-item h3 { margin: 0 0 4px; font-size: 1rem; }
+.news-item p { margin: 0; font-size: .9rem; color: var(--muted); }
+
+/* ---------- 我的历程时间线 ---------- */
+.timeline { position: relative; margin: 8px 0 0; padding-left: 26px; }
+.timeline::before {
+    content: "";
+    position: absolute;
+    left: 8px; top: 6px; bottom: 6px;
+    width: 2px;
+    background: linear-gradient(180deg, var(--blue), rgba(77,124,254,.08));
+    border-radius: 2px;
+}
+.tl-item { position: relative; padding: 0 0 26px; }
+.tl-item:last-child { padding-bottom: 4px; }
+.tl-item::before {
+    content: "";
+    position: absolute;
+    left: -24px; top: 6px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 3px solid var(--blue);
+    box-shadow: 0 0 12px rgba(77,124,254,.5);
+}
+.tl-item .tl-year {
+    font-weight: 800;
+    font-size: 1.05rem;
+    background: var(--grad-blue);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+.tl-item h3 { margin: 2px 0 6px; font-size: 1.02rem; }
+.tl-item p { margin: 0; color: var(--muted); font-size: .93rem; }
