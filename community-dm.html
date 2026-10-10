@@ -172,18 +172,20 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.min.js?v=20261004p"></script>
+    <script src="js/community.min.js?v=20261010a"></script>
     <script src="js/redpacket.js"></script>
     <script>
     (function () {
-        var me = null, convs = [], activeUid = null, activeGroupId = null, nameMap = {}, groupMap = {}, pollTimer = null, sending = false;
+        var me = null, convs = [], activeUid = null, activeGroupId = null, nameMap = {}, groupMap = {}, pollTimer = null, sending = false, loadingConvs = false;
 
         function qp(name) {
             try { return new URLSearchParams(location.search).get(name); } catch (e) { return null; }
         }
 
         async function loadConvs() {
-            var r = await withTimeout(sb.from('direct_messages')
+            if (loadingConvs) return; /* 防重叠：上一次还没跑完就跳过，避免群聊重复 push */
+            loadingConvs = true;
+            try {
                 .select('id,sender_id,receiver_id,content,created_at,read_at,msg_type')
                 .is('group_id', null)
                 .or('sender_id.eq.' + me.id + ',receiver_id.eq.' + me.id)
@@ -266,6 +268,7 @@
             convs.sort(function (a, b) { return new Date(b.last.created_at) - new Date(a.last.created_at); });
             renderConvs();
             updateDmDot();
+            } finally { loadingConvs = false; }
         }
 
         function renderConvs() {
