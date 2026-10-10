@@ -1903,3 +1903,37 @@ a.filter-chip { text-decoration: none; }
     background: var(--surface-2);
 }
 .contest-link .c-status.live { background: rgba(46, 204, 113, .15); color: #2ecc71; }
+
+/* ---------- 首页底部工具栏 ---------- */
+.bottom-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 18px 16px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-soft);
+}
+.bottom-toolbar .bt-label {
+    font-weight: 700;
+    margin-right: 8px;
+    color: var(--text);
+}
+.bottom-toolbar .bt-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: .9rem;
+    transition: color .2s, border-color .2s, background .2s;
+}
+.bottom-toolbar .bt-item:hover {
+    color: var(--text);
+    border-color: var(--blue);
+    background: rgba(77, 124, 254, .08);
+    text-decoration: none;
+}
