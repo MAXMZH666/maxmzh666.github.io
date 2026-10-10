@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <title>跳转中… - MAXMZH</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" href="css/styles.css?v=20261004h">
+    <style>
+        .jump-wrap { max-width: 480px; margin: 15vh auto; text-align: center; padding: 0 20px; }
+        .jump-wrap p { color: var(--muted); }
+    </style>
+</head>
+<body>
+    <div class="jump-wrap">
+        <h2>🔗 正在跳转…</h2>
+        <p id="jump-msg">请稍候</p>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/community.min.js?v=20261010a"></script>
+    <script>
+    (async function () {
+        var msg = document.getElementById('jump-msg');
+        var code = '';
+        try { code = new URLSearchParams(location.search).get('c') || ''; } catch (e) {}
+        code = code.trim();
+        if (!code || !/^[A-Za-z0-9]{4,12}$/.test(code)) {
+            msg.textContent = '短链不存在或已失效';
+            return;
+        }
+        try {
+            var r = await sb.from('short_links').select('url,code').eq('code', code).single();
+            if (r.error || !r.data || !r.data.url) throw new Error('not found');
+            var url = r.data.url;
+            if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+            msg.textContent = '即将跳转到 ' + url;
+            try { sb.rpc('increment_link_clicks', { p_code: code }); } catch (e) {}
+            setTimeout(function () { location.replace(url); }, 600);
+        } catch (e) {
+            msg.textContent = '短链不存在或已失效';
+        }
+    })();
+    </script>
+</body>
+</html>
