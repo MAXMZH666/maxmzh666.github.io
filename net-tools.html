@@ -77,6 +77,16 @@
             </div>
 
             <div class="tool-panel reveal">
+                <h2>📋 WHOIS 查询</h2>
+                <p class="section-sub" style="margin:0 0 12px">查询域名注册信息（当前支持 .com / .net / .org）。</p>
+                <div class="tool-row">
+                    <input type="text" id="whois-input" placeholder="输入域名，如 google.com" value="google.com">
+                    <button class="btn btn-primary btn-sm" id="whois-btn" type="button">查询</button>
+                </div>
+                <div class="tool-result" id="whois-out"></div>
+            </div>
+
+            <div class="tool-panel reveal">
                 <h2>🔗 短链生成</h2>
                 <p class="section-sub" style="margin:0 0 12px">把长链接变成本站短链（需登录社区账号），形如 maxmzh666.github.io/s.html?c=Ab3x9Q。</p>
                 <div class="tool-row">
@@ -162,6 +172,50 @@
         }
         ipBtn.addEventListener('click', ipQuery);
         ipInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') ipQuery(); });
+
+        /* WHOIS 查询（RDAP） */
+        var whoisBtn = document.getElementById('whois-btn');
+        var whoisInput = document.getElementById('whois-input');
+        var whoisOut = document.getElementById('whois-out');
+        var RDAP_SERVERS = {
+            'com': 'https://rdap.verisign.com/com/v1/domain/',
+            'net': 'https://rdap.verisign.com/net/v1/domain/',
+            'org': 'https://rdap.publicinterestregistry.org/rdap/domain/'
+        };
+        function whoisQuery() {
+            var domain = whoisInput.value.trim().replace(/^https?:\/\//, '').split('/')[0].toLowerCase();
+            if (!domain) { whoisOut.innerHTML = '<span class="err">请输入域名</span>'; whoisOut.classList.add('show'); return; }
+            var tld = domain.split('.').pop();
+            var server = RDAP_SERVERS[tld];
+            if (!server) { whoisOut.innerHTML = '<span class="err">暂不支持 .' + tld + ' 后缀，仅支持 .com / .net / .org</span>'; whoisOut.classList.add('show'); return; }
+            whoisOut.innerHTML = '查询中…'; whoisOut.classList.add('show');
+            fetch(server + encodeURIComponent(domain))
+                .then(function (r) { if (!r.ok) throw new Error('未找到该域名的注册信息'); return r.json(); })
+                .then(function (d) {
+                    var html = '<span class="ok">' + (d.ldhName || domain) + '</span>\n';
+                    (d.events || []).forEach(function (e) {
+                        var label = { 'registration': '注册时间', 'expiration': '到期时间', 'last changed': '最后变更', 'last update of RDAP database': '数据更新' }[e.eventAction] || e.eventAction;
+                        html += label + ': ' + (e.eventDate || '').slice(0, 10) + '\n';
+                    });
+                    (d.entities || []).forEach(function (en) {
+                        var role = (en.roles || []).join(',');
+                        if (role.indexOf('registrar') >= 0) {
+                            var name = '';
+                            (en.vcardArray && en.vcardArray[1] || []).forEach(function (v) {
+                                if (v[0] === 'fn') name = v[3];
+                            });
+                            if (name) html += '注册商: ' + name + '\n';
+                        }
+                    });
+                    if (d.status) html += '状态: ' + d.status.join(', ') + '\n';
+                    if (d.nameservers) html += 'DNS: ' + d.nameservers.map(function (n) { return n.ldhName; }).join(', ') + '\n';
+                    whoisOut.textContent = '';
+                    whoisOut.innerHTML = html.replace(/\n/g, '<br>');
+                })
+                .catch(function (e) { whoisOut.innerHTML = '<span class="err">' + (e.message || '查询失败') + '</span>'; });
+        }
+        whoisBtn.addEventListener('click', whoisQuery);
+        whoisInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') whoisQuery(); });
 
         /* 短链生成 */
         var slBtn = document.getElementById('sl-btn');
