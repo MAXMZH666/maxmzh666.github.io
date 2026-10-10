@@ -76,6 +76,17 @@
                 <div class="tool-result" id="ip-out"></div>
             </div>
 
+            <div class="tool-panel reveal">
+                <h2>🔗 短链生成</h2>
+                <p class="section-sub" style="margin:0 0 12px">把长链接变成本站短链（需登录社区账号），形如 maxmzh666.github.io/s.html?c=Ab3x9Q。</p>
+                <div class="tool-row">
+                    <input type="text" id="sl-input" placeholder="粘贴长链接，如 https://…">
+                    <button class="btn btn-primary btn-sm" id="sl-btn" type="button">生成</button>
+                </div>
+                <div class="tool-result" id="sl-out"></div>
+                <div id="sl-mine" style="margin-top:12px"></div>
+            </div>
+
             <p class="section-sub reveal">数据来源：Google DNS-over-HTTPS、ipapi.co 免费接口。</p>
         </section>
     </main>
@@ -93,6 +104,8 @@
         <p>本站托管于 GitHub Pages</p>
     </footer>
     <script src="js/scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/community.min.js?v=20261010a"></script>
     <script>
     (function () {
         /* DNS 查询 */
@@ -149,6 +162,65 @@
         }
         ipBtn.addEventListener('click', ipQuery);
         ipInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') ipQuery(); });
+
+        /* 短链生成 */
+        var slBtn = document.getElementById('sl-btn');
+        var slInput = document.getElementById('sl-input');
+        var slOut = document.getElementById('sl-out');
+        var slMine = document.getElementById('sl-mine');
+        function slCode(n) {
+            var chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+            var s = '';
+            for (var i = 0; i < n; i++) s += chars.charAt(Math.floor(Math.random() * chars.length));
+            return s;
+        }
+        function slSay(html) { slOut.innerHTML = html; slOut.classList.add('show'); }
+        async function slCreate() {
+            var url = slInput.value.trim();
+            if (!url) { slSay('<span class="err">请先粘贴长链接</span>'); return; }
+            if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+            slSay('生成中…');
+            try {
+                var me = await currentUser();
+                if (!me) { slSay('<span class="err">请先 <a href="community-auth.html" style="color:inherit;text-decoration:underline">登录社区账号</a> 再生成短链</span>'); return; }
+                var code = slCode(6);
+                var r = await sb.from('short_links').insert({ code: code, url: url, user_id: me.id }).select('code').single();
+                if (r.error) throw r.error;
+                var short = location.origin + '/s.html?c=' + r.data.code;
+                slSay('<span class="ok">生成成功：</span><br><a href="' + short + '" target="_blank" style="color:#74c0fc">' + short + '</a><br><button class="btn btn-ghost btn-sm" id="sl-copy" type="button" style="margin-top:8px">复制短链</button>');
+                document.getElementById('sl-copy').addEventListener('click', function () {
+                    try { navigator.clipboard.writeText(short); this.textContent = '已复制'; } catch (e) {}
+                });
+                slLoadMine(me.id);
+            } catch (e) { slSay('<span class="err">生成失败：' + ((e && e.message) || '请重试') + '</span>'); }
+        }
+        async function slLoadMine(uid) {
+            try {
+                var r = await sb.from('short_links').select('code,url,clicks,created_at').eq('user_id', uid).order('created_at', { ascending: false }).limit(10);
+                if (r.error || !r.data || !r.data.length) { slMine.innerHTML = ''; return; }
+                var html = '<p style="font-weight:600;margin:8px 0">我的短链</p>';
+                r.data.forEach(function (x) {
+                    var short = location.origin + '/s.html?c=' + x.code;
+                    html += '<div style="font-size:.85rem;padding:6px 0;border-bottom:1px solid var(--border)">' +
+                        '<a href="' + short + '" target="_blank" style="color:#74c0fc">…/s.html?c=' + x.code + '</a> ' +
+                        '<span style="color:var(--muted)">(' + x.clicks + ' 次点击)</span><br>' +
+                        '<span style="color:var(--muted);word-break:break-all">' + esc(x.url.slice(0, 60)) + '</span> ' +
+                        '<a href="javascript:void(0)" data-del="' + x.code + '" style="color:#ff6b6b">删除</a></div>';
+                });
+                slMine.innerHTML = html;
+                slMine.querySelectorAll('[data-del]').forEach(function (a) {
+                    a.addEventListener('click', async function () {
+                        if (!confirm('删除这条短链？')) return;
+                        await sb.from('short_links').delete().eq('code', a.getAttribute('data-del'));
+                        slLoadMine(uid);
+                    });
+                });
+            } catch (e) {}
+        }
+        slBtn.addEventListener('click', slCreate);
+        slInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') slCreate(); });
+        /* 登录后自动加载我的短链 */
+        (async function () { try { var me = await currentUser(); if (me) slLoadMine(me.id); } catch (e) {} })();
     })();
     </script>
     <script defer src="https://vercount.one/js"></script>

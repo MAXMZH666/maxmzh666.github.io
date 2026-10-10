@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAXMZH AI 编程助手：自带 API Key，免费使用 AI 帮你写代码、调 bug。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="MAXMZH - AI 编程助手">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <title>MAXMZH - AI 编程助手</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/styles.css?v=20261004h">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+    <style>
+        .ai-wrap { max-width: 760px; margin: 0 auto; }
+        .ai-chat { background: var(--card, rgba(255,255,255,.02)); border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 12px; padding: 16px; height: 420px; overflow-y: auto; margin-bottom: 12px; }
+        .ai-msg { margin-bottom: 12px; line-height: 1.7; font-size: .92rem; }
+        .ai-msg.user { text-align: right; }
+        .ai-msg.user .bubble { display: inline-block; background: rgba(77,124,254,.18); border-radius: 12px 12px 4px 12px; padding: 8px 14px; max-width: 85%; text-align: left; }
+        .ai-msg.ai .bubble { display: inline-block; background: rgba(255,255,255,.04); border-radius: 12px 12px 12px 4px; padding: 8px 14px; max-width: 92%; }
+        .ai-msg.ai pre { background: rgba(0,0,0,.35); border-radius: 8px; padding: 10px; overflow-x: auto; font-size: .82rem; margin: 8px 0; }
+        .ai-msg.ai code { font-family: monospace; }
+        .ai-input-row { display: flex; gap: 8px; }
+        .ai-input-row input { flex: 1; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: inherit; }
+        .ai-settings { background: var(--card, rgba(255,255,255,.02)); border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 12px; padding: 16px; margin-bottom: 16px; font-size: .88rem; }
+        .ai-settings label { display: block; margin: 8px 0 4px; color: var(--muted); }
+        .ai-settings input { width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: inherit; box-sizing: border-box; }
+        .typing { color: var(--muted); font-style: italic; }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
+                <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">主页</a></li>
+                <li><a href="about.html">个人简介</a></li>
+                <li><a href="blog.html">博客</a></li>
+                <li><a href="community-home.html">社区</a></li>
+                <li><a href="contact.html">联系方式</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="portfolio">
+            <div class="ai-wrap">
+                <h1 class="section-title reveal">🤖 AI 编程助手</h1>
+                <p class="section-sub reveal">自带 API Key，AI 帮你写代码、调 bug、讲思路。Key 只存你本地浏览器，不经过本站服务器。</p>
+
+                <div class="ai-settings reveal">
+                    <b>⚙️ 设置（填一次即可，存本地）</b>
+                    <label>API 地址（OpenAI 兼容接口）</label>
+                    <input type="text" id="ai-base" placeholder="https://api.openai.com/v1">
+                    <label>API Key</label>
+                    <input type="password" id="ai-key" placeholder="sk-…">
+                    <label>模型</label>
+                    <input type="text" id="ai-model" placeholder="gpt-4o-mini">
+                    <p class="form-hint" style="margin:8px 0 0">支持 OpenAI / DeepSeek / 任何 OpenAI 兼容接口。DeepSeek 地址填 https://api.deepseek.com/v1，模型填 deepseek-chat。</p>
+                </div>
+
+                <div class="ai-chat reveal" id="ai-chat">
+                    <div class="ai-msg ai"><div class="bubble">你好！我是 AI 编程助手。先在上面填好 API Key，然后问我任何编程问题：Scratch、Python、C++、网页都可以。<br><br>比如试试问我：「用 Python 写个冒泡排序」</div></div>
+                </div>
+                <div class="ai-input-row reveal">
+                    <input type="text" id="ai-input" placeholder="输入你的编程问题，回车发送…">
+                    <button class="btn btn-primary" id="ai-send" type="button">发送</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="foot-links">
+            <a href="index.html">主页</a>
+            <a href="about.html">个人简介</a>
+            <a href="blog.html">博客</a>
+            <a href="community-home.html">社区</a>
+            <a href="contact.html">联系方式</a>
+            <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+        <p>本站托管于 GitHub Pages</p>
+    </footer>
+    <script src="js/scripts.js"></script>
+    <script>
+    (function () {
+        var chat = document.getElementById('ai-chat');
+        var input = document.getElementById('ai-input');
+        var sendBtn = document.getElementById('ai-send');
+        var baseEl = document.getElementById('ai-base');
+        var keyEl = document.getElementById('ai-key');
+        var modelEl = document.getElementById('ai-model');
+        /* 读取本地保存的设置 */
+        try {
+            baseEl.value = localStorage.getItem('mmc_ai_base') || 'https://api.openai.com/v1';
+            keyEl.value = localStorage.getItem('mmc_ai_key') || '';
+            modelEl.value = localStorage.getItem('mmc_ai_model') || 'gpt-4o-mini';
+        } catch (e) {}
+        [baseEl, keyEl, modelEl].forEach(function (el, i) {
+            el.addEventListener('change', function () {
+                try {
+                    localStorage.setItem(['mmc_ai_base', 'mmc_ai_key', 'mmc_ai_model'][i], el.value.trim());
+                } catch (e) {}
+            });
+        });
+        var history = [
+            { role: 'system', content: '你是一个编程助手，擅长 Scratch、Python、C++、HTML/CSS/JS。回答简洁实用，代码用 markdown 代码块包裹，中文回答。' }
+        ];
+        function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+        function renderMd(t) {
+            /* 极简 markdown：代码块 + 换行 */
+            var parts = t.split(/```/);
+            var html = '';
+            parts.forEach(function (p, i) {
+                if (i % 2 === 1) {
+                    var lines = p.split('\n');
+                    if (/^\w+$/.test(lines[0].trim())) lines.shift();
+                    html += '<pre><code>' + esc(lines.join('\n')) + '</code></pre>';
+                } else {
+                    html += esc(p).replace(/\n/g, '<br>');
+                }
+            });
+            return html;
+        }
+        function addMsg(role, text) {
+            var div = document.createElement('div');
+            div.className = 'ai-msg ' + role;
+            div.innerHTML = '<div class="bubble">' + (role === 'ai' ? renderMd(text) : esc(text)) + '</div>';
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
+            return div;
+        }
+        var busy = false;
+        async function send() {
+            var q = input.value.trim();
+            if (!q || busy) return;
+            var base = baseEl.value.trim().replace(/\/$/, '');
+            var key = keyEl.value.trim();
+            var model = modelEl.value.trim() || 'gpt-4o-mini';
+            if (!key) { addMsg('ai', '请先在上面填入 API Key。'); return; }
+            try {
+                localStorage.setItem('mmc_ai_base', base);
+                localStorage.setItem('mmc_ai_key', key);
+                localStorage.setItem('mmc_ai_model', model);
+            } catch (e) {}
+            busy = true;
+            sendBtn.disabled = true;
+            addMsg('user', q);
+            input.value = '';
+            history.push({ role: 'user', content: q });
+            var typing = addMsg('ai', '');
+            typing.querySelector('.bubble').innerHTML = '<span class="typing">思考中…</span>';
+            try {
+                var resp = await fetch(base + '/chat/completions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+                    body: JSON.stringify({ model: model, messages: history.slice(-12), temperature: 0.7 })
+                });
+                var data = await resp.json();
+                if (!resp.ok) throw new Error((data && data.error && data.error.message) || ('HTTP ' + resp.status));
+                var ans = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content || '（无回复）';
+                history.push({ role: 'assistant', content: ans });
+                typing.querySelector('.bubble').innerHTML = renderMd(ans);
+            } catch (e) {
+                typing.querySelector('.bubble').innerHTML = '<span style="color:#ff6b6b">出错了：' + esc(e.message || '请求失败') + '<br>检查 API 地址、Key 和模型是否正确。</span>';
+            }
+            chat.scrollTop = chat.scrollHeight;
+            busy = false;
+            sendBtn.disabled = false;
+        }
+        sendBtn.addEventListener('click', send);
+        input.addEventListener('keydown', function (e) { if (e.key === 'Enter') send(); });
+    })();
+    </script>
+    <script defer src="https://vercount.one/js"></script>
+</body>
+</html>
