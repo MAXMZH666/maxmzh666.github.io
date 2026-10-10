@@ -108,6 +108,25 @@ body.site-header-hidden .sub-header {
     background: var(--gold);
     font-weight: 700;
 }
+/* 导航下拉菜单 */
+.nav-drop { position: relative; }
+.nav-drop > a::after { content: " ▾"; font-size: .8em; }
+.nav-drop-menu {
+    display: none;
+    position: absolute;
+    top: 100%; left: 0;
+    min-width: 160px;
+    background: rgba(20, 20, 26, 0.98);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 6px;
+    z-index: 1000;
+    list-style: none;
+    margin: 4px 0 0;
+}
+.nav-drop:hover .nav-drop-menu,
+.nav-drop.open .nav-drop-menu { display: block; }
+.nav-drop-menu a { white-space: nowrap; }
 
 .nav-toggle {
     display: none;
@@ -622,6 +641,15 @@ button:hover { background-color: #ffd633; }
     }
     .nav-links.open { display: flex; }
     .nav-links a { padding: 12px 16px; }
+    /* 移动端下拉菜单改为直接展开 */
+    .nav-drop-menu {
+        position: static;
+        display: block;
+        background: transparent;
+        border: none;
+        padding: 0 0 0 12px;
+        margin: 0;
+    }
     .hero { padding: 64px 20px 48px; }
     .section, .about, .portfolio, .project-detail, .contact, .forum { padding: 40px 16px; }
     .profile-hero { padding: 24px 20px; }
