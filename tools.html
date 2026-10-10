@@ -75,6 +75,34 @@
                         <p class="form-hint">仅作者标记为开源的作品可下载，请尊重原作者。</p>
                     </div>
                 </div>
+
+                <div class="card reveal">
+                    <div class="card-cover"><span class="monogram">码</span></div>
+                    <div class="card-body">
+                        <h3>🔳 二维码生成</h3>
+                        <p>输入任意文字或链接，一键生成二维码，长按可保存。纯本地生成，不上传服务器。</p>
+                        <div style="display:flex;gap:8px;margin:12px 0">
+                            <input type="text" id="qr-input" placeholder="输入文字或链接" style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:inherit">
+                            <button class="btn btn-primary btn-sm" id="qr-btn" type="button">生成</button>
+                        </div>
+                        <div id="qr-out" style="text-align:center;min-height:40px"></div>
+                    </div>
+                </div>
+
+                <div class="card reveal">
+                    <div class="card-cover"><span class="monogram">{}</span></div>
+                    <div class="card-body">
+                        <h3>{} JSON 格式化</h3>
+                        <p>粘贴 JSON 字符串，一键格式化 / 压缩 / 校验，写配置、调接口时用得上。</p>
+                        <textarea id="json-input" rows="4" placeholder='粘贴 JSON，如 {"a":1}' style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:inherit;margin:12px 0;font-family:monospace"></textarea>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap">
+                            <button class="btn btn-primary btn-sm" id="json-pretty" type="button">格式化</button>
+                            <button class="btn btn-ghost btn-sm" id="json-min" type="button">压缩</button>
+                            <button class="btn btn-ghost btn-sm" id="json-check" type="button">校验</button>
+                        </div>
+                        <p class="form-hint" id="json-msg" style="margin-top:8px"></p>
+                    </div>
+                </div>
             </div>
         </section>
     </main>
@@ -95,6 +123,47 @@
         <p class="foot-stats"><span id="busuanzi_container_site_pv">本站总访问量 <span id="busuanzi_value_site_pv">统计中…</span> 次</span><span> · </span><span id="busuanzi_container_page_pv">本页访问 <span id="busuanzi_value_page_pv">统计中…</span> 次</span></p>
     </footer>
     <script src="js/scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script>
+    /* 二维码生成 */
+    (function () {
+        var btn = document.getElementById('qr-btn');
+        var input = document.getElementById('qr-input');
+        var out = document.getElementById('qr-out');
+        if (!btn) return;
+        function gen() {
+            var t = input.value.trim();
+            out.innerHTML = '';
+            if (!t) { out.innerHTML = '<p class="form-hint">先输入内容</p>'; return; }
+            try {
+                new QRCode(out, { text: t, width: 160, height: 160, correctLevel: QRCode.CorrectLevel.M });
+            } catch (e) {
+                out.innerHTML = '<p class="form-hint">生成失败，换短一点的内容试试</p>';
+            }
+        }
+        btn.addEventListener('click', gen);
+        input.addEventListener('keydown', function (e) { if (e.key === 'Enter') gen(); });
+    })();
+    /* JSON 格式化 */
+    (function () {
+        var input = document.getElementById('json-input');
+        var msg = document.getElementById('json-msg');
+        if (!input) return;
+        function say(t, ok) { msg.textContent = t; msg.style.color = ok ? '#51cf66' : '#ff6b6b'; }
+        document.getElementById('json-pretty').addEventListener('click', function () {
+            try { input.value = JSON.stringify(JSON.parse(input.value), null, 2); say('格式化成功', true); }
+            catch (e) { say('JSON 有误：' + e.message, false); }
+        });
+        document.getElementById('json-min').addEventListener('click', function () {
+            try { input.value = JSON.stringify(JSON.parse(input.value)); say('压缩成功', true); }
+            catch (e) { say('JSON 有误：' + e.message, false); }
+        });
+        document.getElementById('json-check').addEventListener('click', function () {
+            try { JSON.parse(input.value); say('✓ 合法 JSON', true); }
+            catch (e) { say('✗ ' + e.message, false); }
+        });
+    })();
+    </script>
     <script defer src="https://vercount.one/js"></script>
 </body>
 </html>
