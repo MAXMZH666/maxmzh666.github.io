@@ -2223,8 +2223,7 @@ footer::before {
 .tl-item::before {
     box-shadow: 0 0 0 4px var(--blue-soft), 0 0 12px rgba(77,124,254,.5);
 }
-
-/* ---------- 巨型 M 背景：如睁眼般突然亮起 ---------- */
+/* ---------- 巨型 M 背景：如睁眼般突然亮起（白色） ---------- */
 .evo-m-bg {
     position: absolute;
     top: 50%; left: 50%;
@@ -2232,30 +2231,61 @@ footer::before {
     font-size: clamp(22rem, 58vw, 60rem);
     font-weight: 900;
     line-height: 1;
-    color: rgba(77,124,254,.16);
+    color: rgba(255,255,255,.13);
     opacity: 0;
     pointer-events: none;
     user-select: none;
     z-index: 0;
 }
-.evo-banner > *:not(.evo-m-bg) { position: relative; z-index: 1; }
-/* 横幅入场时 M 亮起：黑暗中等待 → 突然闪亮 → 回落为环境微光 */
+.evo-banner > *:not(.evo-m-bg):not(.evo-scroll-hint) { position: relative; z-index: 1; }
+/* 横幅入场时 M 亮起：黑暗等待 → 睁眼闪亮（微张大） → 回落微光 → 持续呼吸 */
 .evo-banner.visible .evo-m-bg {
-    animation: m-awaken 2.6s ease-out .8s both;
+    animation: m-awaken 2.6s cubic-bezier(.22,.8,.3,1) .8s both,
+               m-breathe 5.5s ease-in-out 3.4s infinite;
 }
 @keyframes m-awaken {
-    0%   { opacity: 0; filter: blur(14px); }
-    40%  { opacity: 0; filter: blur(14px); }
-    52%  { opacity: .9; filter: blur(0);
-           color: rgba(140,170,255,.85);
-           text-shadow: 0 0 90px rgba(77,124,254,.95), 0 0 220px rgba(124,92,255,.7); }
-    70%  { opacity: .45;
-           color: rgba(77,124,254,.35);
-           text-shadow: 0 0 50px rgba(77,124,254,.55); }
-    100% { opacity: .3; filter: blur(0);
-           color: rgba(77,124,254,.16);
-           text-shadow: 0 0 70px rgba(77,124,254,.35); }
+    0%   { opacity: 0; filter: blur(16px); transform: translate(-50%,-54%) scale(.94); }
+    40%  { opacity: 0; filter: blur(16px); transform: translate(-50%,-54%) scale(.94); }
+    52%  { opacity: .95; filter: blur(0); transform: translate(-50%,-54%) scale(1.03);
+           color: rgba(255,255,255,.95);
+           text-shadow: 0 0 100px rgba(255,255,255,.95), 0 0 260px rgba(255,255,255,.55); }
+    70%  { opacity: .5; transform: translate(-50%,-54%) scale(1);
+           color: rgba(255,255,255,.38);
+           text-shadow: 0 0 55px rgba(255,255,255,.4); }
+    100% { opacity: .3; filter: blur(0); transform: translate(-50%,-54%) scale(1);
+           color: rgba(255,255,255,.13);
+           text-shadow: 0 0 70px rgba(255,255,255,.22); }
+}
+@keyframes m-breathe {
+    0%, 100% { opacity: .28; }
+    50%      { opacity: .42; }
 }
 @media (prefers-reduced-motion: reduce) {
-    .evo-banner.visible .evo-m-bg { animation: none; opacity: .2; }
+    .evo-banner.visible .evo-m-bg { animation: none; opacity: .18; }
 }
+/* ---------- 横幅底部：滚动引导 + 与下文柔和衔接 ---------- */
+.evo-scroll-hint {
+    position: absolute;
+    bottom: 26px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    color: var(--muted);
+    font-size: 1.4rem;
+    animation: scroll-hint 2s ease-in-out infinite;
+    pointer-events: none;
+}
+@keyframes scroll-hint {
+    0%, 100% { opacity: .35; transform: translate(-50%, 0); }
+    50%      { opacity: .9;  transform: translate(-50%, 8px); }
+}
+.evo-banner::after {
+    content: "";
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 120px;
+    background: linear-gradient(180deg, transparent, var(--bg));
+    pointer-events: none;
+    z-index: 1;
+}
+/* hero 与横幅衔接：收起顶部留白 */
+.hero-compact { padding-top: 8px; }
