@@ -2244,21 +2244,21 @@ footer::before {
                m-breathe 5.5s ease-in-out 3.4s infinite;
 }
 @keyframes m-awaken {
-    0%   { opacity: 0; filter: blur(16px); transform: translate(-50%,-54%) scale(.94); }
-    40%  { opacity: 0; filter: blur(16px); transform: translate(-50%,-54%) scale(.94); }
-    52%  { opacity: .95; filter: blur(0); transform: translate(-50%,-54%) scale(1.03);
-           color: rgba(255,255,255,.95);
-           text-shadow: 0 0 100px rgba(255,255,255,.95), 0 0 260px rgba(255,255,255,.55); }
-    70%  { opacity: .5; transform: translate(-50%,-54%) scale(1);
-           color: rgba(255,255,255,.38);
-           text-shadow: 0 0 55px rgba(255,255,255,.4); }
-    100% { opacity: .3; filter: blur(0); transform: translate(-50%,-54%) scale(1);
-           color: rgba(255,255,255,.13);
-           text-shadow: 0 0 70px rgba(255,255,255,.22); }
+    0%   { opacity: 0; filter: blur(16px); transform: translate(-50%,-54%) scale(.96); }
+    40%  { opacity: 0; filter: blur(16px); transform: translate(-50%,-54%) scale(.96); }
+    52%  { opacity: .55; filter: blur(0); transform: translate(-50%,-54%) scale(1.01);
+           color: rgba(255,255,255,.6);
+           text-shadow: 0 0 45px rgba(255,255,255,.45), 0 0 120px rgba(255,255,255,.2); }
+    70%  { opacity: .38; transform: translate(-50%,-54%) scale(1);
+           color: rgba(255,255,255,.3);
+           text-shadow: 0 0 35px rgba(255,255,255,.25); }
+    100% { opacity: .26; filter: blur(0); transform: translate(-50%,-54%) scale(1);
+           color: rgba(255,255,255,.11);
+           text-shadow: 0 0 50px rgba(255,255,255,.15); }
 }
 @keyframes m-breathe {
-    0%, 100% { opacity: .28; }
-    50%      { opacity: .42; }
+    0%, 100% { opacity: .24; }
+    50%      { opacity: .32; }
 }
 @media (prefers-reduced-motion: reduce) {
     .evo-banner.visible .evo-m-bg { animation: none; opacity: .18; }
