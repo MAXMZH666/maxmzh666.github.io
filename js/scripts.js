@@ -31,14 +31,19 @@
         });
     } catch (e) { /* 忽略 */ }
 
-    /* 滚动显现动画 */
+    /* 滚动显现动画（入场 + 可选出场） */
     var revealEls = document.querySelectorAll('.reveal');
     if ('IntersectionObserver' in window && revealEls.length) {
         var io = new IntersectionObserver(function (entries) {
             entries.forEach(function (en) {
                 if (en.isIntersecting) {
                     en.target.classList.add('visible');
-                    io.unobserve(en.target);
+                    /* 只有带 reveal-out 的元素才播出场动画，其余一次入场后不再观察 */
+                    if (!en.target.classList.contains('reveal-out')) {
+                        io.unobserve(en.target);
+                    }
+                } else if (en.target.classList.contains('reveal-out')) {
+                    en.target.classList.remove('visible');
                 }
             });
         }, { threshold: 0.12 });
