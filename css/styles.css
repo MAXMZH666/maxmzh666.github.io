@@ -1968,14 +1968,21 @@ body {
     box-shadow: 0 12px 32px rgba(77,124,254,.12);
 }
 
-/* ---------- EVOLUTION 视觉横幅 ---------- */
+/* ---------- EVOLUTION 视觉横幅（整页） ---------- */
 .evo-banner {
     position: relative;
     overflow: hidden;
     text-align: center;
-    padding: 72px 16px 64px;
+    min-height: calc(100vh - var(--header-h));
+    min-height: calc(100svh - var(--header-h));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 16px;
     background:
-        radial-gradient(800px 320px at 50% 120%, rgba(77,124,254,.16), transparent 65%),
+        radial-gradient(900px 480px at 50% 115%, rgba(77,124,254,.18), transparent 65%),
+        radial-gradient(700px 380px at 50% -10%, rgba(124,92,255,.10), transparent 60%),
         transparent;
 }
 .evo-kicker {
@@ -1986,7 +1993,7 @@ body {
     margin-bottom: 12px;
 }
 .evo-text {
-    font-size: clamp(3rem, 12vw, 8.5rem);
+    font-size: clamp(3.4rem, 13vw, 10rem);
     font-weight: 900;
     line-height: 1;
     letter-spacing: .04em;
@@ -2074,7 +2081,7 @@ body {
 
 /* ---------- EVOLUTION 横幅品牌字 ---------- */
 .evo-brand {
-    font-size: clamp(2.2rem, 8vw, 5.5rem);
+    font-size: clamp(2.6rem, 9vw, 6.5rem);
     font-weight: 900;
     line-height: 1.05;
     letter-spacing: .12em;
