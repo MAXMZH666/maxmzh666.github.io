@@ -601,9 +601,21 @@ footer .foot-links { display: flex; gap: 18px; justify-content: center; flex-wra
 footer .foot-links a { color: var(--muted); }
 footer .foot-links a:hover { color: var(--gold); }
 
-/* ---------- 滚动显现动画 ---------- */
+/* ---------- 滚动显现动画（入场 + 出场） ---------- */
 .reveal { opacity: 0; transform: translateY(26px); transition: opacity .6s ease, transform .6s ease; }
 .reveal.visible { opacity: 1; transform: none; }
+/* 入场方向变体 */
+.reveal-left { transform: translateX(-40px); }
+.reveal-right { transform: translateX(40px); }
+.reveal-scale { transform: scale(.92); }
+.reveal-fade { transform: none; }
+/* 错峰延迟 */
+.reveal-d1 { transition-delay: .08s; }
+.reveal-d2 { transition-delay: .16s; }
+.reveal-d3 { transition-delay: .24s; }
+.reveal-d4 { transition-delay: .32s; }
+/* 出场：离开视口时反向播放入场动画（由 JS 切换 .visible 实现） */
+.reveal.reveal-out { transition: opacity .45s ease, transform .45s ease; }
 @media (prefers-reduced-motion: reduce) {
     .reveal { opacity: 1; transform: none; transition: none; }
     html { scroll-behavior: auto; }
