@@ -58,12 +58,12 @@
                 <div class="ai-settings reveal">
                     <b>⚙️ 设置（填一次即可，存本地）</b>
                     <label>API 地址（OpenAI 兼容接口）</label>
-                    <input type="text" id="ai-base" placeholder="https://api.openai.com/v1">
+                    <input type="text" id="ai-base" placeholder="https://api.deepseek.com/v1">
                     <label>API Key</label>
                     <input type="password" id="ai-key" placeholder="sk-…">
                     <label>模型</label>
-                    <input type="text" id="ai-model" placeholder="gpt-4o-mini">
-                    <p class="form-hint" style="margin:8px 0 0">支持 OpenAI / DeepSeek / 任何 OpenAI 兼容接口。DeepSeek 地址填 https://api.deepseek.com/v1，模型填 deepseek-chat。</p>
+                    <input type="text" id="ai-model" placeholder="deepseek-chat">
+                    <p class="form-hint" style="margin:8px 0 0">默认已填 DeepSeek（浏览器可直连，性价比高）。注意：OpenAI 官方接口不支持浏览器直接调用；其他 OpenAI 兼容接口按其文档填写地址和模型。</p>
                 </div>
 
                 <div class="ai-chat reveal" id="ai-chat">
@@ -100,9 +100,9 @@
         var modelEl = document.getElementById('ai-model');
         /* 读取本地保存的设置 */
         try {
-            baseEl.value = localStorage.getItem('mmc_ai_base') || 'https://api.openai.com/v1';
+            baseEl.value = localStorage.getItem('mmc_ai_base') || 'https://api.deepseek.com/v1';
             keyEl.value = localStorage.getItem('mmc_ai_key') || '';
-            modelEl.value = localStorage.getItem('mmc_ai_model') || 'gpt-4o-mini';
+            modelEl.value = localStorage.getItem('mmc_ai_model') || 'deepseek-chat';
         } catch (e) {}
         [baseEl, keyEl, modelEl].forEach(function (el, i) {
             el.addEventListener('change', function () {
@@ -144,7 +144,7 @@
             if (!q || busy) return;
             var base = baseEl.value.trim().replace(/\/$/, '');
             var key = keyEl.value.trim();
-            var model = modelEl.value.trim() || 'gpt-4o-mini';
+            var model = modelEl.value.trim() || 'deepseek-chat';
             if (!key) { addMsg('ai', '请先在上面填入 API Key。'); return; }
             try {
                 localStorage.setItem('mmc_ai_base', base);
