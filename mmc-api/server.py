@@ -190,11 +190,11 @@ def auth_send_code(b, ip):
                   {"Authorization": "Bearer " + _auth_env("RESEND_API_KEY"),
                    "Content-Type": "application/json",
                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"},
-                  {"from": "MAX社区 <noreply@maxmzh.com>", "to": [email],
-                   "subject": "【MAX社区】注册验证码：" + code,
-                   "text": "你的 MAX社区 注册验证码是：" + code + "\n\n10 分钟内有效，请勿告诉他人。\n如非本人操作，请忽略本邮件。",
+                  {"from": "MAX编程社区 <noreply@maxmzh.com>", "to": [email],
+                   "subject": "【MAX编程社区】注册验证码：" + code,
+                   "text": "你的 MAX编程社区 注册验证码是：" + code + "\n\n10 分钟内有效，请勿告诉他人。\n如非本人操作，请忽略本邮件。",
                    "html": '<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">'
-                           '<h2 style="color:#4d7cfe;margin:0 0 12px">MAX社区 注册验证码</h2>'
+                           '<h2 style="color:#4d7cfe;margin:0 0 12px">MAX编程社区 注册验证码</h2>'
                            '<p>你的验证码是：</p>'
                            '<p style="font-size:32px;font-weight:700;letter-spacing:8px;color:#111">' + code + '</p>'
                            '<p style="color:#666">10 分钟内有效，请勿告诉他人。如非本人操作，请忽略本邮件。</p></div>'})

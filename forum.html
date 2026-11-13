@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="MAX论坛：综合讨论、作品求助、建议反馈，与 MAX社区同账号互通。">
+    <meta name="description" content="MAX论坛：综合讨论、作品求助、建议反馈，与 MAX编程社区同账号互通。">
     <meta name="theme-color" content="#0b0b0e">
     <meta property="og:title" content="MAXMZH - MAX论坛">
     <meta property="og:type" content="website">
@@ -31,32 +31,28 @@
     <div data-max-account="float"></div>
     <header class="site-header">
         <nav class="nav" aria-label="主导航">
-            <a class="brand" href="https://maxmzh.com/"><img src="logo.webp" alt="MAXMZH"></a>
+            <a class="brand" href="forum.html"><img src="logo.webp" alt="MAXMZH"></a>
             <div class="nav-actions">
                 <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
                 <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
             </div>
-            <ul class="nav-links">
-                <li><a href="https://maxmzh.com/">主页</a></li>
-                <li><a href="https://maxmzh.com/about.html">个人简介</a></li>
-                <li><a href="https://maxmzh.com/blog.html">博客</a></li>
-                <li><a href="https://maxmzh.com/community-home.html" class="active">社区</a></li>
-                <li><a href="https://maxmzh.com/contact.html">联系方式</a></li>
+                        <ul class="nav-links">
+                <li><a href="forum.html">论坛首页</a></li>
+                <li><a href="forum-new.html">发新帖</a></li>
+                <li><a href="forum.html#cat-5a90d1f4-61f4-4ae9-b4f0-0ca5bd48a71f">💻 MAX编程社区专栏</a></li>
+                <li><a href="https://maxmzh.com/community-home.html">MAX编程社区</a></li>
+                <li><a href="https://maxmzh.com/">主站</a></li>
             </ul>
         </nav>
     </header>
-    <div class="sub-header">
+        <div class="sub-header">
         <div class="sub-header-inner">
             <a class="sub-brand" href="forum.html">💬 <span>MAX论坛</span></a>
-            <nav class="sub-links" aria-label="社区导航">
-                <a href="https://maxmzh.com/community-home.html" data-sub="home">首页</a>
-                <a href="community.html" data-sub="works">🔍 发现</a>
-                <a href="forum.html" data-sub="forum">💬 论坛</a>
-                <a href="https://maxmzh.com/community-studios.html" data-sub="studios">🏢 工作室</a>
-                <a href="https://maxmzh.com/community-shop.html" data-sub="shop">🎁 任务商城</a>
-                <a href="https://maxmzh.com/community-contests.html" data-sub="contests">🏁 赛事</a>
-                <a href="https://maxmzh.com/community-moderation.html" data-sub="moderation">⚖️ 共建</a>
-                <a href="https://maxmzh.com/community-publish.html" data-sub="publish">🚀 发布</a>
+            <nav class="sub-links" aria-label="论坛导航">
+                <a href="forum.html">全部帖子</a>
+                <a href="forum.html#cat-5a90d1f4-61f4-4ae9-b4f0-0ca5bd48a71f">💻 MAX编程社区专栏</a>
+                <a href="forum-new.html">✏️ 发新帖</a>
+                <a href="https://maxmzh.com/community-home.html">MAX编程社区</a>
                 <span id="sub-auth"><a href="https://maxmzh.com/community-auth.html">登录</a></span>
             </nav>
         </div>
@@ -64,9 +60,9 @@
 
     <main>
         <section class="portfolio">
-            <p class="article-back"><a href="community.html">← 返回 MAX社区</a></p>
+            <p class="article-back"><a href="community.html">← 返回 MAX编程社区</a></p>
             <h1 class="section-title">💬 MAX论坛</h1>
-            <p class="section-sub">聊游戏、问问题、提建议，和 MAX社区同账号互通。</p>
+            <p class="section-sub">聊游戏、问问题、提建议，和 MAX编程社区同账号互通。</p>
             <div class="forum-topbar">
                 <div class="sort-tabs" id="cat-tabs"><button data-cat="" class="active">全部</button></div>
                 <a class="btn-new" href="forum-new.html">✏️ 发新帖</a>
@@ -100,7 +96,6 @@
     <script src="/js/max-account.js?v=20261113a"></script>
     <script>
     (async function () {
-        await renderSubHeader();
         var sb = window.sb, catId = '', sort = 'new';
         var cats = [], catMap = {};
         /* 版块 */
@@ -127,6 +122,12 @@
                 this.classList.add('active');
                 load();
             });
+            /* #cat-<id> 深链：导航「MAX编程社区专栏」直达对应版块 */
+            var hcat = (location.hash || '').replace('#cat-', '');
+            if (hcat && catMap[hcat]) {
+                var hb = tabs.querySelector('[data-cat="' + hcat + '"]');
+                if (hb) hb.click();
+            }
         } catch (e) {}
         /* 排序 */
         document.getElementById('sort-tabs').querySelectorAll('button').forEach(function (b) {

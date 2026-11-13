@@ -9403,7 +9403,7 @@ MAXMZH customized version.`,
   ACCENT_COLOR: '#4d7cfe',
   SOURCE_CODE: 'https://github.com/MAXMZH666/maxmzh666.github.io',
   FEEDBACK_PRIMARY: {
-    name: 'MAX社区',
+    name: 'MAX编程社区',
     link: 'https://maxmzh666.github.io/community-home.html'
   },
   FEEDBACK_SECONDARY: {

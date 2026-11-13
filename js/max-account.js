@@ -1,5 +1,5 @@
 /* ============================================================
- * MAX 账号（联合登录）—— maxmzh.com 全部网页产品共用 MAX社区账号
+ * MAX 账号（联合登录）—— maxmzh.com 全部网页产品共用 MAX编程社区账号
  * ------------------------------------------------------------
  * 原理：所有产品同域（maxmzh.com），共用同一个 Supabase 项目的
  * 登录态（localStorage 同源共享）。在社区登录一次，其它产品打开
@@ -126,7 +126,7 @@
             '<span class="maxacc-name">' + esc(name) + '</span>' +
             '<span class="maxacc-menu">' +
             '<a href="/community-user.html?username=' + encodeURIComponent(name) + '">👤 我的社区主页</a>' +
-            '<a href="/community.html">🌐 MAX社区</a>' +
+            '<a href="/community.html">🌐 MAX编程社区</a>' +
             '<button type="button" data-maxacc-logout>🚪 退出登录</button>' +
             '</span></span>';
         var chip = el.querySelector('.maxacc-chip');
