@@ -1,0 +1,7 @@
+[Unit]
+Description=MAXMZH admin data backup
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/maxmzh-admin/backup.sh
