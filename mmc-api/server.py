@@ -113,6 +113,8 @@ def _http(method, url, headers, body=None, timeout=15):
             return e.code, (json.loads(raw) if raw else None)
         except Exception:
             return e.code, None
+    except Exception:
+        return 0, None
 
 
 def _sha256hex(s):

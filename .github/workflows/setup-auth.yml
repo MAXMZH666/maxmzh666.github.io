@@ -44,6 +44,10 @@ jobs:
           scp -i ~/.ssh/id_vps -r mmc-api "$VPS_USER@$VPS_HOST:~/"
           ssh -i ~/.ssh/id_vps "$VPS_USER@$VPS_HOST" 'bash ~/mmc-api/deploy-auth.sh'
 
+      - name: Diagnose auth flow
+        run: |
+          ssh -i ~/.ssh/id_vps "$VPS_USER@$VPS_HOST" 'echo "--- probe:"; curl -s -m 40 -X POST http://127.0.0.1:8791/auth/send-code -H "Content-Type: application/json" -d "{\"email\":\"mmc_test@example.com\"}"; echo; echo "--- journal:"; sudo journalctl -u mmc-api -n 80 --no-pager | tail -50'
+
       - name: Verify public auth endpoint
         run: |
           R=$(curl -s -m 10 -X POST https://maxmzh.com/auth/send-code -H 'Content-Type: application/json' -d '{"email":"bad"}')
