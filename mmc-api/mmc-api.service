@@ -1,0 +1,18 @@
+[Unit]
+Description=MMC self-hosted foundation API
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=ops
+EnvironmentFile=/opt/mmc-api/db.env
+ExecStart=/usr/bin/python3 /opt/mmc-api/server.py
+Restart=on-failure
+RestartSec=3
+ProtectSystem=strict
+ReadWritePaths=/opt/mmc-api
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
