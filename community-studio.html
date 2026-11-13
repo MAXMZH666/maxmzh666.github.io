@@ -14,7 +14,7 @@
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
-    <link rel="stylesheet" href="css/styles.min.css?v=20261004p">
+    <link rel="stylesheet" href="css/styles.min.css?v=20261113a">
     <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
     <style>
         .studio-hero { border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 14px; padding: 24px; margin-bottom: 20px; display: flex; gap: 18px; align-items: center; background: linear-gradient(135deg, rgba(77,124,254,.08), rgba(156,77,254,.05)); }
@@ -50,7 +50,7 @@
 <body>
     <header class="site-header">
         <nav class="nav" aria-label="主导航">
-            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <a class="brand" href="index.html"><img src="logo.webp" alt="MAXMZH"></a>
             <div class="nav-actions">
                 <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
                 <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
@@ -103,7 +103,7 @@
         <p>本站托管于 GitHub Pages</p>
     </footer>
 
-    <script src="js/scripts.js?v=20261011a"></script>
+    <script src="js/scripts.min.js?v=20261113a"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/community.min.js?v=20261010a"></script>
     <script src="js/redpacket.js"></script>
@@ -158,7 +158,7 @@
             });
         }
 
-        var av = s.avatar_url ? '<img src="' + esc(s.avatar_url) + '" alt="">' : '🏢';
+        var av = s.avatar_url ? '<img src="' + esc(s.avatar_url) + '" alt="" loading="lazy" decoding="async">' : '🏢';
         var coverBanner = s.cover_url ? '<div style="border-radius:14px;overflow:hidden;margin-bottom:16px;max-height:220px"><img src="' + esc(s.cover_url) + '" alt="" style="width:100%;height:220px;object-fit:cover" loading="lazy"></div>' : '';
         var html = coverBanner + '<div class="studio-hero"><div class="avatar">' + av + '</div><div>' +
             '<h1>' + esc(s.name) + '</h1>' +
@@ -174,7 +174,7 @@
         html += '<h2 class="sec-title">👥 成员（' + members.length + '）</h2><div class="member-list">' +
             members.map(function (m) {
                 var u = users[m.user_id] || {};
-                var uav = u.avatar_url ? '<img src="' + esc(u.avatar_url) + '" alt="" loading="lazy">' : '<img alt="">';
+                var uav = u.avatar_url ? '<img src="' + esc(u.avatar_url) + '" alt="" loading="lazy">' : '<img alt="" loading="lazy" decoding="async">';
                 var rm = (isManager && m.role !== 'owner' && m.user_id !== me.id)
                     ? ' <button class="remove-btn" data-rm-member="' + m.user_id + '">移除</button>' : '';
                 var appt = '';
@@ -235,7 +235,7 @@
         else {
             html += '<div class="work-grid">' + swList.map(function (x) {
                 var w = works[x.work_id] || {};
-                var cover = w.cover_url ? '<img src="' + esc(w.cover_url) + '" alt="">' : '🎮';
+                var cover = w.cover_url ? '<img src="' + esc(w.cover_url) + '" alt="" loading="lazy" decoding="async">' : '🎮';
                 var rm = (isManager || (me && x.added_by === me.id))
                     ? '<button class="remove-btn" data-rm-work="' + x.work_id + '">移除</button>' : '';
                 return '<div><a class="work-card" href="community-play.html?id=' + x.work_id + '">' +
@@ -513,7 +513,7 @@
                 } catch (e) {}
                 box.innerHTML = rpHtml + (list.length ? list.map(function (d) {
                     var u = dusers[d.user_id] || {};
-                    var uav = u.avatar_url ? '<img src="' + esc(u.avatar_url) + '" alt="" loading="lazy">' : '<img alt="">';
+                    var uav = u.avatar_url ? '<img src="' + esc(u.avatar_url) + '" alt="" loading="lazy">' : '<img alt="" loading="lazy" decoding="async">';
                     var role = droles[d.user_id] || 'member';
                     var canDel = (me && d.user_id === me.id) || isManager;
                     var dcCat = d.category || '综合';

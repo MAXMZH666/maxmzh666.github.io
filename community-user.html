@@ -14,13 +14,13 @@
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
-    <link rel="stylesheet" href="css/styles.min.css?v=20261004p">
+    <link rel="stylesheet" href="css/styles.min.css?v=20261113a">
     <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
 </head>
 <body>
     <header class="site-header">
         <nav class="nav" aria-label="主导航">
-            <a class="brand" href="index.html"><img src="logo.png" alt="MAXMZH"></a>
+            <a class="brand" href="index.html"><img src="logo.webp" alt="MAXMZH"></a>
             <div class="nav-actions">
                 <button id="theme-toggle" class="theme-toggle" aria-label="切换深色/浅色模式">☀️</button>
                 <button class="nav-toggle" aria-expanded="false" aria-label="打开菜单">☰</button>
@@ -73,7 +73,7 @@
         <p class="foot-stats"><span id="busuanzi_container_site_pv">本站总访问量 <span id="busuanzi_value_site_pv">统计中…</span> 次</span><span> · </span><span id="busuanzi_container_page_pv">本页访问 <span id="busuanzi_value_page_pv">统计中…</span> 次</span></p>
     </footer>
 
-    <script src="js/scripts.js?v=20261011a"></script>
+    <script src="js/scripts.min.js?v=20261113a"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/community.min.js?v=20261010a"></script>
     <script>
@@ -159,13 +159,13 @@
             var portfolioHtml = '';
             if (pr.data.username === 'MAXMZH') {
                 var pfItems = [
-                    ['审判行动系列', 'project1.html', 'picture/spxd.png', '一系列模拟类型的狙击游戏。'],
-                    ['穿越火线系列', 'project2.html', 'picture/cyhx.png', '一系列拟 3D 的 FPS 射击游戏。'],
+                    ['审判行动系列', 'project1.html', 'picture/spxd.webp', '一系列模拟类型的狙击游戏。'],
+                    ['穿越火线系列', 'project2.html', 'picture/cyhx.webp', '一系列拟 3D 的 FPS 射击游戏。'],
                     ['审判战争', 'project3.html', '', '一款沙盒类多人竞技射击游戏。'],
-                    ['PUBG-PVZ', 'project5.html', 'picture/PUBG-PVZ.png', '植物大战僵尸题材射击游戏。'],
-                    ['审判行动：致命瞄准', 'project9.html', 'picture/spxdzmmz1.png', '审判行动系列最新作。'],
+                    ['PUBG-PVZ', 'project5.html', 'picture/PUBG-PVZ.webp', '植物大战僵尸题材射击游戏。'],
+                    ['审判行动：致命瞄准', 'project9.html', 'picture/spxdzmmz1.webp', '审判行动系列最新作。'],
                     ['Space Waves（太空波）', 'project8.html', 'picture/Spaces%20Waves.jpg', '太空题材 waves 游戏。'],
-                    ['MAX Agar', 'project7.html', 'picture/Agar.png', 'agar.io 同人版。'],
+                    ['MAX Agar', 'project7.html', 'picture/Agar.webp', 'agar.io 同人版。'],
                     ['MAX 科技云（APP）', 'project4.html', '', 'MAX 科技云手机应用。'],
                     ['MAX 微信步数修改', 'project6.html', 'picture/MAX%E4%B8%80%E9%94%AE%E5%88%B7%E5%BE%AE%E4%BF%A1%E6%AD%A5%E6%95%B0.png', '微信步数修改工具。'],
                     ['Banana', 'https://world.xiaomawang.com/community/main/compose/bv2F666J', '', '小码王社区作品。'],
@@ -270,7 +270,7 @@
                 '<p class="article-back"><a href="community.html">← 返回社区</a></p>' +
                 '<div class="profile-bg-wrap" id="profile-head">' +
                 '<div class="profile-head-inner">' +
-                (pr.data.avatar_url ? '<img src="' + esc(pr.data.avatar_url) + '" alt="头像" id="u-avatar" class="profile-avatar">' : '<span class="profile-avatar" style="display:flex;align-items:center;justify-content:center;font-size:2rem;background:var(--surface-2)" id="u-avatar">👤</span>') +
+                (pr.data.avatar_url ? '<img src="' + esc(pr.data.avatar_url) + '" alt="头像" id="u-avatar" class="profile-avatar" loading="lazy" decoding="async">' : '<span class="profile-avatar" style="display:flex;align-items:center;justify-content:center;font-size:2rem;background:var(--surface-2)" id="u-avatar">👤</span>') +
                 '<div style="flex:1;min-width:200px"><h1 class="section-title" style="margin:0"><span id="u-title"></span>' + esc(pr.data.username) + '<span id="u-badges"></span></h1>' +
                 (pr.data.bio ? '<p class="section-sub" style="margin:4px 0 0">' + esc(pr.data.bio) + '</p>' : '') + '</div></div>' +
                 (isSelf ? '<p><a class="btn btn-blue" href="community-profile-edit.html">✏️ 编辑个人资料</a> <a class="btn btn-ghost" href="community-settings.html">⚙️ 个人设置</a></p></div>' : '</div>') +
