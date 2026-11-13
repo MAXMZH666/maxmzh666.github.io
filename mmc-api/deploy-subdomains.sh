@@ -19,12 +19,17 @@ SITE=/etc/nginx/sites-available/maxmzh
 sudo cp "$SITE" "$SITE.bak-$(date +%Y%m%d%H%M%S)"
 sudo python3 "$SRC_DIR/nginx_insert.py" "$SITE" "$SRC_DIR/nginx-stats.conf" "/stats/"
 
-# 4) 子域名虚拟主机（证书沿用现有 Let's Encrypt 证书）
-CERT_DIR=$(sudo ls -d /etc/letsencrypt/live/*/ 2>/dev/null | head -1)
-echo "cert dir: $CERT_DIR"
-if [ -z "$CERT_DIR" ]; then echo "找不到证书目录，终止"; exit 1; fi
+# 4) 子域名虚拟主机（证书路径直接读现有主站 nginx 配置，与主站共用同一张证书）
+CERT=$(sudo grep -h 'ssl_certificate ' /etc/nginx/sites-enabled/maxmzh | grep -v key | head -1 | sed -E 's/.*ssl_certificate[[:space:]]+([^;]+);.*/\1/' | tr -d ' ')
+KEY=$(sudo grep -h 'ssl_certificate_key ' /etc/nginx/sites-enabled/maxmzh | head -1 | sed -E 's/.*ssl_certificate_key[[:space:]]+([^;]+);.*/\1/' | tr -d ' ')
+if [ -z "$CERT" ] || [ -z "$KEY" ]; then
+    D=$(sudo find /etc/letsencrypt/live -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
+    CERT="$D/fullchain.pem"; KEY="$D/privkey.pem"
+fi
+echo "cert: $CERT"
+if ! sudo test -f "$CERT" || ! sudo test -f "$KEY"; then echo "证书文件不存在，终止"; exit 1; fi
 for v in api img forum store; do
-    sed -e "s|@CERT@|${CERT_DIR}fullchain.pem|" -e "s|@KEY@|${CERT_DIR}privkey.pem|" \
+    sed -e "s|@CERT@|${CERT}|" -e "s|@KEY@|${KEY}|" \
         "$SRC_DIR/vhost-$v.conf" | sudo tee /etc/nginx/sites-available/$v.maxmzh.com >/dev/null
     sudo ln -sf /etc/nginx/sites-available/$v.maxmzh.com /etc/nginx/sites-enabled/$v.maxmzh.com
 done
