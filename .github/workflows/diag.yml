@@ -1,0 +1,22 @@
+name: Diag VPS admin
+on:
+  workflow_dispatch:
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_USER: ops
+    steps:
+      - name: Setup SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_vps
+          chmod 600 ~/.ssh/id_vps
+          ssh-keyscan -t ed25519 -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+      - name: Diagnose
+        run: |
+          ssh -i ~/.ssh/id_vps "$VPS_USER@$VPS_HOST" 'echo "== service =="; systemctl is-active maxmzh-admin || true; echo "== listen =="; ss -tlnp 2>/dev/null | grep 8790 || echo NO_LISTEN; echo "== local api =="; curl -s -m 5 http://127.0.0.1:8790/api/news | head -c 150; echo; echo "== nginx grep =="; grep -n "8790" /etc/nginx/sites-available/maxmzh || echo NO_8790_IN_SITE; grep -c "server {" /etc/nginx/sites-available/maxmzh; echo "== nginx -t =="; sudo nginx -t 2>&1 | tail -2; echo "== journal =="; sudo journalctl -u maxmzh-admin -n 15 --no-pager | tail -15'
