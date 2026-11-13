@@ -38,6 +38,202 @@ class H(BaseHTTPRequestHandler):
         else:
             self._json(404, {"error": "not found"})
 
+    def do_POST(self):
+        path = self.path.split("?", 1)[0]
+        if path not in ("/auth/send-code", "/auth/verify-register"):
+            self._json(404, {"error": "not found"})
+            return
+        try:
+            n = int(self.headers.get("Content-Length") or 0)
+            body = json.loads(self.rfile.read(n) or b"{}")
+        except Exception:
+            self._json(400, {"error": "bad json"})
+            return
+        ip = (self.headers.get("CF-Connecting-IP")
+              or (self.headers.get("X-Forwarded-For") or "").split(",")[0].strip()
+              or self.client_address[0])
+        try:
+            if path == "/auth/send-code":
+                code, obj = auth_send_code(body, ip)
+            else:
+                code, obj = auth_verify_register(body)
+        except Exception as e:
+            code, obj = 500, {"error": str(e)}
+        self._json(code, obj)
+
+
+
+# ---------------- 邮箱验证码注册（/auth/*，从 Cloudflare Worker 移植到自托管） ----------------
+import hashlib
+import re
+import secrets as _secrets
+import threading
+import urllib.error
+from datetime import datetime, timezone, timedelta
+
+SB_URL = "https://xkvpzxxtcnocofnsezpy.supabase.co"
+_AUTH_ENV_PATH = os.environ.get("MMC_AUTH_ENV", "/opt/mmc-api/auth.env")
+
+
+def _auth_env(name):
+    v = os.environ.get(name)
+    if v:
+        return v
+    try:
+        with open(_AUTH_ENV_PATH) as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith(name + "="):
+                    return line[len(name) + 1:].strip()
+    except Exception:
+        pass
+    raise RuntimeError("missing env: " + name)
+
+
+def _svc_headers(extra=None):
+    key = _auth_env("SUPABASE_SERVICE_KEY")
+    h = {"apikey": key, "Authorization": "Bearer " + key,
+         "Content-Type": "application/json"}
+    if extra:
+        h.update(extra)
+    return h
+
+
+def _http(method, url, headers, body=None, timeout=15):
+    req = urllib.request.Request(
+        url, method=method, headers=headers,
+        data=json.dumps(body).encode() if body is not None else None)
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            raw = r.read()
+            return r.status, (json.loads(raw) if raw else None)
+    except urllib.error.HTTPError as e:
+        raw = e.read()
+        try:
+            return e.code, (json.loads(raw) if raw else None)
+        except Exception:
+            return e.code, None
+
+
+def _sha256hex(s):
+    return hashlib.sha256(s.encode()).hexdigest()
+
+
+def _parse_ts(s):
+    return datetime.fromisoformat(str(s).replace("Z", "+00:00"))
+
+
+_rate_lock = threading.Lock()
+_rate_map = {}
+
+
+def _check_code_rate(ip):
+    now = datetime.now(timezone.utc).timestamp()
+    with _rate_lock:
+        rec = _rate_map.get(ip)
+        if not rec or now - rec[0] > 3600:
+            _rate_map[ip] = (now, 1)
+            return True
+        _rate_map[ip] = (rec[0], rec[1] + 1)
+        return rec[1] + 1 <= 10
+
+
+_EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]{2,}$")
+
+
+def auth_send_code(b, ip):
+    email = str(b.get("email") or "").strip().lower()
+    if not _EMAIL_RE.match(email) or len(email) > 254:
+        return 400, {"error": "邮箱格式不正确"}
+    if not _check_code_rate(ip):
+        return 429, {"error": "发送太频繁，请稍后再试"}
+    base = SB_URL
+    st, rows = _http("GET", base + "/rest/v1/email_codes?email=eq."
+                     + urllib.request.quote(email) + "&select=created_at",
+                     _svc_headers())
+    if st == 200 and rows and rows[0]:
+        if (datetime.now(timezone.utc) - _parse_ts(rows[0]["created_at"])).total_seconds() < 60:
+            return 429, {"error": "发送太频繁，请 60 秒后再试"}
+    code = "%06d" % _secrets.randbelow(1000000)
+    h = _sha256hex(email + ":" + code + ":" + _auth_env("EMAIL_CODE_SECRET"))
+    now = datetime.now(timezone.utc)
+    st, _ = _http("POST", base + "/rest/v1/email_codes",
+                  _svc_headers({"Prefer": "resolution=merge-duplicates,return=minimal"}),
+                  {"email": email, "code_hash": h, "attempts": 0,
+                   "created_at": now.isoformat(),
+                   "expires_at": (now + timedelta(seconds=600)).isoformat()})
+    if not (200 <= st < 300):
+        return 500, {"error": "验证码保存失败，请稍后再试"}
+    st, _ = _http("POST", "https://api.resend.com/emails",
+                  {"Authorization": "Bearer " + _auth_env("RESEND_API_KEY"),
+                   "Content-Type": "application/json"},
+                  {"from": "MAX社区 <noreply@maxmzh.com>", "to": [email],
+                   "subject": "【MAX社区】注册验证码：" + code,
+                   "text": "你的 MAX社区 注册验证码是：" + code + "\n\n10 分钟内有效，请勿告诉他人。\n如非本人操作，请忽略本邮件。",
+                   "html": '<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">'
+                           '<h2 style="color:#4d7cfe;margin:0 0 12px">MAX社区 注册验证码</h2>'
+                           '<p>你的验证码是：</p>'
+                           '<p style="font-size:32px;font-weight:700;letter-spacing:8px;color:#111">' + code + '</p>'
+                           '<p style="color:#666">10 分钟内有效，请勿告诉他人。如非本人操作，请忽略本邮件。</p></div>'})
+    if not (200 <= st < 300):
+        _http("DELETE", base + "/rest/v1/email_codes?email=eq."
+              + urllib.request.quote(email), _svc_headers())
+        return 502, {"error": "验证码发送失败，请稍后再试"}
+    return 200, {"ok": True}
+
+
+def auth_verify_register(b):
+    email = str(b.get("email") or "").strip().lower()
+    code = str(b.get("code") or "").strip()
+    pw = str(b.get("password") or "")
+    name = str(b.get("username") or "").strip()
+    if not _EMAIL_RE.match(email):
+        return 400, {"error": "邮箱格式不正确"}
+    if not re.match(r"^\d{6}$", code):
+        return 400, {"error": "请输入 6 位验证码"}
+    if not (6 <= len(pw) <= 72):
+        return 400, {"error": "密码至少 6 位"}
+    if not name or len(name) > 20 or re.search(r"[<>&\"'\\]", name):
+        return 400, {"error": "用户名不合法（1-20 字，不能含特殊符号）"}
+    base = SB_URL
+    q = urllib.request.quote(email)
+    st, rows = _http("GET", base + "/rest/v1/email_codes?email=eq." + q
+                     + "&select=code_hash,attempts,expires_at", _svc_headers())
+    row = rows[0] if (st == 200 and rows) else None
+    if not row:
+        return 400, {"error": "验证码不存在或已过期，请重新获取"}
+
+    def del_code():
+        _http("DELETE", base + "/rest/v1/email_codes?email=eq." + q, _svc_headers())
+
+    if _parse_ts(row["expires_at"]) < datetime.now(timezone.utc):
+        del_code()
+        return 400, {"error": "验证码已过期，请重新获取"}
+    if row["attempts"] >= 5:
+        del_code()
+        return 400, {"error": "验证码错误次数过多，请重新获取"}
+    h = _sha256hex(email + ":" + code + ":" + _auth_env("EMAIL_CODE_SECRET"))
+    if h != row["code_hash"]:
+        _http("PATCH", base + "/rest/v1/email_codes?email=eq." + q,
+              _svc_headers(), {"attempts": row["attempts"] + 1})
+        return 400, {"error": "验证码不正确"}
+    st, prows = _http("GET", base + "/rest/v1/profiles?username=eq."
+                      + urllib.request.quote(name) + "&select=id", _svc_headers())
+    if st == 200 and prows:
+        return 409, {"error": "用户名已被占用，换一个试试"}
+    st, cu = _http("POST", base + "/auth/v1/admin/users", _svc_headers(),
+                   {"email": email, "password": pw, "email_confirm": True,
+                    "user_metadata": {"username": name}})
+    if not (200 <= st < 300):
+        msg = ""
+        if isinstance(cu, dict):
+            msg = str(cu.get("msg") or cu.get("message") or cu.get("error") or "")
+        if re.search(r"already|exists|registered", msg, re.I):
+            del_code()
+            return 400, {"error": "该邮箱已注册，请直接登录"}
+        return 500, {"error": "注册失败，请稍后再试"}
+    del_code()
+    return 200, {"ok": True}
 
 
 # ---------------- WebSocket 实时未读推送（8792，与 Supabase 并行） ----------------

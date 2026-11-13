@@ -315,7 +315,7 @@
             note.textContent = '正在发送验证码…';
             note.className = 'form-note sending';
             try {
-                var r = await fetch(R2_WORKER_URL + '/auth/send-code', {
+                var r = await fetch('/auth/send-code', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: f.email })
@@ -447,7 +447,7 @@
                 btn.disabled = true;
                 showLoading('正在完成注册…');
                 try {
-                    var vr = await fetch(R2_WORKER_URL + '/auth/verify-register', {
+                    var vr = await fetch('/auth/verify-register', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ email: email2, code: code2, password: pw2b, username: uname2 })
