@@ -183,26 +183,46 @@
         render();
     }
 
-    function playersPresent() {
+    /* 按 joined_at 排序定执子：两端看到同一份 presence 列表，排序结果必然一致，
+       避免订阅瞬间 presence 未同步导致两边都自认黑棋 */
+    function assignColors() {
         if (!channel) return 0;
         var st = channel.presenceState();
-        return Object.keys(st).length;
+        var entries = Object.keys(st).map(function (k) {
+            var m = (st[k] && st[k][0]) || {};
+            return { key: k, t: m.joined_at || 0 };
+        }).sort(function (a, b) { return (a.t - b.t) || (a.key < b.key ? -1 : 1); });
+        var idx = -1;
+        for (var i = 0; i < entries.length; i++) if (entries[i].key === myId) idx = i;
+        if (moves.length === 0 && idx >= 0) {
+            myColor = idx === 0 ? 1 : (idx === 1 ? 2 : 0);
+        }
+        return entries.length;
     }
     function updateNamesAndStatus() {
-        var n = playersPresent();
+        var n = assignColors();
         if (myColor === 1) {
             $('black-name').textContent = '你';
             $('white-name').textContent = n >= 2 ? '对手' : '等待加入…';
         } else if (myColor === 2) {
             $('black-name').textContent = '对手';
             $('white-name').textContent = '你';
+        } else if (myColor === 0 && n >= 1) {
+            $('black-name').textContent = '玩家一';
+            $('white-name').textContent = '玩家二';
+        }
+        if (myColor === 0 && n >= 2) {
+            started = true;
+            setStatus('房间已满，你正在观战。');
+            render();
+            return;
         }
         if (n >= 2 && !started) {
             started = true;
             setStatus('对弈开始！你执<b class="' + (myColor === 1 ? 'me' : 'opp') + '">' + (myColor === 1 ? '黑（先行）' : '白') + '</b>');
             log('双方就位，对弈开始');
             render();
-        } else if (n >= 2 && started) {
+        } else if (n >= 2 && started && !gameOver) {
             setStatus('对弈进行中，你执' + (myColor === 1 ? '黑' : '白'));
         } else if (started && n < 2) {
             setStatus('⚠️ 对方已离开房间。可以等其重新加入，或离开重开。');
@@ -239,20 +259,19 @@
         });
         channel.subscribe(function (status) {
             if (status !== 'SUBSCRIBED') return;
-            var n = playersPresent();
-            myColor = (n <= 1) ? 1 : 2;
             channel.track({ joined_at: Date.now() });
             $('lobby').style.display = 'none';
             $('roombar').style.display = 'flex';
             $('room-code').textContent = code;
-            if (asCreator || myColor === 1) {
+            if (asCreator) {
                 setStatus('房间已创建，把房号或链接发给朋友，等对方加入…');
             } else {
-                setStatus('已加入房间，你执<b>白</b>，等黑棋先行。');
+                setStatus('已加入房间，正在分配执子…');
                 channel.send({ type: 'broadcast', event: 'sync-request', payload: {} });
             }
             resetBoard();
             setTimeout(updateNamesAndStatus, 300);
+            setTimeout(updateNamesAndStatus, 1200);
         });
     }
 
