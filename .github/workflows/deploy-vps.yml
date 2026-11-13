@@ -1,0 +1,51 @@
+name: Deploy to Osaka VPS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_USER: ops
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_vps
+          chmod 600 ~/.ssh/id_vps
+          ssh-keyscan -t ed25519 -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          FP=$(ssh-keygen -lf ~/.ssh/known_hosts | awk '{print $2}' | head -1)
+          echo "host key fingerprint: $FP"
+          test "$FP" = "SHA256:FhhiN4dO64X6WNnXRYICB/3kFzZpmS089TYUXpDUW9k"
+
+      - name: Sync site (git pull on VPS)
+        run: |
+          ssh -i ~/.ssh/id_vps "$VPS_USER@$VPS_HOST" 'cd /var/www/maxmzh && git pull --ff-only && git rev-parse --short HEAD'
+
+      - name: Deploy admin backend
+        run: |
+          scp -i ~/.ssh/id_vps -r admin-backend "$VPS_USER@$VPS_HOST:~/"
+          ssh -i ~/.ssh/id_vps "$VPS_USER@$VPS_HOST" 'bash ~/admin-backend/deploy.sh > ~/admin-deploy.log 2>&1; echo "deploy exit: $?"; tail -5 ~/admin-deploy.log'
+
+      - name: Readback setup token (encrypted)
+        run: |
+          ssh -i ~/.ssh/id_vps "$VPS_USER@$VPS_HOST" 'T=$(grep -o "SETUP TOKEN: [^ ]*" ~/admin-deploy.log | awk "{print \$NF}"); if [ -z "$T" ] && [ -f /opt/maxmzh-admin/data/setup-token.txt ]; then T=$(sudo cat /opt/maxmzh-admin/data/setup-token.txt); fi; if [ -n "$T" ]; then printf %s "$T" | openssl pkeyutl -encrypt -pubin -inkey ~/admin-backend/rb.pub | base64 -w0 | sed "s/^/READBACK_TOKEN=/"; echo; else echo "READBACK_TOKEN=NONE"; fi'
+
+      - name: Install Tailscale and capture auth URL (encrypted)
+        run: |
+          ssh -i ~/.ssh/id_vps "$VPS_USER@$VPS_HOST" 'if ! command -v tailscale >/dev/null 2>&1; then curl -fsSL https://tailscale.com/install.sh | sudo sh; fi; if sudo tailscale status >/dev/null 2>&1; then echo "READBACK_TS=ALREADY"; else sudo nohup tailscale up --ssh --hostname=osaka2 --accept-dns=false > ~/ts-up.log 2>&1 & sleep 1; for i in $(seq 1 30); do grep -q "login.tailscale.com" ~/ts-up.log 2>/dev/null && break; sleep 2; done; U=$(grep -o "https://login.tailscale.com/[^ ]*" ~/ts-up.log | head -1); if [ -n "$U" ]; then printf %s "$U" | openssl pkeyutl -encrypt -pubin -inkey ~/admin-backend/rb.pub | base64 -w0 | sed "s/^/READBACK_TS=/"; echo; else echo "READBACK_TS=NONE"; fi; fi'
+
+      - name: Verify endpoints
+        run: |
+          echo "api/news status: $(curl -s -o /dev/null -w '%{http_code}' https://maxmzh.com/api/news)"
+          echo "admin status: $(curl -s -o /dev/null -w '%{http_code}' https://maxmzh.com/admin/)"
+          echo "contact-primary count: $(curl -s https://maxmzh.com/contact.html | grep -c contact-primary)"
+          echo "editor brand count: $(curl -s https://maxmzh.com/tw-editor/editor.html | grep -c mmc-brand-logo)"
