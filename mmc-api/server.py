@@ -168,7 +168,8 @@ def auth_send_code(b, ip):
         return 500, {"error": "验证码保存失败，请稍后再试"}
     st, _ = _http("POST", "https://api.resend.com/emails",
                   {"Authorization": "Bearer " + _auth_env("RESEND_API_KEY"),
-                   "Content-Type": "application/json"},
+                   "Content-Type": "application/json",
+                   "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"},
                   {"from": "MAX社区 <noreply@maxmzh.com>", "to": [email],
                    "subject": "【MAX社区】注册验证码：" + code,
                    "text": "你的 MAX社区 注册验证码是：" + code + "\n\n10 分钟内有效，请勿告诉他人。\n如非本人操作，请忽略本邮件。",
