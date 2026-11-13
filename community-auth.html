@@ -135,6 +135,11 @@
         await renderSubHeader();
         var params = new URLSearchParams(location.search);
         var next = params.get('next') || 'community.html';
+        try {
+            var nu = new URL(next, location.origin);
+            if (nu.origin !== location.origin) next = 'community.html';
+            else next = nu.pathname + nu.search + nu.hash;
+        } catch (e) { next = 'community.html'; }
         var verified = params.get('verified') === '1';
         var urlMode = params.get('mode');
         var isRecovery = /type=recovery/.test(location.hash) || params.get('type') === 'recovery' || urlMode === 'recover';
