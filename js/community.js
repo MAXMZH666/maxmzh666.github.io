@@ -242,28 +242,64 @@ async function renderSubHeader() {
                 var dr = await window.sb.from('direct_messages')
                     .select('id', { count: 'exact', head: true })
                     .eq('receiver_id', p.id).is('read_at', null);
-                var total = (nr.count || 0) + (dr.count || 0);
-                if (total > 0) {
-                    mineDot.textContent = total > 99 ? '99+' : String(total);
-                    mineDot.style.display = '';
-                } else {
-                    mineDot.style.display = 'none';
-                }
-                /* 各菜单项同步红点：动态=未读通知，私信=未读私信 */
-                var dotFeed = document.getElementById('dot-feed');
-                if (dotFeed) {
-                    if (nr.count > 0) { dotFeed.textContent = nr.count > 99 ? '99+' : String(nr.count); dotFeed.style.display = ''; }
-                    else dotFeed.style.display = 'none';
-                }
-                var dotDm = document.getElementById('dot-dm');
-                if (dotDm) {
-                    if (dr.count > 0) { dotDm.textContent = dr.count > 99 ? '99+' : String(dr.count); dotDm.style.display = ''; }
-                    else dotDm.style.display = 'none';
-                }
+                applyUnreadDots(nr.count || 0, dr.count || 0);
             } catch (e) { mineDot.style.display = 'none'; }
+            startRealtimeDots(); /* WebSocket 实时推送（连不上自动放弃，不影响原有逻辑） */
         }
     }
 }
+/* 未读红点渲染：首次查询与 WebSocket 推送共用（口径与全站红点规则一致） */
+function applyUnreadDots(nrCount, drCount) {
+    var mineDot = document.getElementById('mine-dot');
+    if (mineDot) {
+        var total = (nrCount || 0) + (drCount || 0);
+        if (total > 0) {
+            mineDot.textContent = total > 99 ? '99+' : String(total);
+            mineDot.style.display = '';
+        } else {
+            mineDot.style.display = 'none';
+        }
+    }
+    var dotFeed = document.getElementById('dot-feed');
+    if (dotFeed) {
+        if (nrCount > 0) { dotFeed.textContent = nrCount > 99 ? '99+' : String(nrCount); dotFeed.style.display = ''; }
+        else dotFeed.style.display = 'none';
+    }
+    var dotDm = document.getElementById('dot-dm');
+    if (dotDm) {
+        if (drCount > 0) { dotDm.textContent = drCount > 99 ? '99+' : String(drCount); dotDm.style.display = ''; }
+        else dotDm.style.display = 'none';
+    }
+}
+
+/* WebSocket 实时未读推送：连自托管网关（mmc-api），断线自动重连 */
+var mmcWs = null;
+var mmcWsRetry = 0;
+async function startRealtimeDots() {
+    if (mmcWs && (mmcWs.readyState === 0 || mmcWs.readyState === 1)) return;
+    try {
+        var s = await window.sb.auth.getSession();
+        var token = s.data.session && s.data.session.access_token;
+        if (!token) return;
+        var ws = new WebSocket('wss://maxmzh.com/ws/');
+        mmcWs = ws;
+        ws.onopen = function () { mmcWsRetry = 0; ws.send(JSON.stringify({ token: token })); };
+        ws.onmessage = function (ev) {
+            try {
+                var d = JSON.parse(ev.data);
+                if (d.type === 'unread') applyUnreadDots(d.notifications || 0, d.messages || 0);
+            } catch (e) {}
+        };
+        ws.onclose = function () {
+            mmcWs = null;
+            mmcWsRetry++;
+            var delay = Math.min(30000, 1500 * mmcWsRetry);
+            setTimeout(function () { startRealtimeDots(); }, delay);
+        };
+        ws.onerror = function () { try { ws.close(); } catch (e) {} };
+    } catch (e) {}
+}
+
 /* 兼容旧调用 */
 async function renderNavAuth() { return renderSubHeader(); }
 async function renderNavBell() {}
