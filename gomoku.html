@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="MAX 联机五子棋：创建房间发给朋友，输房号即可加入，实时对弈。">
+<title>联机五子棋 - MAXMZH</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="stylesheet" href="css/styles.min.css?v=20261113a">
+<style>
+    .gk-wrap { max-width: 640px; margin: 0 auto; padding: 18px 14px 50px; }
+    .gk-panel { background: #151a2e; border: 1px solid rgba(255,255,255,.09); border-radius: 16px; padding: 18px; margin-bottom: 16px; }
+    .gk-panel h1 { margin: 0 0 6px; font-size: 24px; background: linear-gradient(90deg,#4d7cfe,#6d5cff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .gk-sub { color: #9aa5c7; font-size: 13px; margin: 0 0 14px; }
+    .gk-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .gk-btn { background: linear-gradient(135deg,#4d7cfe,#6d5cff); color: #fff; border: none; border-radius: 10px; padding: 10px 18px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .gk-btn.ghost { background: none; border: 1px solid rgba(255,255,255,.25); color: #c6cdea; }
+    .gk-btn:disabled { opacity: .5; cursor: default; }
+    .gk-input { background: #0d1120; border: 1px solid rgba(255,255,255,.16); color: #fff; border-radius: 10px; padding: 10px 12px; font-size: 15px; letter-spacing: 2px; text-transform: uppercase; width: 150px; }
+    .gk-code { font-size: 26px; font-weight: 800; letter-spacing: 4px; color: #ffd166; }
+    .gk-status { margin-top: 12px; font-size: 14px; color: #c6cdea; min-height: 20px; }
+    .gk-status b.me { color: #5fd68a; } .gk-status b.opp { color: #ff9f7a; }
+    .gk-board-box { background: #151a2e; border: 1px solid rgba(255,255,255,.09); border-radius: 16px; padding: 14px; }
+    .gk-board { display: grid; grid-template-columns: repeat(15, 1fr); gap: 2px; background: #dcb36a; padding: 8px; border-radius: 10px; aspect-ratio: 1; }
+    .gk-cell { background: transparent; border: none; padding: 0; position: relative; cursor: pointer; aspect-ratio: 1; }
+    .gk-cell::before { content: ""; position: absolute; inset: 0; background:
+        linear-gradient(#8a6d3b, #8a6d3b) center/100% 1px no-repeat,
+        linear-gradient(#8a6d3b, #8a6d3b) center/1px 100% no-repeat; }
+    .gk-cell .stone { position: absolute; inset: 6%; border-radius: 50%; z-index: 1; }
+    .gk-cell .stone.black { background: radial-gradient(circle at 35% 30%, #666, #000 70%); box-shadow: 0 2px 4px rgba(0,0,0,.5); }
+    .gk-cell .stone.white { background: radial-gradient(circle at 35% 30%, #fff, #cfd4e0 75%); box-shadow: 0 2px 4px rgba(0,0,0,.4); }
+    .gk-cell .last { position: absolute; inset: 34%; border: 2px solid #ff5252; border-radius: 50%; z-index: 2; }
+    .gk-cell.playable:hover .stone.ghost-stone { display: block; }
+    .gk-cell .stone.ghost-stone { display: none; opacity: .45; }
+    .gk-meta { display: flex; gap: 14px; align-items: center; margin-top: 12px; font-size: 13.5px; color: #9aa5c7; flex-wrap: wrap; }
+    .gk-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; vertical-align: -1px; margin-right: 5px; }
+    .gk-log { margin-top: 10px; font-size: 12.5px; color: #7e89ad; max-height: 86px; overflow-y: auto; line-height: 1.7; }
+</style>
+</head>
+<body>
+<div data-max-account="float"></div>
+<div class="gk-wrap">
+    <div class="gk-panel">
+        <h1>⚫ 联机五子棋</h1>
+        <p class="gk-sub">创建房间把房号/链接发给朋友，对方打开页面输入房号即可实时对弈。黑棋先行，连成五子获胜。</p>
+        <div class="gk-row" id="lobby">
+            <button class="gk-btn" id="create-btn">创建房间</button>
+            <span style="color:#9aa5c7">或</span>
+            <input class="gk-input" id="join-code" maxlength="6" placeholder="输入房号">
+            <button class="gk-btn ghost" id="join-btn">加入房间</button>
+        </div>
+        <div class="gk-row" id="roombar" style="display:none">
+            <span style="color:#9aa5c7;font-size:13px">房号</span>
+            <span class="gk-code" id="room-code"></span>
+            <button class="gk-btn ghost" id="copy-btn">复制邀请链接</button>
+            <button class="gk-btn ghost" id="leave-btn">离开房间</button>
+        </div>
+        <div class="gk-status" id="status">先创建或加入一个房间开始对弈。</div>
+    </div>
+
+    <div class="gk-board-box">
+        <div class="gk-board" id="board"></div>
+        <div class="gk-meta">
+            <span><span class="gk-dot" style="background:#111;border:1px solid #555"></span>黑棋 <span id="black-name">—</span></span>
+            <span><span class="gk-dot" style="background:#e8ecf8"></span>白棋 <span id="white-name">—</span></span>
+            <span id="turn-tip"></span>
+            <button class="gk-btn ghost" id="rematch-btn" style="display:none;padding:7px 14px">再来一局</button>
+        </div>
+        <div class="gk-log" id="log"></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/max-account.js?v=20261114a"></script>
+<script>
+(function () {
+    'use strict';
+    var SIZE = 15;
+    var SUPABASE_URL = 'https://xkvpzxxtcnocofnsezpy.supabase.co';
+    var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhrdnB6eHh0Y25vY29mbnNlenB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5MTY4MzQsImV4cCI6MjEwNjQ5MjgzNH0.zTpvyEsutA9hV_UIg36g5owBRnxdHaI-sy_fLUsu6ec';
+    var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    var myId = Math.random().toString(36).slice(2, 10);
+    var channel = null, roomCode = '', myColor = 0; /* 1=黑 2=白 0=未入局 */
+    var moves = [];           /* [{x,y,c}] 顺序即手顺 */
+    var board = [];           /* [y][x] = 0/1/2 */
+    var gameOver = false, started = false;
+
+    var $ = function (id) { return document.getElementById(id); };
+    var boardEl = $('board'), statusEl = $('status'), logEl = $('log');
+
+    function resetBoard() {
+        board = [];
+        for (var y = 0; y < SIZE; y++) { board.push(new Array(SIZE).fill(0)); }
+        moves = []; gameOver = false;
+        render();
+    }
+    function log(msg) {
+        var d = document.createElement('div');
+        d.textContent = msg;
+        logEl.prepend(d);
+    }
+    function checkWin(x, y, c) {
+        var dirs = [[1, 0], [0, 1], [1, 1], [1, -1]];
+        for (var i = 0; i < dirs.length; i++) {
+            var dx = dirs[i][0], dy = dirs[i][1], n = 1;
+            for (var s = 1; s < 5; s++) {
+                var nx = x + dx * s, ny = y + dy * s;
+                if (nx < 0 || ny < 0 || nx >= SIZE || ny >= SIZE || board[ny][nx] !== c) break;
+                n++;
+            }
+            for (var s2 = 1; s2 < 5; s2++) {
+                var mx = x - dx * s2, my = y - dy * s2;
+                if (mx < 0 || my < 0 || mx >= SIZE || my >= SIZE || board[my][mx] !== c) break;
+                n++;
+            }
+            if (n >= 5) return true;
+        }
+        return false;
+    }
+    function turnColor() { return moves.length % 2 === 0 ? 1 : 2; }
+    function render() {
+        boardEl.innerHTML = '';
+        var last = moves[moves.length - 1];
+        var myTurn = started && !gameOver && myColor === turnColor();
+        for (var y = 0; y < SIZE; y++) {
+            for (var x = 0; x < SIZE; x++) {
+                (function (x, y) {
+                    var cell = document.createElement('button');
+                    cell.className = 'gk-cell' + (myTurn && !board[y][x] ? ' playable' : '');
+                    cell.setAttribute('aria-label', x + ',' + y);
+                    var v = board[y][x];
+                    if (v) {
+                        var st = document.createElement('span');
+                        st.className = 'stone ' + (v === 1 ? 'black' : 'white');
+                        cell.appendChild(st);
+                        if (last && last.x === x && last.y === y) {
+                            var mk = document.createElement('span');
+                            mk.className = 'last';
+                            cell.appendChild(mk);
+                        }
+                    } else if (myTurn) {
+                        var gh = document.createElement('span');
+                        gh.className = 'stone ghost-stone ' + (myColor === 1 ? 'black' : 'white');
+                        cell.appendChild(gh);
+                    }
+                    cell.addEventListener('click', function () { tryMove(x, y); });
+                    boardEl.appendChild(cell);
+                })(x, y);
+            }
+        }
+        var tip = $('turn-tip');
+        if (!started) tip.textContent = '';
+        else if (gameOver) tip.textContent = '对局结束';
+        else tip.textContent = turnColor() === myColor ? '—— 轮到你落子' : '—— 等待对方落子';
+    }
+    function setStatus(html) { statusEl.innerHTML = html; }
+    function applyMove(x, y, c, remote) {
+        if (board[y][x] || gameOver) return false;
+        if (c !== turnColor()) return false;
+        board[y][x] = c;
+        moves.push({ x: x, y: y, c: c });
+        log((c === 1 ? '黑棋' : '白棋') + ' 落子 ' + String.fromCharCode(65 + x) + (SIZE - y) + (remote ? '（对方）' : ''));
+        if (checkWin(x, y, c)) {
+            gameOver = true;
+            var winTxt = c === 1 ? '黑棋获胜 🎉' : '白棋获胜 🎉';
+            setStatus('<b>' + winTxt + '</b>' + (c === myColor ? ' —— 干得漂亮！' : ' —— 再接再厉'));
+            $('rematch-btn').style.display = myColor ? 'inline-block' : 'none';
+            log('🏆 ' + winTxt);
+        }
+        render();
+        return true;
+    }
+    function tryMove(x, y) {
+        if (!started || gameOver || myColor !== turnColor() || board[y][x]) return;
+        if (applyMove(x, y, myColor, false) && channel) {
+            channel.send({ type: 'broadcast', event: 'move', payload: { x: x, y: y, c: myColor } });
+        }
+    }
+    function rebuildFrom(list) {
+        resetBoard();
+        list.forEach(function (m) { applyMove(m.x, m.y, m.c, true); });
+        render();
+    }
+
+    function playersPresent() {
+        if (!channel) return 0;
+        var st = channel.presenceState();
+        return Object.keys(st).length;
+    }
+    function updateNamesAndStatus() {
+        var n = playersPresent();
+        if (myColor === 1) {
+            $('black-name').textContent = '你';
+            $('white-name').textContent = n >= 2 ? '对手' : '等待加入…';
+        } else if (myColor === 2) {
+            $('black-name').textContent = '对手';
+            $('white-name').textContent = '你';
+        }
+        if (n >= 2 && !started) {
+            started = true;
+            setStatus('对弈开始！你执<b class="' + (myColor === 1 ? 'me' : 'opp') + '">' + (myColor === 1 ? '黑（先行）' : '白') + '</b>');
+            log('双方就位，对弈开始');
+            render();
+        } else if (n >= 2 && started) {
+            setStatus('对弈进行中，你执' + (myColor === 1 ? '黑' : '白'));
+        } else if (started && n < 2) {
+            setStatus('⚠️ 对方已离开房间。可以等其重新加入，或离开重开。');
+        }
+    }
+
+    function joinRoom(code, asCreator) {
+        roomCode = code;
+        channel = sb.channel('gomoku-' + code, {
+            config: { broadcast: { self: false }, presence: { key: myId } }
+        });
+        channel.on('presence', { event: 'sync' }, updateNamesAndStatus);
+        channel.on('presence', { event: 'leave' }, updateNamesAndStatus);
+        channel.on('broadcast', { event: 'move' }, function (msg) {
+            applyMove(msg.payload.x, msg.payload.y, msg.payload.c, true);
+        });
+        channel.on('broadcast', { event: 'sync-request' }, function () {
+            if (myColor === 1 && moves.length) {
+                channel.send({ type: 'broadcast', event: 'sync-state', payload: { moves: moves } });
+            }
+        });
+        channel.on('broadcast', { event: 'sync-state' }, function (msg) {
+            if (moves.length === 0 && msg.payload.moves && msg.payload.moves.length) {
+                rebuildFrom(msg.payload.moves);
+                log('已同步对局进度');
+            }
+        });
+        channel.on('broadcast', { event: 'reset' }, function () {
+            resetBoard();
+            started = true;
+            setStatus('新对局开始！你执' + (myColor === 1 ? '黑（先行）' : '白'));
+            $('rematch-btn').style.display = 'none';
+            log('🔄 对方发起再来一局');
+        });
+        channel.subscribe(function (status) {
+            if (status !== 'SUBSCRIBED') return;
+            var n = playersPresent();
+            myColor = (n <= 1) ? 1 : 2;
+            channel.track({ joined_at: Date.now() });
+            $('lobby').style.display = 'none';
+            $('roombar').style.display = 'flex';
+            $('room-code').textContent = code;
+            if (asCreator || myColor === 1) {
+                setStatus('房间已创建，把房号或链接发给朋友，等对方加入…');
+            } else {
+                setStatus('已加入房间，你执<b>白</b>，等黑棋先行。');
+                channel.send({ type: 'broadcast', event: 'sync-request', payload: {} });
+            }
+            resetBoard();
+            setTimeout(updateNamesAndStatus, 300);
+        });
+    }
+
+    function genCode() {
+        var abc = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+        var s = '';
+        for (var i = 0; i < 6; i++) s += abc[Math.floor(Math.random() * abc.length)];
+        return s;
+    }
+    $('create-btn').addEventListener('click', function () { joinRoom(genCode(), true); });
+    $('join-btn').addEventListener('click', function () {
+        var v = $('join-code').value.trim().toUpperCase();
+        if (v.length !== 6) { setStatus('房号是 6 位字符，请检查后重试。'); return; }
+        joinRoom(v, false);
+    });
+    $('copy-btn').addEventListener('click', function () {
+        var url = location.origin + location.pathname + '?room=' + roomCode;
+        if (navigator.clipboard) navigator.clipboard.writeText(url);
+        $('copy-btn').textContent = '已复制 ✓';
+        setTimeout(function () { $('copy-btn').textContent = '复制邀请链接'; }, 1500);
+    });
+    $('leave-btn').addEventListener('click', function () { location.href = location.pathname; });
+    $('rematch-btn').addEventListener('click', function () {
+        resetBoard();
+        started = true;
+        setStatus('新对局开始！你执' + (myColor === 1 ? '黑（先行）' : '白'));
+        $('rematch-btn').style.display = 'none';
+        if (channel) channel.send({ type: 'broadcast', event: 'reset', payload: {} });
+        log('🔄 你发起再来一局');
+    });
+
+    var q = new URLSearchParams(location.search).get('room');
+    if (q && q.length === 6) $('join-code').value = q.toUpperCase();
+    resetBoard();
+})();
+</script>
+</body>
+</html>
