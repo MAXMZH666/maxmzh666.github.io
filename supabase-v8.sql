@@ -6,7 +6,7 @@
 -- 1. 管理员标记（站长设为管理员）
 alter table profiles add column if not exists is_admin boolean not null default false;
 update profiles set is_admin = true
-where id = (select id from auth.users where email = 'removed@example.com');
+where id = (select id from auth.users where email = 'ADMIN_EMAIL_HERE' /* 执行前替换为站长邮箱 */);
 
 -- 2. 网站类型：works / work_versions 加 site_url
 alter table works add column if not exists site_url text;
