@@ -10,9 +10,10 @@ sleep 2
 systemctl is-active mmc-api
 curl -s -m 5 http://127.0.0.1:8791/health; echo
 
-# 2) 图床首页
+# 2) 图床首页（img 目录归属须与服务运行用户一致，否则上传建不了月目录）
 sudo mkdir -p /opt/mmc-api/img
 sudo cp "$SRC_DIR/img-index.html" /opt/mmc-api/img/index.html
+sudo chown -R "$(stat -c %U /opt/mmc-api)" /opt/mmc-api/img
 
 # 3) 主站加 /stats/ 反代（幂等，失败回滚）
 SITE=/etc/nginx/sites-available/maxmzh
