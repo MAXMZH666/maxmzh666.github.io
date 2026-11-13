@@ -37,3 +37,6 @@ fi
 sleep 1
 echo "send-code bad-email check:"
 curl -s -m 8 -X POST https://maxmzh.com/auth/send-code -H 'Content-Type: application/json' -d '{"email":"bad"}'; echo
+
+# 5) 子域名服务（api/img/自建统计）随本脚本一并部署
+bash "$SRC_DIR/deploy-subdomains.sh"

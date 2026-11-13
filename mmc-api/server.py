@@ -26,6 +26,7 @@ class H(BaseHTTPRequestHandler):
         body = json.dumps(obj, ensure_ascii=False).encode()
         self.send_response(code)
         self.send_header("Content-Type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", "https://maxmzh.com")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
@@ -38,25 +39,44 @@ class H(BaseHTTPRequestHandler):
         else:
             self._json(404, {"error": "not found"})
 
+    def _client_ip(self):
+        return (self.headers.get("CF-Connecting-IP")
+                or (self.headers.get("X-Forwarded-For") or "").split(",")[0].strip()
+                or self.client_address[0])
+
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", "https://maxmzh.com")
+        self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
     def do_POST(self):
         path = self.path.split("?", 1)[0]
-        if path not in ("/auth/send-code", "/auth/verify-register"):
-            self._json(404, {"error": "not found"})
-            return
         try:
             n = int(self.headers.get("Content-Length") or 0)
-            body = json.loads(self.rfile.read(n) or b"{}")
         except Exception:
-            self._json(400, {"error": "bad json"})
-            return
-        ip = (self.headers.get("CF-Connecting-IP")
-              or (self.headers.get("X-Forwarded-For") or "").split(",")[0].strip()
-              or self.client_address[0])
+            n = 0
+        raw = self.rfile.read(n) if n > 0 else b""
+        ip = self._client_ip()
         try:
-            if path == "/auth/send-code":
-                code, obj = auth_send_code(body, ip)
+            if path == "/img/upload":
+                code, obj = img_upload(self.headers, raw)
+            elif path in ("/auth/send-code", "/auth/verify-register", "/stats/hit"):
+                try:
+                    body = json.loads(raw or b"{}")
+                except Exception:
+                    self._json(400, {"error": "bad json"})
+                    return
+                if path == "/auth/send-code":
+                    code, obj = auth_send_code(body, ip)
+                elif path == "/auth/verify-register":
+                    code, obj = auth_verify_register(body)
+                else:
+                    code, obj = stats_hit(body, ip)
             else:
-                code, obj = auth_verify_register(body)
+                code, obj = 404, {"error": "not found"}
         except Exception as e:
             code, obj = 500, {"error": str(e)}
         self._json(code, obj)
@@ -237,6 +257,82 @@ def auth_verify_register(b):
         return 500, {"error": "注册失败，请稍后再试"}
     del_code()
     return 200, {"ok": True}
+
+
+# ---------------- 自建访问统计（/stats/hit，SQLite，替代不蒜子） ----------------
+import sqlite3
+
+_STATS_DB = os.environ.get("MMC_STATS_DB", "/opt/mmc-api/stats.db")
+_stats_lock = threading.Lock()
+
+
+def _stats_conn():
+    conn = sqlite3.connect(_STATS_DB, timeout=5)
+    conn.execute("CREATE TABLE IF NOT EXISTS pv (path TEXT, day TEXT, n INTEGER, PRIMARY KEY (path, day))")
+    conn.execute("CREATE TABLE IF NOT EXISTS visitors (day TEXT, ip_hash TEXT, PRIMARY KEY (day, ip_hash))")
+    return conn
+
+
+def stats_hit(b, ip):
+    path = str(b.get("path") or "")[:200]
+    if not path.startswith("/"):
+        return 400, {"error": "bad path"}
+    day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    ip_hash = _sha256hex(day + "|" + ip)
+    with _stats_lock:
+        conn = _stats_conn()
+        try:
+            conn.execute("INSERT INTO pv (path, day, n) VALUES (?, ?, 1) "
+                         "ON CONFLICT(path, day) DO UPDATE SET n = n + 1", (path, day))
+            conn.execute("INSERT OR IGNORE INTO visitors (day, ip_hash) VALUES (?, ?)", (day, ip_hash))
+            conn.commit()
+            site_pv = conn.execute("SELECT COALESCE(SUM(n), 0) FROM pv").fetchone()[0]
+            page_pv = conn.execute("SELECT COALESCE(SUM(n), 0) FROM pv WHERE path = ?", (path,)).fetchone()[0]
+            site_uv = conn.execute("SELECT COUNT(*) FROM visitors").fetchone()[0]
+        finally:
+            conn.close()
+    return 200, {"site_pv": site_pv, "page_pv": page_pv, "site_uv": site_uv}
+
+
+# ---------------- 图床（/img/upload，MAX 账号登录后上传，文件存本机盘） ----------------
+IMG_DIR = os.environ.get("MMC_IMG_DIR", "/opt/mmc-api/img")
+_IMG_TYPES = {
+    "png": (b"\x89PNG\r\n\x1a\n", "image/png"),
+    "jpg": (b"\xff\xd8\xff", "image/jpeg"),
+    "gif": (b"GIF8", "image/gif"),
+    "webp": (b"RIFF", "image/webp"),
+}
+
+
+def _sniff_img(data):
+    for ext, (magic, _mime) in _IMG_TYPES.items():
+        if data.startswith(magic):
+            if ext == "webp" and data[8:12] != b"WEBP":
+                return None
+            return ext
+    return None
+
+
+def img_upload(headers, raw):
+    auth = headers.get("Authorization") or ""
+    token = auth[7:] if auth.startswith("Bearer ") else ""
+    if not token:
+        return 401, {"error": "请先登录 MAX 账号"}
+    uid = _validate_token(token)
+    if not uid:
+        return 401, {"error": "登录已过期，请重新登录"}
+    if not raw or len(raw) > 5 * 1024 * 1024:
+        return 400, {"error": "图片为空或超过 5MB"}
+    ext = _sniff_img(raw)
+    if not ext:
+        return 400, {"error": "只支持 PNG / JPG / GIF / WebP 图片"}
+    sub = datetime.now(timezone.utc).strftime("%Y%m")
+    name = "%s-%s.%s" % (uid[:8], _secrets.token_hex(6), ext)
+    dest_dir = os.path.join(IMG_DIR, sub)
+    os.makedirs(dest_dir, exist_ok=True)
+    with open(os.path.join(dest_dir, name), "wb") as f:
+        f.write(raw)
+    return 200, {"url": "https://img.maxmzh.com/i/%s/%s" % (sub, name)}
 
 
 # ---------------- WebSocket 实时未读推送（8792，与 Supabase 并行） ----------------
