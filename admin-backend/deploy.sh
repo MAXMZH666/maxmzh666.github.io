@@ -33,6 +33,7 @@ if [ ! -f /etc/nginx/conf.d/cf-log.conf ]; then
 fi
 
 echo "== 5. nginx 站点接入 /api/ 与 /admin/，并屏蔽后台源码目录 =="
+SITE=/etc/nginx/sites-available/maxmzh
 sudo cp "$SITE" "$SITE.bak-$(date +%Y%m%d%H%M%S)"
 sudo python3 "$SRC_DIR/nginx_insert.py" "$SITE" "$SRC_DIR/nginx-admin-locations.conf" "8790"
 sudo python3 "$SRC_DIR/nginx_insert.py" "$SITE" "$SRC_DIR/nginx-deny.conf" "admin-backend"
