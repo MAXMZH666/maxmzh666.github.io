@@ -212,7 +212,7 @@
             note('pw-note', '正在发送重置邮件…', true);
             try {
                 var r = await withTimeout(sb.auth.resetPasswordForEmail(me.email, {
-                    redirectTo: 'https://maxmzh666.github.io/community-auth.html?mode=recover'
+                    redirectTo: 'https://maxmzh.com/community-auth.html?mode=recover'
                 }), 20000, '发送超时，请重试');
                 if (r.error) throw r.error;
                 note('pw-note', '✅ 重置邮件已发送到 ' + me.email + '，请去邮箱点击链接设置新密码', true);
@@ -228,7 +228,7 @@
             if (em === me.email) { note('em-note', '与当前邮箱相同，无需修改', false); return; }
             note('em-note', '发送中…', true);
             var r = await withTimeout(sb.auth.updateUser({ email: em }, {
-                emailRedirectTo: 'https://maxmzh666.github.io/community-settings.html?email_changed=1'
+                emailRedirectTo: 'https://maxmzh.com/community-settings.html?email_changed=1'
             }), 20000, '发送超时，请重试');
             if (r.error) note('em-note', '发送失败：' + r.error.message, false);
             else note('em-note', '✅ 确认邮件已发送到 ' + em + '，请点击邮件中的链接完成更换', true);

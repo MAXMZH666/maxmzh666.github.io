@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#0b0b0e">
     <meta property="og:title" content="MAXMZH - 社区登录">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="https://maxmzh666.github.io/logo.png">
+    <meta property="og:image" content="https://maxmzh.com/logo.png">
     <title>登录 / 注册 - MAXMZH 社区</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -293,7 +293,7 @@
             note.className = 'form-note sending';
             try {
                 var inviteForUrl = document.getElementById('a-invite').value.trim().toUpperCase();
-                var redirectTo = 'https://maxmzh666.github.io/community-auth.html?mode=signup&verified=1&next=' + encodeURIComponent(next) +
+                var redirectTo = 'https://maxmzh.com/community-auth.html?mode=signup&verified=1&next=' + encodeURIComponent(next) +
                     (inviteForUrl ? '&invite=' + encodeURIComponent(inviteForUrl) : '');
                 var r = await sb.auth.signInWithOtp({
                     email: email,
@@ -442,7 +442,7 @@
             note.className = 'form-note sending';
             try {
                 var r = await withTimeout(sb.auth.resetPasswordForEmail(email, {
-                    redirectTo: 'https://maxmzh666.github.io/community-auth.html?mode=recover'
+                    redirectTo: 'https://maxmzh.com/community-auth.html?mode=recover'
                 }), 25000, '发送超时，请检查网络后重试');
                 if (r.error) throw r.error;
                 note.textContent = '重置邮件已发送到 ' + email + '，请去邮箱点击链接设置新密码';

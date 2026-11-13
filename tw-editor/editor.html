@@ -146,7 +146,10 @@
           splash.hidden = true;
           window.onerror = null;
         };
-      })();</script><div id="app"></div><script src="js/pentapod/vendors~addon-settings~credits~editor~embed~fullscreen~player.a9c21474df6530cc7bcb.js"></script><script src="js/pentapod/vendors~editor~embed~fullscreen~player.ca27ef043ac01d536645.js"></script><script src="js/pentapod/addon-settings~addons~editor~fullscreen~player.d368c040af8d26993a1d.js"></script><script src="js/pentapod/addon-settings~editor~embed~fullscreen~player.ae55ed6b87fd5b016b19.js"></script><script src="js/pentapod/editor.c7aca82a8bf323a87f74.js"></script><script>
+      })();</script><div id="app"></div><script>
+/* MAX 编辑器：首次访问默认简体中文（已手动切换过的语言不覆盖，URL 上的 locale/lang 参数优先） */
+try { if (!/[?&](locale|lang)=/.test(location.search) && !localStorage.getItem('tw:language')) localStorage.setItem('tw:language', 'zh-cn'); } catch (e) {}
+</script><script src="js/pentapod/vendors~addon-settings~credits~editor~embed~fullscreen~player.a9c21474df6530cc7bcb.js"></script><script src="js/pentapod/vendors~editor~embed~fullscreen~player.ca27ef043ac01d536645.js"></script><script src="js/pentapod/addon-settings~addons~editor~fullscreen~player.d368c040af8d26993a1d.js"></script><script src="js/pentapod/addon-settings~editor~embed~fullscreen~player.ae55ed6b87fd5b016b19.js"></script><script src="js/pentapod/editor.c7aca82a8bf323a87f74.js"></script><script>
 /* MAXMZH 社区：编辑器增强（注入，无需重新构建）
    - 文件菜单内注入「保存草稿 / 发布到社区」
    - 隐藏顶部「查看作品页面」「TurboWarp 反馈」按钮
@@ -154,7 +157,7 @@
 (function () {
     'use strict';
     var EMBEDDED = window.parent !== window;
-    var SITE = 'https://maxmzh666.github.io';
+    var SITE = 'https://maxmzh.com';
     var SB_URL = 'https://xkvpzxxtcnocofnsezpy.supabase.co';
     var SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhrdnB6eHh0Y25vY29mbnNlenB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5MTY4MzQsImV4cCI6MjEwNjQ5MjgzNH0.zTpvyEsutA9hV_UIg36g5owBRnxdHaI-sy_fLUsu6ec';
     var sb = null, sbReady = null;
@@ -194,15 +197,17 @@
         var title = (sg && sg.projectTitle) || '未命名作品';
         return { buffer: buffer, title: title };
     }
-    async function requireUser() {
+    async function requireUser(silent) {
         await ensureSb();
         var r = await sb.auth.getUser();
         var u = r.data && r.data.user;
         if (!u) {
-            toast('请先登录社区账号', 2000);
-            setTimeout(function () {
-                location.href = SITE + '/community-auth.html?next=' + encodeURIComponent(location.href);
-            }, 800);
+            if (!silent) {
+                toast('请先登录社区账号', 2000);
+                setTimeout(function () {
+                    location.href = SITE + '/community-auth.html?next=' + encodeURIComponent(location.href);
+                }, 800);
+            }
             throw new Error('未登录');
         }
         return u;
@@ -221,7 +226,7 @@
     var draftKey = 'mmc_draft_scratch_id';
     async function saveDraft(auto) {
         try {
-            var u = await requireUser();
+            var u = await requireUser(auto);
             if (!auto) toast('正在保存草稿…', 1500);
             var got = await getSb3();
             var url = await uploadSb3('drafts/' + u.id + '/' + Date.now() + '.sb3', got.buffer);
@@ -537,6 +542,47 @@
         document.addEventListener('DOMContentLoaded', build);
     } else { build(); }
     setTimeout(build, 3000);
+})();
+</script>
+<script>
+/* MAX 编辑器品牌化：蓝色菜单栏 + MAX 标志 + 标题守卫（注入，不改构建产物） */
+(function () {
+    'use strict';
+    try {
+        var css = document.createElement('style');
+        css.textContent =
+            '[class*="menu-bar_menu-bar"]{background:linear-gradient(90deg,#4d7cfe,#6d5cff) !important;}' +
+            '#mmc-brand-logo{display:inline-flex !important;align-items:center;gap:6px;color:#fff !important;' +
+            'font-weight:700;font-size:15px;letter-spacing:.5px;text-decoration:none;padding:0 10px;}' +
+            '#mmc-brand-logo b{background:#fff;color:#4d7cfe;border-radius:6px;padding:1px 7px;font-size:14px;}';
+        document.head.appendChild(css);
+    } catch (e) {}
+    function brand() {
+        var links = document.querySelectorAll('a[href*="scratch.mit.edu/users/GarboMuffin"]');
+        for (var i = 0; i < links.length; i++) {
+            var a = links[i];
+            a.id = 'mmc-brand-logo';
+            a.href = 'https://maxmzh.com/';
+            a.innerHTML = '<b>M</b>MAX 编辑器';
+        }
+        if (document.title !== 'MAX 编辑器' && (document.title.indexOf('TurboWarp') !== -1 || document.title.indexOf('MAX') !== -1)) {
+            document.title = 'MAX 编辑器';
+        }
+    }
+    var pending = false;
+    function schedule() {
+        if (pending) return;
+        pending = true;
+        setTimeout(function () { pending = false; brand(); }, 400);
+    }
+    function start() {
+        brand();
+        try {
+            new MutationObserver(schedule).observe(document.documentElement, { childList: true, subtree: true, characterData: true });
+        } catch (e) {}
+        setInterval(brand, 3000);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
 </script>
 </body></html>

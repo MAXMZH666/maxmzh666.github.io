@@ -70,7 +70,7 @@ function shareSoftware() {
         navigator.share({
             title: 'MAX科技云',
             text: '分享MAX科技云应用',
-            url: 'https://maxmzh666.github.io/project4.html'
+            url: 'https://maxmzh.com/project4.html'
         }).then(() => {
                     console.log('分享成功');
                 }).catch((error) => {
@@ -84,6 +84,6 @@ function shareSoftware() {
         tempInput.select();
         document.execCommand('copy');
         document.body.removeChild(tempInput);
-        alert('下载链接已复制到剪贴板：' + https://maxmzh666.github.io/project4.html);
+        alert('下载链接已复制到剪贴板：' + https://maxmzh.com/project4.html);
     }
 }
