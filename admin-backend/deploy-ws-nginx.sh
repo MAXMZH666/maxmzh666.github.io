@@ -15,5 +15,6 @@ else
     exit 1
 fi
 sleep 1
-CODE=$(curl -s -o /dev/null -w '%{http_code}' -m 10 -H 'Upgrade: websocket' -H 'Connection: Upgrade' -H 'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==' -H 'Sec-WebSocket-Version: 13' https://maxmzh.com/ws/)
-echo "ws handshake http_code: $CODE"
+# 握手成功时连接保持开启、curl 会等到超时，用响应头判断 101 即可（不能用 http_code+set -e，会误杀）
+HDR=$(curl -s -D - -o /dev/null -m 3 -H 'Upgrade: websocket' -H 'Connection: Upgrade' -H 'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==' -H 'Sec-WebSocket-Version: 13' https://maxmzh.com/ws/ 2>/dev/null | head -1 || true)
+echo "ws handshake: $HDR"
