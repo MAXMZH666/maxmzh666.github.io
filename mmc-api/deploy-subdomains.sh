@@ -20,9 +20,10 @@ sudo cp "$SITE" "$SITE.bak-$(date +%Y%m%d%H%M%S)"
 sudo python3 "$SRC_DIR/nginx_insert.py" "$SITE" "$SRC_DIR/nginx-stats.conf" "/stats/"
 
 # 4) 子域名虚拟主机（证书沿用现有 Let's Encrypt 证书）
-CERT_DIR=$(ls -d /etc/letsencrypt/live/*/ | head -1)
+CERT_DIR=$(sudo ls -d /etc/letsencrypt/live/*/ 2>/dev/null | head -1)
 echo "cert dir: $CERT_DIR"
-for v in api img; do
+if [ -z "$CERT_DIR" ]; then echo "找不到证书目录，终止"; exit 1; fi
+for v in api img forum store; do
     sed -e "s|@CERT@|${CERT_DIR}fullchain.pem|" -e "s|@KEY@|${CERT_DIR}privkey.pem|" \
         "$SRC_DIR/vhost-$v.conf" | sudo tee /etc/nginx/sites-available/$v.maxmzh.com >/dev/null
     sudo ln -sf /etc/nginx/sites-available/$v.maxmzh.com /etc/nginx/sites-enabled/$v.maxmzh.com
@@ -33,7 +34,7 @@ if sudo nginx -t; then
     echo "nginx reloaded"
 else
     echo "nginx 配置校验失败，回滚！"
-    sudo rm -f /etc/nginx/sites-enabled/api.maxmzh.com /etc/nginx/sites-enabled/img.maxmzh.com
+    sudo rm -f /etc/nginx/sites-enabled/api.maxmzh.com /etc/nginx/sites-enabled/img.maxmzh.com /etc/nginx/sites-enabled/forum.maxmzh.com /etc/nginx/sites-enabled/store.maxmzh.com
     sudo cp "$(ls -t $SITE.bak-* | head -1)" "$SITE"
     sudo nginx -t && sudo systemctl reload nginx
     exit 1
@@ -44,3 +45,5 @@ sleep 1
 echo "api health (public): $(curl -s -m 8 https://api.maxmzh.com/health || echo FAIL)"
 echo "img home (public): $(curl -s -o /dev/null -w '%{http_code}' -m 8 https://img.maxmzh.com/ || echo FAIL)"
 echo "stats hit (public): $(curl -s -m 8 -X POST https://maxmzh.com/stats/hit -H 'Content-Type: application/json' -d '{"path":"/deploy-check"}' || echo FAIL)"
+echo "forum home (public): $(curl -s -o /dev/null -w '%{http_code}' -m 8 https://forum.maxmzh.com/ || echo FAIL)"
+echo "store home (public): $(curl -s -o /dev/null -w '%{http_code}' -m 8 https://store.maxmzh.com/ || echo FAIL)"
