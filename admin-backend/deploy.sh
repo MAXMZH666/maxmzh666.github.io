@@ -37,7 +37,7 @@ SITE=/etc/nginx/sites-available/maxmzh
 sudo cp "$SITE" "$SITE.bak-$(date +%Y%m%d%H%M%S)"
 if ! grep -q "8790" "$SITE"; then
     # 在 server 块最后一个 } 前插入 location 片段，并把 access_log 切到 cf_combined
-    python3 - "$SITE" "$SRC_DIR/nginx-admin-locations.conf" <<'PYEOF'
+    sudo python3 - "$SITE" "$SRC_DIR/nginx-admin-locations.conf" <<'PYEOF'
 import sys
 site_path, snippet_path = sys.argv[1], sys.argv[2]
 src = open(site_path).read()
