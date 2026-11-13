@@ -53,7 +53,7 @@
                 <a class="btn btn-ghost" href="about.html">了解我</a>
             </div>
 
-            <div class="news-list">
+            <div class="news-list" id="news-list">
                 <div class="news-item reveal reveal-left">
                     <span class="news-date">2026-10-10</span>
                     <div>
@@ -162,5 +162,32 @@
     </footer>
     <script src="js/scripts.min.js?v=20261113a"></script>
     <script defer src="https://vercount.one/js"></script>
+
+    <script>
+    // 最新消息由网站后台动态提供（/api/news）；接口不可用时保留上方静态内容
+    (function () {
+        var list = document.getElementById('news-list');
+        if (!list || !window.fetch) return;
+        fetch('/api/news').then(function (r) { return r.ok ? r.json() : null; }).then(function (data) {
+            if (!data || !data.items || !data.items.length) return;
+            list.innerHTML = '';
+            data.items.slice(0, 6).forEach(function (it) {
+                var item = document.createElement('div'); item.className = 'news-item';
+                var date = document.createElement('span'); date.className = 'news-date'; date.textContent = it.date || '';
+                var box = document.createElement('div');
+                var h = document.createElement('h3'); h.textContent = it.title || '';
+                var p = document.createElement('p'); p.textContent = it.text || '';
+                if (it.link && it.link.url) {
+                    var a = document.createElement('a'); a.href = it.link.url; a.textContent = it.link.text || '查看 →';
+                    if (p.textContent) p.appendChild(document.createTextNode(' '));
+                    p.appendChild(a);
+                }
+                box.appendChild(h); box.appendChild(p);
+                item.appendChild(date); item.appendChild(box);
+                list.appendChild(item);
+            });
+        }).catch(function () {});
+    })();
+    </script>
 </body>
 </html>
