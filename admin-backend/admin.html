@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAXMZH 网站后台</title>
+<style>
+    :root { --bg:#0b0b0e; --surface:#15151c; --border:#26262f; --text:#eaeaef; --muted:#9a9aa5; --blue:#4d7cfe; --blue2:#6d5cff; --gold:#f5c542; --red:#ff5c5c; --green:#3ecf6e; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; }
+    .wrap { max-width:860px; margin:0 auto; padding:24px 16px 60px; }
+    h1 { font-size:1.4rem; margin:8px 0 4px; }
+    h1 .grad { background:linear-gradient(90deg,var(--blue),var(--blue2)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .sub { color:var(--muted); margin:0 0 24px; font-size:.92rem; }
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:18px; }
+    .card h2 { margin:0 0 14px; font-size:1.08rem; }
+    label { display:block; margin:12px 0 6px; font-weight:600; font-size:.92rem; }
+    input, textarea { width:100%; background:#0e0e13; border:1px solid var(--border); border-radius:9px; color:var(--text); padding:10px 12px; font-size:.95rem; font-family:inherit; }
+    input:focus, textarea:focus { outline:none; border-color:var(--blue); }
+    textarea { min-height:64px; resize:vertical; }
+    .btn { display:inline-block; border:none; cursor:pointer; border-radius:9px; padding:10px 20px; font-size:.95rem; background:linear-gradient(120deg,var(--blue),var(--blue2)); color:#fff; font-weight:600; }
+    .btn:active { transform:translateY(1px); }
+    .btn.ghost { background:transparent; border:1px solid var(--border); color:var(--text); font-weight:400; }
+    .btn.small { padding:6px 12px; font-size:.85rem; }
+    .btn.danger { background:transparent; border:1px solid var(--red); color:var(--red); font-weight:400; }
+    .err { color:var(--red); min-height:1.2em; font-size:.9rem; }
+    .ok { color:var(--green); font-size:.9rem; }
+    .center { max-width:420px; margin:10vh auto 0; }
+    .news-item-edit { border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:12px; background:#101016; }
+    .news-item-edit .row { display:grid; grid-template-columns:130px 1fr; gap:10px; }
+    .news-item-edit .row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .news-item-edit .ops { display:flex; gap:8px; margin-top:10px; }
+    .stat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; }
+    .stat-box { background:#101016; border:1px solid var(--border); border-radius:10px; padding:14px; text-align:center; }
+    .stat-box .num { font-size:1.6rem; font-weight:700; color:var(--blue); }
+    .stat-box .lbl { color:var(--muted); font-size:.85rem; margin-top:4px; }
+    table { width:100%; border-collapse:collapse; font-size:.92rem; }
+    th, td { padding:7px 8px; border-bottom:1px solid var(--border); text-align:left; }
+    th { color:var(--muted); font-weight:600; }
+    .bar { height:8px; background:#0e0e13; border-radius:4px; overflow:hidden; margin-top:6px; }
+    .bar > div { height:100%; background:linear-gradient(90deg,var(--blue),var(--blue2)); }
+    .topbar { display:flex; justify-content:space-between; align-items:center; }
+    .hidden { display:none !important; }
+    @media (max-width:560px){ .news-item-edit .row, .news-item-edit .row2 { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+    <!-- 首次设置 -->
+    <div id="view-setup" class="center hidden">
+        <h1>MAXMZH <span class="grad">网站后台</span></h1>
+        <p class="sub">首次使用：输入部署时生成的设置码，并为后台设置一个登录密码。</p>
+        <div class="card">
+            <label>设置码</label>
+            <input id="setup-token" type="text" autocomplete="off" placeholder="例如 a1b2c3d4e5f6">
+            <label>设置登录密码（至少 8 位）</label>
+            <input id="setup-pw" type="password" autocomplete="new-password">
+            <label>再输一次</label>
+            <input id="setup-pw2" type="password" autocomplete="new-password">
+            <p class="err" id="setup-err"></p>
+            <button class="btn" id="setup-btn">完成设置并登录</button>
+        </div>
+    </div>
+
+    <!-- 登录 -->
+    <div id="view-login" class="center hidden">
+        <h1>MAXMZH <span class="grad">网站后台</span></h1>
+        <p class="sub">输入后台密码登录。</p>
+        <div class="card">
+            <label>密码</label>
+            <input id="login-pw" type="password" autocomplete="current-password">
+            <p class="err" id="login-err"></p>
+            <button class="btn" id="login-btn">登录</button>
+        </div>
+    </div>
+
+    <!-- 控制台 -->
+    <div id="view-dash" class="hidden">
+        <div class="topbar">
+            <div>
+                <h1>MAXMZH <span class="grad">网站后台</span></h1>
+                <p class="sub">公告改完即时生效，不用重新部署。</p>
+            </div>
+            <button class="btn ghost small" id="logout-btn">退出登录</button>
+        </div>
+
+        <div class="card">
+            <h2>📢 首页公告（最新消息）</h2>
+            <div id="news-list"></div>
+            <button class="btn ghost small" id="news-add">＋ 添加一条</button>
+            <button class="btn" id="news-save" style="margin-left:8px">保存并发布</button>
+            <span class="ok" id="news-ok"></span>
+            <p class="err" id="news-err"></p>
+        </div>
+
+        <div class="card">
+            <h2>📊 访问统计 <button class="btn ghost small" id="stats-refresh" style="float:right">刷新</button></h2>
+            <div class="stat-grid">
+                <div class="stat-box"><div class="num" id="st-today-pv">-</div><div class="lbl">今日访问量 PV</div></div>
+                <div class="stat-box"><div class="num" id="st-today-uv">-</div><div class="lbl">今日访客 UV</div></div>
+                <div class="stat-box"><div class="num" id="st-yest-pv">-</div><div class="lbl">昨日 PV</div></div>
+                <div class="stat-box"><div class="num" id="st-yest-uv">-</div><div class="lbl">昨日 UV</div></div>
+            </div>
+            <h3 style="margin:18px 0 8px;font-size:.98rem">近 7 天</h3>
+            <table><thead><tr><th>日期</th><th>PV</th><th>UV</th></tr></thead><tbody id="st-last7"></tbody></table>
+            <h3 style="margin:18px 0 8px;font-size:.98rem">热门页面 Top 10</h3>
+            <table><thead><tr><th>页面</th><th>访问量</th></tr></thead><tbody id="st-top"></tbody></table>
+            <p class="sub" style="margin:10px 0 0">数据来自服务器访问日志；经 Cloudflare 访问时按真实访客 IP 统计。</p>
+        </div>
+
+        <div class="card">
+            <h2>🖥️ 服务器状态 <button class="btn ghost small" id="server-refresh" style="float:right">刷新</button></h2>
+            <div id="server-box">加载中…</div>
+        </div>
+    </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+async function api(path, opts) {
+    const r = await fetch(path, Object.assign({ headers: { "Content-Type": "application/json" } }, opts || {}));
+    let data = {};
+    try { data = await r.json(); } catch (e) {}
+    if (!r.ok) throw new Error(data.error || ("HTTP " + r.status));
+    return data;
+}
+function show(view) {
+    ["view-setup", "view-login", "view-dash"].forEach(v => $(v).classList.toggle("hidden", v !== view));
+}
+
+/* ---------- 新闻编辑 ---------- */
+let newsItems = [];
+function renderNews() {
+    const box = $("news-list");
+    box.innerHTML = "";
+    newsItems.forEach((it, i) => {
+        const div = document.createElement("div");
+        div.className = "news-item-edit";
+        div.innerHTML =
+            '<div class="row"><div><label>日期</label><input data-f="date" value=""></div>' +
+            '<div><label>标题</label><input data-f="title" value=""></div></div>' +
+            '<label>内容</label><textarea data-f="text"></textarea>' +
+            '<div class="row2"><div><label>链接文字（可空）</label><input data-f="lt" value=""></div>' +
+            '<div><label>链接地址（可空）</label><input data-f="lu" value=""></div></div>' +
+            '<div class="ops"><button class="btn ghost small" data-op="up">↑ 上移</button>' +
+            '<button class="btn ghost small" data-op="down">↓ 下移</button>' +
+            '<button class="btn danger small" data-op="del">删除</button></div>';
+        div.querySelector('[data-f="date"]').value = it.date || "";
+        div.querySelector('[data-f="title"]').value = it.title || "";
+        div.querySelector('[data-f="text"]').value = it.text || "";
+        div.querySelector('[data-f="lt"]').value = it.link ? (it.link.text || "") : "";
+        div.querySelector('[data-f="lu"]').value = it.link ? (it.link.url || "") : "";
+        div.querySelectorAll("input,textarea").forEach(el => el.addEventListener("input", () => collectNews()));
+        div.querySelector('[data-op="up"]').onclick = () => { if (i > 0) { [newsItems[i-1], newsItems[i]] = [newsItems[i], newsItems[i-1]]; collectNews(false); renderNews(); } };
+        div.querySelector('[data-op="down"]').onclick = () => { if (i < newsItems.length - 1) { [newsItems[i+1], newsItems[i]] = [newsItems[i], newsItems[i+1]]; collectNews(false); renderNews(); } };
+        div.querySelector('[data-op="del"]').onclick = () => { collectNews(false); newsItems.splice(i, 1); renderNews(); };
+        box.appendChild(div);
+    });
+}
+function collectNews(rerender = true) {
+    const out = [];
+    document.querySelectorAll("#news-list .news-item-edit").forEach(div => {
+        const g = f => div.querySelector('[data-f="' + f + '"]').value.trim();
+        const lu = g("lu");
+        out.push({ date: g("date"), title: g("title"), text: g("text"),
+                   link: lu ? { text: g("lt") || "查看 →", url: lu } : null });
+    });
+    newsItems = out;
+    if (rerender) renderNews();
+}
+
+/* ---------- 统计与状态 ---------- */
+async function loadStats() {
+    try {
+        const s = await api("/api/admin/stats");
+        $("st-today-pv").textContent = s.today.pv;
+        $("st-today-uv").textContent = s.today.uv;
+        $("st-yest-pv").textContent = s.yesterday.pv;
+        $("st-yest-uv").textContent = s.yesterday.uv;
+        $("st-last7").innerHTML = s.last7.map(d => "<tr><td>" + d.date + "</td><td>" + d.pv + "</td><td>" + d.uv + "</td></tr>").join("");
+        $("st-top").innerHTML = s.top_pages.map(p => "<tr><td>" + p.path.replace(/</g, "&lt;") + "</td><td>" + p.pv + "</td></tr>").join("") || '<tr><td colspan="2">暂无数据</td></tr>';
+    } catch (e) { $("st-last7").innerHTML = '<tr><td colspan="3">' + e.message + "</td></tr>"; }
+}
+async function loadServer() {
+    try {
+        const s = await api("/api/admin/server");
+        const bar = pct => '<div class="bar"><div style="width:' + Math.min(100, pct) + '%"></div></div>';
+        $("server-box").innerHTML =
+            '<div class="stat-grid">' +
+            '<div class="stat-box"><div class="num">' + (s.load && s.load.length ? s.load[0] : "-") + '</div><div class="lbl">CPU 负载（1 分钟 / ' + (s.cpu_count || "?") + ' 核）</div></div>' +
+            '<div class="stat-box"><div class="num">' + (s.uptime_hours != null ? s.uptime_hours + "h" : "-") + '</div><div class="lbl">已运行</div></div>' +
+            '<div class="stat-box"><div class="num">' + (s.nginx || "-") + '</div><div class="lbl">nginx 状态</div></div>' +
+            '<div class="stat-box"><div class="num" style="font-size:1.1rem">' + (s.site_commit || "-") + '</div><div class="lbl">站点版本 ' + (s.site_commit_time || "") + '</div></div></div>' +
+            '<label>内存：' + (s.mem ? s.mem.used_mb + " / " + s.mem.total_mb + " MB（" + s.mem.pct + "%）" : "-") + '</label>' + (s.mem ? bar(s.mem.pct) : "") +
+            '<label>磁盘：' + (s.disk ? s.disk.used_gb + " / " + s.disk.total_gb + " GB（" + s.disk.pct + "%）" : "-") + '</label>' + (s.disk ? bar(s.disk.pct) : "");
+    } catch (e) { $("server-box").textContent = e.message; }
+}
+
+/* ---------- 初始化 ---------- */
+async function init() {
+    const st = await api("/api/admin/state");
+    if (st.setup) { show("view-setup"); return; }
+    if (!st.authed) { show("view-login"); return; }
+    show("view-dash");
+    const n = await api("/api/admin/news");
+    newsItems = n.items || [];
+    renderNews();
+    loadStats(); loadServer();
+}
+$("setup-btn").onclick = async () => {
+    $("setup-err").textContent = "";
+    if ($("setup-pw").value !== $("setup-pw2").value) { $("setup-err").textContent = "两次密码不一致"; return; }
+    try {
+        await api("/api/setup", { method: "POST", body: JSON.stringify({ token: $("setup-token").value.trim(), password: $("setup-pw").value }) });
+        init();
+    } catch (e) { $("setup-err").textContent = e.message; }
+};
+$("login-btn").onclick = async () => {
+    $("login-err").textContent = "";
+    try {
+        await api("/api/login", { method: "POST", body: JSON.stringify({ password: $("login-pw").value }) });
+        init();
+    } catch (e) { $("login-err").textContent = e.message; }
+};
+$("login-pw").addEventListener("keydown", e => { if (e.key === "Enter") $("login-btn").click(); });
+$("logout-btn").onclick = async () => { await api("/api/logout", { method: "POST", body: "{}" }); location.reload(); };
+$("news-add").onclick = () => { collectNews(false); const d = new Date(); const p = n => String(n).padStart(2, "0"); newsItems.unshift({ date: d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()), title: "", text: "", link: null }); renderNews(); };
+$("news-save").onclick = async () => {
+    collectNews(false);
+    $("news-err").textContent = ""; $("news-ok").textContent = "";
+    try {
+        const r = await api("/api/admin/news", { method: "POST", body: JSON.stringify({ items: newsItems }) });
+        $("news-ok").textContent = "已发布（" + r.count + " 条），首页已生效 ✓";
+        setTimeout(() => $("news-ok").textContent = "", 4000);
+    } catch (e) { $("news-err").textContent = e.message; }
+};
+$("stats-refresh").onclick = loadStats;
+$("server-refresh").onclick = loadServer;
+init().catch(e => { document.body.innerHTML = "<p style='padding:20px'>后台服务未就绪：" + e.message + "</p>"; });
+</script>
+</body>
+</html>
