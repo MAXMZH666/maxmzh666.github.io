@@ -23,7 +23,7 @@ class H(BaseHTTPRequestHandler):
         print(f"{self.address_string()} {fmt % args}", flush=True)
 
     def _json(self, code, obj):
-        body = json.dumps(obj).encode()
+        body = json.dumps(obj, ensure_ascii=False).encode()
         self.send_response(code)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
