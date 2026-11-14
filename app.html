@@ -98,7 +98,8 @@ function qparam(name) { var m = new RegExp('[?&]' + name + '=([^&]*)').exec(loca
         if (a.updated) meta.push(['更新时间', a.updated]);
         if (isThird && a.author) meta.push(['提供方', a.author]);
         if (!isThird) meta.push(['来源', 'MAX 官方出品']);
-        var metaHtml = meta.map(function (kv) { return '<tr><td>' + esc(kv[0]) + '</td><td>' + esc(kv[1]) + '</td></tr>'; }).join('');
+        var metaHtml = meta.map(function (kv) { return '<tr><td>' + esc(kv[0]) + '</td><td>' + esc(kv[1]) + '</td></tr>'; }).join('') +
+            '<tr><td>用户评分</td><td id="rate-cell">查询中…</td></tr>';
         var actionHtml = a.url
             ? '<a class="btn" href="' + esc(a.url) + '" target="_blank" rel="noopener">' + esc(a.actionText || '打开应用') + '</a>'
             : '<span class="btn soon">' + esc(a.actionText || '即将上架') + '</span>';
@@ -124,6 +125,17 @@ function qparam(name) { var m = new RegExp('[?&]' + name + '=([^&]*)').exec(loca
             }).join('') + '</div>';
         }
         main.innerHTML = html;
+        /* 用户评分：读商店后台的真实评分（安卓版里打的分），取不到就隐藏这一行，不影响页面 */
+        fetch('https://maxmzh.com/store-api/rating?app=' + encodeURIComponent(a.name)).then(function (r) { return r.json(); }).then(function (d) {
+            var cell = document.getElementById('rate-cell');
+            if (!cell) return;
+            if (d && typeof d.avg === 'number' && d.count > 0) cell.textContent = '⭐ ' + (Math.round(d.avg * 10) / 10) + ' 分（' + d.count + ' 人评分）';
+            else if (d && typeof d.avg === 'number') cell.textContent = '暂无评分';
+            else cell.closest('tr').style.display = 'none';
+        }).catch(function () {
+            var cell = document.getElementById('rate-cell');
+            if (cell) cell.closest('tr').style.display = 'none';
+        });
         if (a.url) {
             var qi = document.getElementById('qr-img');
             qi.onerror = function () { qi.closest('.card').style.display = 'none'; };

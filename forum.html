@@ -99,6 +99,7 @@
             </div>
             <p id="forum-note" class="works-note">加载中…</p>
             <div id="thread-list"></div>
+            <div id="more-wrap" style="text-align:center;margin:18px 0" hidden><button class="btn-new" id="btn-more" type="button" style="background:var(--surface-2, #1d1d25)">加载更多</button></div>
         </section>
     </main>
 
@@ -218,50 +219,62 @@
         }
         document.getElementById('q-btn').addEventListener('click', doSearch);
         document.getElementById('q').addEventListener('keydown', function (e) { if (e.key === 'Enter') doSearch(); });
-        async function load() {
+        var page = 0, PAGE_SIZE = 50;
+        async function fetchProfs(ts) {
+            var aids = Array.from(new Set(ts.map(function (t) { return t.author_id; }))).filter(function (a) { return !unameCache[a]; });
+            if (aids.length) {
+                var pr = await sb.from('profiles').select('id,username,avatar_url').in('id', aids);
+                (pr.data || []).forEach(function (p) { unameCache[p.id] = p; });
+            }
+        }
+        function threadRow(t) {
+            var c = catMap[t.category_id] || {};
+            var p = unameCache[t.author_id] || {};
+            var name = p.username || '未知';
+            var ava = p.avatar_url
+                ? '<img class="t-ava" src="' + esc(p.avatar_url) + '" alt="" loading="lazy">'
+                : '<span class="t-ava t-ava-fallback">' + esc(name.slice(0, 1).toUpperCase()) + '</span>';
+            return '<a class="thread-row" href="forum-thread.html?id=' + t.id + '">' + ava +
+                '<span class="t-main"><span class="t-title">' +
+                (t.is_pinned ? '<span class="chip chip-pin">📌 置顶</span> ' : '') + esc(t.title) +
+                (t.is_locked ? ' <span class="chip chip-lock">🔒 锁定</span>' : '') + '</span>' +
+                '<span class="t-meta"><span class="chip">' + esc((c.icon || '') + ' ' + (c.name || '综合')) + '</span>' +
+                '<span>' + esc(name) + '</span>' +
+                '<span>发布于 ' + relTime(t.created_at) + '</span>' +
+                (t.reply_count > 0 ? '<span>最后回复 ' + relTime(t.updated_at) + '</span>' : '') +
+                '</span></span>' +
+                '<span class="t-side"><span class="t-rcount">' + t.reply_count + '</span><span class="t-rlabel">回复</span><span class="t-views">👁 ' + t.views + '</span></span></a>';
+        }
+        async function load(reset) {
+            if (reset === undefined) reset = true;
             var note = document.getElementById('forum-note'), list = document.getElementById('thread-list');
-            note.textContent = '加载中…'; list.innerHTML = '';
+            var moreWrap = document.getElementById('more-wrap');
+            if (reset) { page = 0; note.textContent = '加载中…'; list.innerHTML = ''; if (moreWrap) moreWrap.hidden = true; }
             try {
                 var q = sb.from('forum_threads').select('id,title,category_id,author_id,created_at,updated_at,views,reply_count,is_pinned,is_locked');
                 if (catId) q = q.eq('category_id', catId);
                 if (kw) q = q.ilike('title', '%' + kw + '%');
                 q = q.order('is_pinned', { ascending: false });
-                q = sort === 'hot' ? q.order('reply_count', { ascending: false }) : q.order('updated_at', { ascending: false });
-                var r = await q.limit(50);
+                q = sort === 'hot' ? q.order('reply_count', { ascending: false }).order('updated_at', { ascending: false }) : q.order('updated_at', { ascending: false });
+                var from = page * PAGE_SIZE;
+                var r = await q.range(from, from + PAGE_SIZE - 1);
                 if (r.error) throw r.error;
                 var ts = r.data || [];
                 if (!ts.length) {
-                    note.textContent = '';
-                    list.innerHTML = '<div class="empty-box">' + (kw ? '没有找到标题含「' + esc(kw) + '」的帖子，换个关键词试试。' : '还没有帖子，来发第一帖吧！') + '<br><a class="btn-new" href="' + (catId ? 'forum-new.html?cat=' + catId : 'forum-new.html') + '">✏️ 发新帖</a></div>';
+                    if (reset) {
+                        note.textContent = '';
+                        list.innerHTML = '<div class="empty-box">' + (kw ? '没有找到标题含「' + esc(kw) + '」的帖子，换个关键词试试。' : '还没有帖子，来发第一帖吧！') + '<br><a class="btn-new" href="' + (catId ? 'forum-new.html?cat=' + catId : 'forum-new.html') + '">✏️ 发新帖</a></div>';
+                    }
+                    if (moreWrap) moreWrap.hidden = true;
                     return;
                 }
                 note.textContent = '';
-                var aids = Array.from(new Set(ts.map(function (t) { return t.author_id; }))).filter(function (a) { return !unameCache[a]; });
-                var profs = unameCache;
-                if (aids.length) {
-                    var pr = await sb.from('profiles').select('id,username,avatar_url').in('id', aids);
-                    (pr.data || []).forEach(function (p) { profs[p.id] = p; });
-                }
-                list.innerHTML = ts.map(function (t) {
-                    var c = catMap[t.category_id] || {};
-                    var p = profs[t.author_id] || {};
-                    var name = p.username || '未知';
-                    var ava = p.avatar_url
-                        ? '<img class="t-ava" src="' + esc(p.avatar_url) + '" alt="" loading="lazy">'
-                        : '<span class="t-ava t-ava-fallback">' + esc(name.slice(0, 1).toUpperCase()) + '</span>';
-                    return '<a class="thread-row" href="forum-thread.html?id=' + t.id + '">' + ava +
-                        '<span class="t-main"><span class="t-title">' +
-                        (t.is_pinned ? '<span class="chip chip-pin">📌 置顶</span> ' : '') + esc(t.title) +
-                        (t.is_locked ? ' <span class="chip chip-lock">🔒 锁定</span>' : '') + '</span>' +
-                        '<span class="t-meta"><span class="chip">' + esc((c.icon || '') + ' ' + (c.name || '综合')) + '</span>' +
-                        '<span>' + esc(name) + '</span>' +
-                        '<span>发布于 ' + relTime(t.created_at) + '</span>' +
-                        (t.reply_count > 0 ? '<span>最后回复 ' + relTime(t.updated_at) + '</span>' : '') +
-                        '</span></span>' +
-                        '<span class="t-side"><span class="t-rcount">' + t.reply_count + '</span><span class="t-rlabel">回复</span><span class="t-views">👁 ' + t.views + '</span></span></a>';
-                }).join('');
+                await fetchProfs(ts);
+                list.insertAdjacentHTML('beforeend', ts.map(threadRow).join(''));
+                if (moreWrap) moreWrap.hidden = ts.length < PAGE_SIZE;
             } catch (e) { note.textContent = '加载失败：' + e.message; }
         }
+        document.getElementById('btn-more').addEventListener('click', function () { page++; load(false); });
         load();
     })();
     </script>
