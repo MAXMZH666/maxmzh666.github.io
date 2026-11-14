@@ -2289,3 +2289,157 @@ footer::before {
 }
 /* hero 与横幅衔接：收起顶部留白 */
 .hero-compact { padding-top: 8px; }
+
+/* ============================================================
+   液态玻璃设计层（2026-11-14）
+   半透明玻璃面 + 背景模糊 + 高光描边 + 柔和投影，亮暗双主题
+   ============================================================ */
+:root {
+    --glass-bg: rgba(23, 23, 33, 0.55);
+    --glass-bg-strong: rgba(17, 17, 26, 0.78);
+    --glass-border: rgba(255, 255, 255, 0.13);
+    --glass-highlight: rgba(255, 255, 255, 0.13);
+    --glass-sheen: linear-gradient(135deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.02) 42%, rgba(255, 255, 255, 0) 65%);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.32);
+    --glass-blur: blur(18px) saturate(160%);
+    --glass-blur-sm: blur(12px) saturate(150%);
+    --radius: 18px;
+}
+[data-theme="light"] {
+    --glass-bg: rgba(255, 255, 255, 0.52);
+    --glass-bg-strong: rgba(255, 255, 255, 0.78);
+    --glass-border: rgba(23, 28, 68, 0.10);
+    --glass-highlight: rgba(255, 255, 255, 0.7);
+    --glass-sheen: linear-gradient(135deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.12) 42%, rgba(255, 255, 255, 0) 65%);
+    --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.13);
+}
+/* 环境光晕：给玻璃提供可折射的色彩（固定不滚动） */
+body {
+    background-image:
+        radial-gradient(640px 420px at 12% -6%, rgba(77, 124, 254, 0.20), rgba(77, 124, 254, 0) 62%),
+        radial-gradient(760px 520px at 88% -4%, rgba(109, 92, 255, 0.17), rgba(109, 92, 255, 0) 62%),
+        radial-gradient(560px 560px at 50% 112%, rgba(255, 204, 0, 0.055), rgba(255, 204, 0, 0) 62%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+}
+[data-theme="light"] body {
+    background-image:
+        radial-gradient(640px 420px at 12% -6%, rgba(77, 124, 254, 0.16), rgba(77, 124, 254, 0) 62%),
+        radial-gradient(760px 520px at 88% -4%, rgba(109, 92, 255, 0.13), rgba(109, 92, 255, 0) 62%),
+        radial-gradient(560px 560px at 50% 112%, rgba(255, 170, 0, 0.08), rgba(255, 170, 0, 0) 62%);
+}
+/* ---------- 顶栏 / 社区域名栏：玻璃 ---------- */
+.site-header, .sub-header {
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border-bottom: 1px solid var(--glass-border);
+    box-shadow: inset 0 1px 0 var(--glass-highlight), 0 6px 28px rgba(0, 0, 0, 0.14);
+}
+/* ---------- 卡片：液态玻璃 ---------- */
+.card, .shop-item, .studio-card, .contest-card, .case-card,
+.contact-card, .apk-card, .info-block {
+    background: var(--glass-sheen), var(--glass-bg);
+    -webkit-backdrop-filter: var(--glass-blur-sm);
+    backdrop-filter: var(--glass-blur-sm);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    box-shadow: inset 0 1px 0 var(--glass-highlight), var(--glass-shadow);
+}
+.card:hover, .shop-item:hover, .studio-card:hover, .contest-card:hover {
+    border-color: rgba(127, 165, 255, 0.45);
+    box-shadow: inset 0 1px 0 var(--glass-highlight), 0 14px 42px rgba(0, 0, 0, 0.38), 0 0 0 1px rgba(127, 165, 255, 0.12);
+}
+[data-theme="light"] .card:hover, [data-theme="light"] .shop-item:hover,
+[data-theme="light"] .studio-card:hover, [data-theme="light"] .contest-card:hover {
+    box-shadow: inset 0 1px 0 var(--glass-highlight), 0 14px 42px rgba(31, 38, 135, 0.16), 0 0 0 1px rgba(77, 124, 254, 0.10);
+}
+/* ---------- 论坛（行内样式较多，用更高优先级覆盖） ---------- */
+body .thread-row, body .post, body .checkin-card, body .login-card,
+body .points-banner, body .already-box {
+    background: var(--glass-sheen), var(--glass-bg);
+    -webkit-backdrop-filter: var(--glass-blur-sm);
+    backdrop-filter: var(--glass-blur-sm);
+    border: 1px solid var(--glass-border);
+    box-shadow: inset 0 1px 0 var(--glass-highlight), var(--glass-shadow);
+}
+body .thread-row { border-radius: 18px; }
+body .thread-row:hover { border-color: rgba(127, 165, 255, 0.45); }
+body .post { border-radius: 18px; }
+/* ---------- 按钮：玻璃 + 品牌渐变高光 ---------- */
+.btn, .btn-ghost, .filter-chip {
+    -webkit-backdrop-filter: var(--glass-blur-sm);
+    backdrop-filter: var(--glass-blur-sm);
+    border: 1px solid var(--glass-border);
+    box-shadow: inset 0 1px 0 var(--glass-highlight), 0 4px 16px rgba(0, 0, 0, 0.16);
+}
+.btn-blue, .btn-primary, .btn-big {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -1px 0 rgba(0, 0, 0, 0.12), 0 8px 24px rgba(77, 124, 254, 0.38);
+}
+.btn:active, .btn-blue:active, .btn-primary:active { transform: translateY(1px) scale(0.99); }
+/* ---------- 弹窗 / 下拉：强玻璃 ---------- */
+.modal {
+    background: var(--glass-sheen), var(--glass-bg-strong);
+    -webkit-backdrop-filter: blur(24px) saturate(170%);
+    backdrop-filter: blur(24px) saturate(170%);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    box-shadow: inset 0 1px 0 var(--glass-highlight), 0 24px 64px rgba(0, 0, 0, 0.45);
+}
+.modal-backdrop {
+    background: rgba(5, 6, 14, 0.44);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+}
+.sub-drop-menu {
+    background: var(--glass-sheen), var(--glass-bg-strong);
+    -webkit-backdrop-filter: blur(22px) saturate(170%);
+    backdrop-filter: blur(22px) saturate(170%);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    box-shadow: inset 0 1px 0 var(--glass-highlight), 0 18px 48px rgba(0, 0, 0, 0.4);
+}
+/* ---------- 输入框：内嵌玻璃 ---------- */
+input[type="text"], input[type="email"], input[type="password"],
+input[type="search"], input[type="number"], input[type="url"],
+textarea, select {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.14);
+}
+[data-theme="light"] input[type="text"], [data-theme="light"] input[type="email"],
+[data-theme="light"] input[type="password"], [data-theme="light"] input[type="search"],
+[data-theme="light"] input[type="number"], [data-theme="light"] input[type="url"],
+[data-theme="light"] textarea, [data-theme="light"] select {
+    background: rgba(255, 255, 255, 0.55);
+    box-shadow: inset 0 2px 6px rgba(31, 38, 135, 0.06);
+}
+input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus,
+input[type="search"]:focus, input[type="number"]:focus, input[type="url"]:focus,
+textarea:focus, select:focus {
+    border-color: rgba(99, 144, 255, 0.65);
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.10), 0 0 0 4px rgba(77, 124, 254, 0.16);
+    outline: none;
+}
+/* ---------- 标签与筛选片 ---------- */
+.tag, .chip {
+    -webkit-backdrop-filter: var(--glass-blur-sm);
+    backdrop-filter: var(--glass-blur-sm);
+    border: 1px solid var(--glass-border);
+    box-shadow: inset 0 1px 0 var(--glass-highlight);
+}
+/* ---------- 滚动条 ---------- */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(140, 150, 180, 0.35); border-radius: 99px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: rgba(140, 150, 180, 0.55); border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-track { background: transparent; }
+::selection { background: rgba(77, 124, 254, 0.35); }
+/* ---------- 降级：不支持模糊或用户要求减少透明时用近实色 ---------- */
+@supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+    :root { --glass-bg: rgba(23, 23, 33, 0.94); --glass-bg-strong: rgba(17, 17, 26, 0.97); }
+    [data-theme="light"] { --glass-bg: rgba(255, 255, 255, 0.94); --glass-bg-strong: rgba(255, 255, 255, 0.97); }
+}
+@media (prefers-reduced-transparency: reduce) {
+    :root { --glass-bg: rgba(23, 23, 33, 0.96); --glass-bg-strong: rgba(17, 17, 26, 0.98); }
+    [data-theme="light"] { --glass-bg: rgba(255, 255, 255, 0.96); --glass-bg-strong: rgba(255, 255, 255, 0.98); }
+}
