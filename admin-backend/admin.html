@@ -106,12 +106,26 @@
             <table><thead><tr><th>日期</th><th>PV</th><th>UV</th></tr></thead><tbody id="st-last7"></tbody></table>
             <h3 style="margin:18px 0 8px;font-size:.98rem">热门页面 Top 10</h3>
             <table><thead><tr><th>页面</th><th>访问量</th></tr></thead><tbody id="st-top"></tbody></table>
-            <p class="sub" style="margin:10px 0 0">数据来自服务器访问日志；经 Cloudflare 访问时按真实访客 IP 统计。</p>
+            <p class="sub" style="margin:10px 0 0">数据来自服务器访问日志；经 Cloudflare 访问时按真实访客 IP 统计。统计结果缓存于 <span id="st-cached">-</span>，2 分钟内重复打开不重新计算。</p>
         </div>
 
         <div class="card">
             <h2>🖥️ 服务器状态 <button class="btn ghost small" id="server-refresh" style="float:right">刷新</button></h2>
             <div id="server-box">加载中…</div>
+        </div>
+
+        <div class="card">
+            <h2>🔐 账号安全</h2>
+            <label>当前密码</label>
+            <input id="pw-cur" type="password" autocomplete="current-password">
+            <label>新密码（至少 8 位）</label>
+            <input id="pw-new" type="password" autocomplete="new-password">
+            <label>再输一次新密码</label>
+            <input id="pw-new2" type="password" autocomplete="new-password">
+            <p class="err" id="pw-err"></p>
+            <button class="btn" id="pw-btn">修改密码</button>
+            <span class="ok" id="pw-ok"></span>
+            <p class="sub" style="margin:12px 0 0">修改成功后，其他设备上的后台登录会全部失效，需要用新密码重新登录；本机保持登录。</p>
         </div>
     </div>
 </div>
@@ -180,6 +194,7 @@ async function loadStats() {
         $("st-yest-uv").textContent = s.yesterday.uv;
         $("st-last7").innerHTML = s.last7.map(d => "<tr><td>" + d.date + "</td><td>" + d.pv + "</td><td>" + d.uv + "</td></tr>").join("");
         $("st-top").innerHTML = s.top_pages.map(p => "<tr><td>" + p.path.replace(/</g, "&lt;") + "</td><td>" + p.pv + "</td></tr>").join("") || '<tr><td colspan="2">暂无数据</td></tr>';
+        if (s.cached_at) $("st-cached").textContent = s.cached_at;
     } catch (e) { $("st-last7").innerHTML = '<tr><td colspan="3">' + e.message + "</td></tr>"; }
 }
 async function loadServer() {
@@ -237,6 +252,18 @@ $("news-save").onclick = async () => {
 };
 $("stats-refresh").onclick = loadStats;
 $("server-refresh").onclick = loadServer;
+$("pw-btn").onclick = async () => {
+    $("pw-err").textContent = ""; $("pw-ok").textContent = "";
+    if (!$("pw-cur").value) { $("pw-err").textContent = "先输入当前密码"; return; }
+    if ($("pw-new").value.length < 8) { $("pw-err").textContent = "新密码至少 8 位"; return; }
+    if ($("pw-new").value !== $("pw-new2").value) { $("pw-err").textContent = "两次输入的新密码不一致"; return; }
+    try {
+        await api("/api/admin/password", { method: "POST", body: JSON.stringify({ current: $("pw-cur").value, new: $("pw-new").value }) });
+        $("pw-cur").value = ""; $("pw-new").value = ""; $("pw-new2").value = "";
+        $("pw-ok").textContent = "密码已修改 ✓ 其他设备的登录已失效";
+        setTimeout(() => $("pw-ok").textContent = "", 5000);
+    } catch (e) { $("pw-err").textContent = e.message; }
+};
 init().catch(e => { document.body.innerHTML = "<p style='padding:20px'>后台服务未就绪：" + e.message + "</p>"; });
 </script>
 </body>

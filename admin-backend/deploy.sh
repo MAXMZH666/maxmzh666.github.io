@@ -24,6 +24,7 @@ echo "== 3. systemd 服务 =="
 sudo cp "$SRC_DIR/maxmzh-admin.service" /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now maxmzh-admin
+sudo systemctl restart maxmzh-admin
 sleep 1
 systemctl is-active maxmzh-admin
 

@@ -193,6 +193,21 @@ def compute_stats():
     }
 
 
+_stats_cache = {"at": 0.0, "data": None}
+STATS_TTL = 120  # 访问统计缓存秒数：日志只增不改，短时缓存避免每次打开后台都全量解析
+
+
+def compute_stats_cached():
+    now = time.time()
+    if _stats_cache["data"] is not None and now - _stats_cache["at"] < STATS_TTL:
+        return _stats_cache["data"]
+    data = compute_stats()
+    data["cached_at"] = datetime.now().strftime("%H:%M:%S")
+    _stats_cache["at"] = now
+    _stats_cache["data"] = data
+    return data
+
+
 def server_status():
     out = {}
     try:
@@ -240,7 +255,7 @@ def server_status():
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "MaxAdmin/1.0"
+    server_version = "MaxAdmin/1.1"
 
     def log_message(self, fmt, *args):
         sys.stderr.write("%s %s\n" % (self.address_string(), fmt % args))
@@ -303,7 +318,7 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/admin/stats":
             if not self._authed():
                 return self._json(401, {"error": "未登录"})
-            return self._json(200, compute_stats())
+            return self._json(200, compute_stats_cached())
         if path == "/api/admin/server":
             if not self._authed():
                 return self._json(401, {"error": "未登录"})
@@ -329,6 +344,10 @@ class Handler(BaseHTTPRequestHandler):
             if not self._authed():
                 return self._json(401, {"error": "未登录"})
             return self._save_news()
+        if path == "/api/admin/password":
+            if not self._authed():
+                return self._json(401, {"error": "未登录"})
+            return self._change_password()
         return self._json(404, {"error": "not found"})
 
     # ---------- actions ----------
@@ -396,6 +415,32 @@ class Handler(BaseHTTPRequestHandler):
             _login_fails[ip] = fails
             time.sleep(0.6)
             return self._json(401, {"error": "密码不正确"})
+
+    def _ok_with_cookie(self, secret):
+        self.send_response(200)
+        self._set_cookie(_sign_session(secret), SESSION_TTL)
+        body = b'{"ok":true}'
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _change_password(self):
+        auth = _auth()
+        if not auth:
+            return self._json(404, {"error": "尚未设置密码"})
+        data = self._body()
+        if not _check_password(str(data.get("current") or ""), auth["pw"]):
+            return self._json(401, {"error": "当前密码不正确"})
+        new = str(data.get("new") or "")
+        if len(new) < 8:
+            return self._json(400, {"error": "新密码至少 8 位"})
+        if _check_password(new, auth["pw"]):
+            return self._json(400, {"error": "新密码不能和当前密码相同"})
+        # 换密码同时轮换会话密钥：其他设备上的旧登录立即失效，本机用新会话续上
+        auth = {"pw": _hash_password(new), "secret": secrets.token_hex(32)}
+        _save_json(AUTH_FILE, auth)
+        return self._ok_with_cookie(auth["secret"])
 
     def _save_news(self):
         data = self._body()
