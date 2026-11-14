@@ -53,6 +53,8 @@
                 <a href="forum.html">全部帖子</a>
                 <a href="forum.html#cat-5a90d1f4-61f4-4ae9-b4f0-0ca5bd48a71f">💻 MAX编程社区专栏</a>
                 <a href="forum-new.html">✏️ 发新帖</a>
+                <a href="forum.html?fav=1">⭐ 我的收藏</a>
+                <a href="forum-rules.html">📜 论坛守则</a>
                 <a href="https://maxmzh.com/community-home.html">MAX编程社区</a>
                 <span id="sub-auth"></span>
             </nav>
@@ -79,7 +81,10 @@
                     <p class="form-hint" id="f-mdhelp"></p>
                 </div>
                 <button type="submit" class="btn-submit" id="f-submit">发布</button>
+                <button type="button" id="f-preview-btn" style="padding:12px 22px;border-radius:10px;border:1px solid var(--border, rgba(255,255,255,.12));background:transparent;color:inherit;cursor:pointer;font-size:1rem">👁 预览</button>
                 <span id="f-msg" class="works-note" style="display:inline"></span>
+                <span id="f-draft" class="works-note" style="display:inline"></span>
+                <div id="f-preview" style="display:none;margin-top:16px;border:1px solid var(--border, rgba(255,255,255,.08));border-radius:12px;padding:14px 16px;line-height:1.7;word-break:break-word"></div>
             </form>
         </section>
     </main>
@@ -92,6 +97,8 @@
             <a href="https://maxmzh.com/community-home.html">社区</a>
             <a href="https://maxmzh.com/community-help.html">❓ 帮助</a>
             <a href="forum.html">MAX论坛</a>
+            <a href="forum-rules.html">论坛守则</a>
+            <a href="https://maxmzh.com/community-legal.html">用户协议 · 隐私政策</a>
             <a href="https://maxmzh.com/contact.html">联系方式</a>
             <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
         </div>
@@ -129,6 +136,42 @@
             var wantCat = new URLSearchParams(location.search).get('cat');
             if (wantCat) sel.value = wantCat;
         } catch (e) {}
+        /* 草稿自动保存（标题/正文/版块存本机，发布成功后清除） */
+        var draftKey = 'forum_new_draft';
+        function saveDraft() {
+            try {
+                localStorage.setItem(draftKey, JSON.stringify({
+                    t: document.getElementById('f-title').value,
+                    c: document.getElementById('f-content').value,
+                    cat: sel.value
+                }));
+                var dEl = document.getElementById('f-draft');
+                if (dEl) dEl.textContent = '草稿已自动保存';
+            } catch (e) {}
+        }
+        ['f-title', 'f-content'].forEach(function (fid) {
+            document.getElementById(fid).addEventListener('input', saveDraft);
+        });
+        sel.addEventListener('change', saveDraft);
+        try {
+            var dj = JSON.parse(localStorage.getItem(draftKey) || 'null');
+            if (dj && (dj.t || dj.c)) {
+                if (dj.t) document.getElementById('f-title').value = dj.t;
+                if (dj.c) document.getElementById('f-content').value = dj.c;
+                if (dj.cat) sel.value = dj.cat;
+                var dEl2 = document.getElementById('f-draft');
+                if (dEl2) dEl2.textContent = '已恢复上次未发完的草稿';
+            }
+        } catch (e) {}
+        /* Markdown 预览 */
+        document.getElementById('f-preview-btn').addEventListener('click', function () {
+            var box = document.getElementById('f-preview');
+            if (box.style.display !== 'none') { box.style.display = 'none'; this.textContent = '👁 预览'; return; }
+            var t = document.getElementById('f-title').value.trim();
+            var c = document.getElementById('f-content').value;
+            box.innerHTML = (t ? '<h3 style="margin:0 0 10px">' + esc(t) + '</h3>' : '') + md(c || '（暂无内容）');
+            box.style.display = ''; this.textContent = '收起预览';
+        });
         document.getElementById('new-form').addEventListener('submit', async function (e) {
             e.preventDefault();
             var title = document.getElementById('f-title').value.trim();
@@ -146,6 +189,7 @@
                     thread_id: tr.data.id, author_id: me.id, content: content
                 });
                 if (pr.error) throw pr.error;
+                try { localStorage.removeItem(draftKey); } catch (e) {}
                 try { await recordTaskProgress('post_thread', 1); } catch (e) {}
                 try { await sendMentions(title + '\n' + content, me.id, tr.data.id, 'thread'); } catch (e) {}
                 location.href = 'forum-thread.html?id=' + tr.data.id;

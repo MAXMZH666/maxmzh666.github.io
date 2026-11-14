@@ -49,6 +49,7 @@
   <url><loc>https://store.maxmzh.com/privacy.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://store.maxmzh.com/account.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
   <url><loc>https://forum.maxmzh.com/</loc><lastmod>2026-11-14</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://forum.maxmzh.com/forum-rules.html</loc><lastmod>2026-11-14</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
   <url><loc>https://maxmzh.com/login.html</loc><changefreq>yearly</changefreq><priority>0.4</priority></url>
   <url><loc>https://maxmzh.com/gomoku.html</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://maxmzh.com/packager/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>

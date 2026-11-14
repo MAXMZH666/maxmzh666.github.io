@@ -72,6 +72,8 @@
                 <a href="forum.html">全部帖子</a>
                 <a href="forum.html#cat-5a90d1f4-61f4-4ae9-b4f0-0ca5bd48a71f">💻 MAX编程社区专栏</a>
                 <a href="forum-new.html">✏️ 发新帖</a>
+                <a href="forum.html?fav=1">⭐ 我的收藏</a>
+                <a href="forum-rules.html">📜 论坛守则</a>
                 <a href="https://maxmzh.com/community-home.html">MAX编程社区</a>
                 <span id="sub-auth"></span>
             </nav>
@@ -93,9 +95,12 @@
                     <button id="q-btn" type="button">搜索</button>
                 </div>
                 <div class="sort-tabs" id="sort-tabs" style="margin:0">
-                    <button data-sort="new" class="active">🆕 最新</button>
+                    <button data-sort="new" class="active">🆕 最新回复</button>
                     <button data-sort="hot">🔥 最热</button>
+                    <button data-sort="fresh">🌱 新帖</button>
+                    <button data-sort="old">🕰 最早</button>
                 </div>
+                <button class="btn-new" id="btn-refresh" type="button" style="background:var(--surface-2, #1d1d25)">🔄 刷新</button>
             </div>
             <p id="forum-note" class="works-note">加载中…</p>
             <div id="thread-list"></div>
@@ -111,6 +116,8 @@
             <a href="https://maxmzh.com/community-home.html">社区</a>
             <a href="https://maxmzh.com/community-help.html">❓ 帮助</a>
             <a href="forum.html">MAX论坛</a>
+            <a href="forum-rules.html">论坛守则</a>
+            <a href="https://maxmzh.com/community-legal.html">用户协议 · 隐私政策</a>
             <a href="https://maxmzh.com/contact.html">联系方式</a>
             <a href="https://github.com/MAXMZH666" target="_blank" rel="noopener">GitHub</a>
         </div>
@@ -124,6 +131,20 @@
     <script>
     (async function () {
         var sb = window.sb, catId = '', sort = 'new', kw = '';
+        var favMode = new URLSearchParams(location.search).get('fav') === '1';
+        var favIds = null;
+        if (favMode) { var st0 = document.querySelector('.section-title'); if (st0) st0.textContent = '⭐ 我的收藏'; }
+        async function ensureFavs() {
+            if (favIds !== null) return;
+            try {
+                var s = await sb.auth.getSession();
+                var u = s && s.data && s.data.session && s.data.session.user;
+                if (!u) { favIds = []; return; }
+                var fr = await sb.from('forum_favorites').select('thread_id').eq('user_id', u.id);
+                favIds = (fr.data || []).map(function (r) { return r.thread_id; });
+            } catch (e) { favIds = []; }
+        }
+        var lastReplyMap = {};
         var cats = [], catMap = {};
         var unameCache = {};
         /* 版块列表 10 分钟缓存，避免每次进论坛都重复查询 */
@@ -217,6 +238,7 @@
             kw = document.getElementById('q').value.trim().replace(/[%_\\]/g, '');
             load();
         }
+        document.getElementById('btn-refresh').addEventListener('click', function () { try { loadCats(); } catch (e) {} try { loadStats(); } catch (e) {} load(); });
         document.getElementById('q-btn').addEventListener('click', doSearch);
         document.getElementById('q').addEventListener('keydown', function (e) { if (e.key === 'Enter') doSearch(); });
         var page = 0, PAGE_SIZE = 50;
@@ -234,6 +256,12 @@
             var ava = p.avatar_url
                 ? '<img class="t-ava" src="' + esc(p.avatar_url) + '" alt="" loading="lazy">'
                 : '<span class="t-ava t-ava-fallback">' + esc(name.slice(0, 1).toUpperCase()) + '</span>';
+            var lastTxt = '';
+            if (t.reply_count > 0) {
+                var lr0 = lastReplyMap[t.id];
+                var lname = lr0 && unameCache[lr0.author_id] ? unameCache[lr0.author_id].username : '';
+                lastTxt = '<span>最后回复' + (lname ? ' ' + esc(lname) : '') + ' · ' + relTime(t.updated_at) + '</span>';
+            }
             return '<a class="thread-row" href="forum-thread.html?id=' + t.id + '">' + ava +
                 '<span class="t-main"><span class="t-title">' +
                 (t.is_pinned ? '<span class="chip chip-pin">📌 置顶</span> ' : '') + esc(t.title) +
@@ -241,7 +269,7 @@
                 '<span class="t-meta"><span class="chip">' + esc((c.icon || '') + ' ' + (c.name || '综合')) + '</span>' +
                 '<span>' + esc(name) + '</span>' +
                 '<span>发布于 ' + relTime(t.created_at) + '</span>' +
-                (t.reply_count > 0 ? '<span>最后回复 ' + relTime(t.updated_at) + '</span>' : '') +
+                lastTxt +
                 '</span></span>' +
                 '<span class="t-side"><span class="t-rcount">' + t.reply_count + '</span><span class="t-rlabel">回复</span><span class="t-views">👁 ' + t.views + '</span></span></a>';
         }
@@ -252,10 +280,25 @@
             if (reset) { page = 0; note.textContent = '加载中…'; list.innerHTML = ''; if (moreWrap) moreWrap.hidden = true; }
             try {
                 var q = sb.from('forum_threads').select('id,title,category_id,author_id,created_at,updated_at,views,reply_count,is_pinned,is_locked');
+                if (favMode) {
+                    await ensureFavs();
+                    if (!favIds.length) {
+                        if (reset) {
+                            note.textContent = '';
+                            list.innerHTML = '<div class="empty-box">还没有收藏的帖子。打开任意帖子，点「☆ 收藏」就能收进来。<br><a class="btn-new" href="forum.html">去逛逛</a></div>';
+                        }
+                        if (moreWrap) moreWrap.hidden = true;
+                        return;
+                    }
+                    q = q.in('id', favIds);
+                }
                 if (catId) q = q.eq('category_id', catId);
                 if (kw) q = q.ilike('title', '%' + kw + '%');
                 q = q.order('is_pinned', { ascending: false });
-                q = sort === 'hot' ? q.order('reply_count', { ascending: false }).order('updated_at', { ascending: false }) : q.order('updated_at', { ascending: false });
+                if (sort === 'hot') q = q.order('reply_count', { ascending: false }).order('updated_at', { ascending: false });
+                else if (sort === 'fresh') q = q.order('created_at', { ascending: false });
+                else if (sort === 'old') q = q.order('created_at', { ascending: true });
+                else q = q.order('updated_at', { ascending: false });
                 var from = page * PAGE_SIZE;
                 var r = await q.range(from, from + PAGE_SIZE - 1);
                 if (r.error) throw r.error;
@@ -270,6 +313,17 @@
                 }
                 note.textContent = '';
                 await fetchProfs(ts);
+                if (ts.length) {
+                    var lr = await sb.from('forum_posts').select('thread_id,author_id,created_at').in('thread_id', ts.map(function (t) { return t.id; })).order('created_at', { ascending: false }).limit(300);
+                    var seen = {};
+                    (lr.data || []).forEach(function (r) { if (!seen[r.thread_id]) seen[r.thread_id] = r; });
+                    ts.forEach(function (t) { if (seen[t.id]) lastReplyMap[t.id] = seen[t.id]; });
+                    var rids = Array.from(new Set(Object.keys(seen).map(function (k) { return seen[k].author_id; }))).filter(function (a) { return !unameCache[a]; });
+                    if (rids.length) {
+                        var rp = await sb.from('profiles').select('id,username,avatar_url').in('id', rids);
+                        (rp.data || []).forEach(function (p) { unameCache[p.id] = p; });
+                    }
+                }
                 list.insertAdjacentHTML('beforeend', ts.map(threadRow).join(''));
                 if (moreWrap) moreWrap.hidden = ts.length < PAGE_SIZE;
             } catch (e) { note.textContent = '加载失败：' + e.message; }
