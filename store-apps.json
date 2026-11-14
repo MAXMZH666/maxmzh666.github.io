@@ -101,5 +101,49 @@
    "shot": "store-shots/ai.jpg"
   }
  ],
- "updated": "2026-11-14"
+ "updated": "2026-11-14",
+ "third": [
+  {
+   "name": "TurboWarp",
+   "icon": "⚡",
+   "platform": "web",
+   "author": "TurboWarp 团队",
+   "desc": "Scratch 的加速版编辑器：把作品编译成 JavaScript 运行，大型作品也能流畅跑，MAX 编辑器正是基于它定制的。支持打开本地 .sb3 文件，也能粘贴 Scratch 官网的作品链接直接播放。",
+   "url": "https://turbowarp.org/",
+   "actionText": "前往官网",
+   "tags": [
+    "Scratch",
+    "编辑器",
+    "加速"
+   ]
+  },
+  {
+   "name": "PenguinMod",
+   "icon": "🐧",
+   "platform": "web",
+   "author": "PenguinMod 团队",
+   "desc": "基于 TurboWarp 的 Scratch 改版，内置大量扩展积木和素材库，能给作品加更多玩法；写好的作品还可以直接发布到它的社区里给全世界看。",
+   "url": "https://penguinmod.com/",
+   "actionText": "前往官网",
+   "tags": [
+    "Scratch",
+    "编辑器",
+    "扩展"
+   ]
+  },
+  {
+   "name": "Scratch 官网",
+   "icon": "🐱",
+   "platform": "web",
+   "author": "MIT / Scratch 团队",
+   "desc": "Scratch 的官方网站、一切的发源地：在线创作、发布作品、逛全球创作者的作品社区。MAX编程社区的作品格式和它完全兼容，两边的文件可以互通。",
+   "url": "https://scratch.mit.edu/",
+   "actionText": "前往官网",
+   "tags": [
+    "Scratch",
+    "官方",
+    "社区"
+   ]
+  }
+ ]
 }

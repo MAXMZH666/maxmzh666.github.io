@@ -151,6 +151,12 @@
         <div class="disc-list" id="disc-list"></div>
     </section>
 
+    <section id="third-wrap" hidden>
+        <h2 class="sec-title">🤝 第三方应用分享</h2>
+        <p class="about-p" style="margin-bottom:14px">这里收录的是其他团队的作品，本站只做收集和介绍，不提供下载文件，点开会前往对方官网。版权归原作者所有，如有问题请到 MAX论坛反馈，我们会及时处理。<br>📥 想分享你喜欢的应用，或者你自己的作品？<a href="https://forum.maxmzh.com/forum-new.html">去 MAX论坛发帖申请收录 →</a></p>
+        <div class="grid" id="third-grid"></div>
+    </section>
+
     <section>
         <h2 class="sec-title">关于 MAX 应用商店</h2>
         <p class="about-p">MAX 应用商店是 MAXMZH 的官方应用分发页，收录 MAX 打包工具、MAX 编辑器、联机五子棋等自研应用与在线工具，全部免费。网页应用打开即用、无需安装；本站是这些应用的唯一官方来源，请不要安装来历不明的同名安装包。每个应用都有自己的介绍页链接（点开详情后地址栏的链接），可以直接分享给朋友。有问题或建议，欢迎到 <a href="https://forum.maxmzh.com/">MAX论坛</a> 发帖反馈。</p>
@@ -188,6 +194,7 @@
         <div class="m-desc" id="m-desc"></div>
         <div class="tags m-tags" id="m-tags"></div>
         <div class="m-tip" id="m-tip" hidden>📱 <b>安装提示：</b>下载完成后打开 APK 文件进行安装；如果系统提示「禁止安装未知来源应用」，请按提示去系统设置里临时允许浏览器或文件管理器安装应用，装好后可以再把这个权限关掉。</div>
+        <div class="m-tip" id="m-tip3" hidden>🤝 <b>第三方分享：</b><span id="m-tip3-txt"></span></div>
         <a class="btn m-btn" id="m-btn" href="#"></a>
         <span class="btn soon m-btn" id="m-soon" hidden></span>
     </div>
@@ -198,7 +205,7 @@
 (function () {
     var NAMES = { windows: 'Windows', android: 'Android', wearable: '智能穿戴', web: '网页应用' };
     var ICONS = { windows: '🪟', android: '🤖', wearable: '⌚', web: '🌐' };
-    var apps = [], platform = 'all', query = '', sort = 'recommend';
+    var apps = [], thirdApps = [], platform = 'all', query = '', sort = 'recommend';
     var grid = document.getElementById('grid');
     var featWrap = document.getElementById('feat-wrap');
     var featGrid = document.getElementById('feat-grid');
@@ -206,7 +213,7 @@
     /* 首次打开安全提示（对标参考站，本机记住后不再弹） */
     var riskMask = document.getElementById('risk-mask');
     try {
-        if (!localStorage.getItem('maxstore_risk_ok') && !/^#app-\d+$/.test(location.hash || '')) {
+        if (!localStorage.getItem('maxstore_risk_ok') && !/^#app-t?\d+$/.test(location.hash || '')) {
             riskMask.hidden = false;
             document.body.style.overflow = 'hidden';
         }
@@ -266,9 +273,23 @@
         featGrid.innerHTML = feats.map(featCard).join('');
         featWrap.hidden = false;
     }
+    function thirdCard(a, i) {
+        return '<article class="app" data-t="' + i + '" title="点击查看详情"><div class="head"><div class="icon">' + esc(a.icon || '📱') + '</div>' +
+            '<div><div class="name">' + esc(a.name) + '</div><div class="meta"><span class="badge">' + esc(NAMES[a.platform] || a.platform) + '</span>' +
+            '<span class="badge" style="background:rgba(80,200,160,.16);color:#8fe3c0">🤝 第三方</span>' + esc(a.author || '') + '</div></div></div>' +
+            '<div class="desc">' + esc(a.desc) + '</div>' + tagChips(a) +
+            '<a class="btn" href="' + esc(a.url) + '" target="_blank" rel="noopener">' + esc(a.actionText || '前往官网') + '</a></article>';
+    }
+    function renderThird() {
+        var w = document.getElementById('third-wrap');
+        if (platform === 'all' && !query && thirdApps.length) {
+            document.getElementById('third-grid').innerHTML = thirdApps.map(thirdCard).join('');
+            w.hidden = false;
+        } else w.hidden = true;
+    }
     function renderStats() {
         var latest = apps.map(function (a) { return a.updated || ''; }).sort().pop() || '';
-        document.getElementById('st-total').textContent = apps.length;
+        document.getElementById('st-total').textContent = apps.length + thirdApps.length;
         document.getElementById('st-cats').textContent = Object.keys(NAMES).length;
         document.getElementById('st-updated').textContent = latest || '—';
     }
@@ -301,6 +322,7 @@
     }
     function render() {
         renderHome();
+        renderThird();
         var list = apps.filter(function (a) {
             var text = (a.name + ' ' + a.desc + ' ' + ((a.tags || []).join(' '))).toLowerCase();
             return (platform === 'all' || a.platform === platform) && (!query || text.indexOf(query) >= 0);
@@ -322,18 +344,22 @@
             t.querySelector('.cnt').textContent = n;
         });
     }
-    function openModal(a) {
+    function openModal(a, isThird, idx) {
         var shot = document.getElementById('m-shot');
         if (a.shot) { shot.src = a.shot; shot.hidden = false; } else { shot.hidden = true; shot.removeAttribute('src'); }
-        try { history.replaceState(null, '', '#app-' + apps.indexOf(a)); } catch (e) {}
+        try { history.replaceState(null, '', isThird ? '#app-t' + idx : '#app-' + idx); } catch (e) {}
         document.getElementById('m-icon').textContent = a.icon || '📱';
         document.getElementById('m-name').textContent = a.name;
         var lines = ['分类：' + (NAMES[a.platform] || a.platform)];
+        if (isThird && a.author) lines.push('提供：' + a.author + '（第三方分享）');
         metaParts(a).forEach(function (x) { lines.push(x); });
         document.getElementById('m-meta').innerHTML = lines.map(esc).join('<br>');
         document.getElementById('m-desc').textContent = a.desc || '';
         document.getElementById('m-tags').innerHTML = (a.tags || []).map(function (t) { return '<span class="tagchip">' + esc(t) + '</span>'; }).join('');
-        document.getElementById('m-tip').hidden = !(a.platform === 'android' && a.action === 'download');
+        document.getElementById('m-tip').hidden = !(!isThird && a.platform === 'android' && a.action === 'download');
+        var tip3 = document.getElementById('m-tip3');
+        tip3.hidden = !isThird;
+        if (isThird) document.getElementById('m-tip3-txt').textContent = '本应用由「' + (a.author || '第三方') + '」提供，本站仅做收集分享，不提供下载文件，也不对内容与安全负责；点击按钮将前往对方官网。';
         var btn = document.getElementById('m-btn'), soon = document.getElementById('m-soon');
         if (a.action === 'soon') {
             btn.hidden = true; soon.hidden = false;
@@ -354,8 +380,10 @@
     }
     document.addEventListener('click', function (e) {
         if (e.target.closest('a.btn, .tab, select, input, button.modal-x')) return;
+        var elt = e.target.closest('[data-t]');
+        if (elt) { openModal(thirdApps[Number(elt.dataset.t)], true, Number(elt.dataset.t)); return; }
         var el = e.target.closest('[data-i]');
-        if (el) openModal(apps[Number(el.dataset.i)]);
+        if (el) openModal(apps[Number(el.dataset.i)], false, Number(el.dataset.i));
     });
     document.getElementById('m-x').addEventListener('click', closeModal);
     mask.addEventListener('click', function (e) { if (e.target === mask) closeModal(); });
@@ -374,9 +402,11 @@
     });
     document.querySelector('.tab[data-p="all"]').classList.add('active');
     fetch('store-apps.json', { cache: 'no-cache' }).then(function (r) { return r.json(); }).then(function (d) {
-        apps = d.apps || []; renderCounts(); renderStats(); render();
+        apps = d.apps || []; thirdApps = d.third || []; renderCounts(); renderStats(); render();
+        var ht = /^#app-t(\d+)$/.exec(location.hash || '');
         var hm = /^#app-(\d+)$/.exec(location.hash || '');
-        if (hm && apps[Number(hm[1])]) openModal(apps[Number(hm[1])]);
+        if (ht && thirdApps[Number(ht[1])]) openModal(thirdApps[Number(ht[1])], true, Number(ht[1]));
+        else if (hm && apps[Number(hm[1])]) openModal(apps[Number(hm[1])], false, Number(hm[1]));
     }).catch(function () {
         grid.innerHTML = '<div class="empty"><div class="big">⚠️</div>应用列表加载失败，请刷新重试。</div>';
     });
