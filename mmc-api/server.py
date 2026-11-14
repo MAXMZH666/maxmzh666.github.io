@@ -44,6 +44,20 @@ class H(BaseHTTPRequestHandler):
             self._json(200, {"ok": True, "db": db_up()})
         elif path == "/":
             self._json(200, {"service": "mmc-api", "status": "foundation", "ws": WS_PORT})
+        elif path == "/store/submission/file":
+            code, data, fname = store_submission_file(self.headers, self.path)
+            if data is None:
+                self._json(code, {"error": fname})
+            else:
+                self.send_response(200)
+                self.send_header("Content-Type", "application/vnd.android.package-archive")
+                self.send_header("Content-Disposition", "attachment; filename*=UTF-8''" + fname)
+                self.send_header("Content-Length", str(len(data)))
+                self.end_headers()
+                try:
+                    self.wfile.write(data)
+                except Exception:
+                    pass
         elif path.startswith("/store/"):
             try:
                 code, obj = store_get(self.path, self.headers)
@@ -78,6 +92,8 @@ class H(BaseHTTPRequestHandler):
         try:
             if path == "/img/upload":
                 code, obj = img_upload(self.headers, raw)
+            elif path == "/store/upload":
+                code, obj = store_upload(self.headers, raw)
             elif path.startswith("/store/"):
                 try:
                     body = json.loads(raw or b"{}")
@@ -448,7 +464,15 @@ def _store_conn():
     except Exception:
         pass
     conn.execute("CREATE TABLE IF NOT EXISTS ratings (app TEXT, uid TEXT, score INTEGER, updated_at TEXT, PRIMARY KEY (app, uid))")
-    conn.execute("CREATE TABLE IF NOT EXISTS submissions (id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT, username TEXT, name TEXT, url TEXT, category TEXT, desc TEXT, contact TEXT, status TEXT DEFAULT 'pending', created_at TEXT)")
+    conn.execute("CREATE TABLE IF NOT EXISTS submissions (id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT, username TEXT, name TEXT, url TEXT, category TEXT, desc TEXT, contact TEXT, status TEXT DEFAULT 'pending', created_at TEXT, apk_file TEXT, apk_pkg TEXT, apk_ver TEXT, apk_label TEXT)")
+    try:
+        scols = [r[1] for r in conn.execute("PRAGMA table_info(submissions)").fetchall()]
+        for col in ("apk_file", "apk_pkg", "apk_ver", "apk_label"):
+            if scols and col not in scols:
+                conn.execute("ALTER TABLE submissions ADD COLUMN " + col + " TEXT")
+        conn.commit()
+    except Exception:
+        pass
     conn.execute("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT)")
     conn.execute("CREATE TABLE IF NOT EXISTS favorites (uid TEXT, app TEXT, created_at TEXT, PRIMARY KEY (uid, app))")
     return conn
@@ -505,6 +529,235 @@ def _rating_agg(conn, app, uid=None):
         r2 = conn.execute("SELECT score FROM ratings WHERE app = ? AND uid = ?", (app, uid)).fetchone()
         mine = r2[0] if r2 else None
     return {"avg": avg, "count": cnt, "mine": mine, "dist": dist}
+
+
+# ---------------- APK 上传与解析（投稿带文件，纯标准库解析二进制清单） ----------------
+import io as _io
+import struct as _struct
+import time as _time
+import zipfile as _zipfile
+
+_STORE_UPLOADS = os.environ.get("MMC_STORE_UPLOADS", "/opt/mmc-api/store_uploads")
+_STORE_UPLOAD_MAX = 60 * 1024 * 1024
+
+
+def _sp_strings(data, off):
+    """解析 AXML/ARSC 的字符串池分块，返回字符串列表。"""
+    _t, _h, _c = _struct.unpack_from("<HHI", data, off)
+    scount, _yc, flags, soff, _yo = _struct.unpack_from("<IIIII", data, off + 8)
+    utf8 = bool(flags & 0x100)
+    offs = [_struct.unpack_from("<I", data, off + _h + i * 4)[0] for i in range(scount)]
+    base = off + soff
+    out = []
+    for o in offs:
+        p = base + o
+        if utf8:
+            def _u8len(p):
+                b0 = data[p]
+                if b0 & 0x80:
+                    return ((b0 & 0x7F) << 8) | data[p + 1], p + 2
+                return b0, p + 1
+            _n, p = _u8len(p)
+            blen, p = _u8len(p)
+            out.append(data[p:p + blen].decode("utf-8", "replace"))
+        else:
+            ln = _struct.unpack_from("<H", data, p)[0]
+            p += 2
+            if ln & 0x8000:
+                ln2 = _struct.unpack_from("<H", data, p)[0]
+                p += 2
+                ln = ((ln & 0x7FFF) << 16) | ln2
+            out.append(data[p:p + ln * 2].decode("utf-16-le", "replace"))
+    return out
+
+
+def _axml_parse(axml):
+    """返回 {package, version_name, version_code, label, label_ref}（取不到为 None）。"""
+    info = {"package": None, "version_name": None, "version_code": None, "label": None, "label_ref": None}
+    if len(axml) < 8:
+        return info
+    strings = []
+    pos = 8
+    while pos + 8 <= len(axml):
+        ctype, _h, csize = _struct.unpack_from("<HHI", axml, pos)
+        if csize < 8:
+            break
+        if ctype == 0x0001:
+            try:
+                strings = _sp_strings(axml, pos)
+            except Exception:
+                strings = []
+        elif ctype == 0x0102 and strings:
+            try:
+                _ns, name_i, astart, asize, acount = _struct.unpack_from("<IIHHH", axml, pos + 16)
+                ename = strings[name_i] if 0 <= name_i < len(strings) else ""
+                abase = pos + 16 + astart
+                for i in range(acount):
+                    ap = abase + i * asize
+                    if ap + 20 > len(axml):
+                        break
+                    _ans, an_i, raw_i, = _struct.unpack_from("<IIi", axml, ap)
+                    vsize, _z, dtype = _struct.unpack_from("<HBb", axml, ap + 12)
+                    vdata = _struct.unpack_from("<I", axml, ap + 16)[0]
+                    aname = strings[an_i] if 0 <= an_i < len(strings) else ""
+                    def _s(idx):
+                        return strings[idx] if 0 <= idx < len(strings) else None
+                    raw = _s(raw_i) if raw_i >= 0 else None
+                    if ename == "manifest":
+                        if aname == "package":
+                            info["package"] = raw or _s(vdata)
+                        elif aname == "versionName":
+                            info["version_name"] = raw or (_s(vdata) if dtype == 0x03 else None)
+                        elif aname == "versionCode":
+                            info["version_code"] = vdata if dtype == 0x10 else (int(raw) if raw and raw.isdigit() else None)
+                    elif ename == "application" and aname == "label":
+                        if raw:
+                            info["label"] = raw
+                        elif dtype == 0x03:
+                            info["label"] = _s(vdata)
+                        elif dtype == 0x01:
+                            info["label_ref"] = vdata
+            except Exception:
+                pass
+        pos += csize
+    return info
+
+
+def _arsc_string(arsc, resid):
+    """在 resources.arsc 里按资源 id 找字符串值（尽力而为）。"""
+    try:
+        strings = []
+        type_id = (resid >> 16) & 0xFF
+        entry_idx = resid & 0xFFFF
+        pos = _struct.unpack_from("<H", arsc, 2)[0] or 12
+        while pos + 8 <= len(arsc):
+            ctype, hsize, csize = _struct.unpack_from("<HHI", arsc, pos)
+            if csize < 8:
+                break
+            if ctype == 0x0001 and not strings:
+                strings = _sp_strings(arsc, pos)
+            elif ctype == 0x0200:
+                # package 分块：子分块从 headerSize 处开始
+                sub = pos + hsize
+                end = pos + csize
+                while sub + 8 <= end:
+                    st, sh, sc = _struct.unpack_from("<HHI", arsc, sub)
+                    if sc < 8:
+                        break
+                    if st == 0x0201:
+                        tid = arsc[sub + 8]
+                        if tid == type_id:
+                            ecount, estart = _struct.unpack_from("<II", arsc, sub + 12)
+                            if entry_idx < ecount:
+                                eoff = _struct.unpack_from("<I", arsc, sub + sh + entry_idx * 4)[0]
+                                if eoff != 0xFFFFFFFF:
+                                    ep = sub + estart + eoff
+                                    esize, eflags = _struct.unpack_from("<HH", arsc, ep)
+                                    if not (eflags & 0x0001):
+                                        _vs, _vz, vtype = _struct.unpack_from("<HBb", arsc, ep + esize)
+                                        vdata = _struct.unpack_from("<I", arsc, ep + esize + 4)[0]
+                                        if vtype == 0x03 and vdata < len(strings):
+                                            return strings[vdata]
+                    sub += sc
+            pos += csize
+    except Exception:
+        return None
+    return None
+
+
+def _apk_info(data):
+    with _zipfile.ZipFile(_io.BytesIO(data)) as z:
+        names = set(z.namelist())
+        if "AndroidManifest.xml" not in names:
+            raise ValueError("no manifest")
+        info = _axml_parse(z.read("AndroidManifest.xml"))
+        if not info["label"] and info.get("label_ref") and "resources.arsc" in names:
+            info["label"] = _arsc_string(z.read("resources.arsc"), info["label_ref"])
+        info.pop("label_ref", None)
+        return info
+
+
+def store_upload(headers, raw):
+    me = _auth_user(headers)
+    if not me:
+        return 401, {"error": "请先登录 MAX 账号"}
+    if not raw:
+        return 400, {"error": "没收到文件"}
+    if len(raw) > _STORE_UPLOAD_MAX:
+        return 400, {"error": "APK 太大（上限 60MB）"}
+    if raw[:2] != b"PK":
+        return 400, {"error": "这不是有效的 APK 文件"}
+    try:
+        info = _apk_info(raw)
+    except Exception:
+        return 400, {"error": "APK 解析失败，文件可能损坏或不是安卓安装包"}
+    if not info.get("package"):
+        return 400, {"error": "APK 里读不到包名，换一个文件试试"}
+    os.makedirs(_STORE_UPLOADS, exist_ok=True)
+    fname = "%s_%d_%s.apk" % (me["uid"][:13], int(_time.time()), _secrets.token_hex(3))
+    fpath = os.path.join(_STORE_UPLOADS, fname)
+    with open(fpath, "wb") as f:
+        f.write(raw)
+    meta = {"info": info, "size": len(raw), "uid": me["uid"], "ts": int(_time.time())}
+    with open(fpath + ".json", "w", encoding="utf-8") as f:
+        f.write(json.dumps(meta, ensure_ascii=False))
+    return 200, {"file": fname, "size": len(raw), "info": info}
+
+
+def _upload_info_for(uid, fname):
+    """校验上传文件归属并读回解析信息；不合法返回 None。"""
+    try:
+        if not fname or "/" in fname or "\\" in fname or ".." in fname:
+            return None
+        mpath = os.path.join(_STORE_UPLOADS, fname + ".json")
+        with open(mpath, encoding="utf-8") as f:
+            meta = json.loads(f.read())
+        if meta.get("uid") != uid:
+            return None
+        return meta.get("info") or {}
+    except Exception:
+        return None
+
+
+def store_submission_file(headers, fullpath):
+    """管理员下载投稿附带的 APK 试装。返回 (code, bytes|None, filename|error)。"""
+    me = _auth_user(headers)
+    if not me:
+        return 401, None, "请先登录 MAX 账号"
+    if not me["is_admin"]:
+        return 403, None, "需要管理员账号"
+    q = {}
+    if "?" in fullpath:
+        for part in fullpath.split("?", 1)[1].split("&"):
+            if "=" in part:
+                k, v = part.split("=", 1)
+                q[k] = v
+    try:
+        sid = int(q.get("id") or 0)
+    except Exception:
+        sid = 0
+    if sid <= 0:
+        return 400, None, "缺少投稿编号"
+    with _store_lock:
+        conn = _store_conn()
+        try:
+            row = conn.execute("SELECT apk_file, name FROM submissions WHERE id = ?", (sid,)).fetchone()
+        finally:
+            conn.close()
+    if not row or not row[0]:
+        return 404, None, "这条投稿没有附带 APK"
+    fname = row[0]
+    if "/" in fname or ".." in fname:
+        return 400, None, "文件名不合法"
+    fpath = os.path.join(_STORE_UPLOADS, fname)
+    try:
+        with open(fpath, "rb") as f:
+            data = f.read()
+    except Exception:
+        return 404, None, "文件已不存在"
+    dl_name = (row[1] or "app") + ".apk"
+    from urllib.parse import quote as _q
+    return 200, data, _q(dl_name)
 
 
 def store_get(fullpath, headers):
@@ -601,12 +854,13 @@ def store_get(fullpath, headers):
             conn = _store_conn()
             try:
                 rows = conn.execute(
-                    "SELECT id, username, name, url, category, desc, contact, status, created_at "
+                    "SELECT id, username, name, url, category, desc, contact, status, created_at, apk_file, apk_pkg, apk_ver, apk_label "
                     "FROM submissions WHERE status = ? ORDER BY id DESC LIMIT 100", (status,)).fetchall()
             finally:
                 conn.close()
         out = [{"id": r[0], "username": r[1], "name": r[2], "url": r[3], "category": r[4],
-                "desc": r[5], "contact": r[6], "status": r[7], "created_at": r[8]} for r in rows]
+                "desc": r[5], "contact": r[6], "status": r[7], "created_at": r[8],
+                "apk_file": r[9], "apk_pkg": r[10], "apk_ver": r[11], "apk_label": r[12]} for r in rows]
         return 200, {"submissions": out}
     return 404, {"error": "not found"}
 
@@ -706,21 +960,33 @@ def store_post(path, b, headers, ip):
         me = _auth_user(headers)
         if not me:
             return 401, {"error": "请先登录 MAX 账号"}
-        name = _clean(b.get("name"), 60)
+        name = _clean(b.get("name") or b.get("title"), 60)
         url = _clean(b.get("url"), 300)
         category = _clean(b.get("category"), 20)
-        desc = _clean(b.get("desc"), 500)
+        desc = _clean(b.get("desc") or b.get("body"), 500)
         contact = _clean(b.get("contact"), 100)
-        if not name or not desc or not (url.startswith("http://") or url.startswith("https://")):
-            return 400, {"error": "名称、链接（http 开头）、介绍都要填"}
+        apk_file = apk_pkg = apk_ver = apk_label = None
+        fname = _clean(b.get("file"), 120)
+        if fname:
+            info = _upload_info_for(me["uid"], fname)
+            if not info:
+                return 400, {"error": "上传的 APK 文件不存在或不属于你"}
+            apk_file = fname
+            apk_pkg = info.get("package")
+            apk_ver = info.get("version_name")
+            apk_label = info.get("label")
+            if not name and apk_label:
+                name = apk_label
+        if not name or not desc or (not apk_file and not (url.startswith("http://") or url.startswith("https://"))):
+            return 400, {"error": "名称、介绍都要填，链接（http 开头）或 APK 文件二选一"}
         with _store_lock:
             conn = _store_conn()
             try:
                 cur = conn.execute(
-                    "INSERT INTO submissions (uid, username, name, url, category, desc, contact, created_at) "
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO submissions (uid, username, name, url, category, desc, contact, created_at, apk_file, apk_pkg, apk_ver, apk_label) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (me["uid"], me["username"], name, url, category, desc, contact,
-                     datetime.now(timezone.utc).isoformat()))
+                     datetime.now(timezone.utc).isoformat(), apk_file, apk_pkg, apk_ver, apk_label))
                 conn.commit()
                 sid = cur.lastrowid
             finally:
