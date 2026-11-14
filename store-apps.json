@@ -1,1 +1,100 @@
-{"apps":[{"action":"open","actionText":"在线使用","desc":"把 Scratch（.sb3）作品一键打包成可以独立打开的 HTML 单文件或 Windows EXE，打包完的作品脱离编辑器也能直接运行和分享。整个过程在线完成、免安装，在 MAX编程社区创作完作品后，用它打包成成品发给朋友最方便。","featured":true,"icon":"📦","name":"MAX 打包工具","platform":"windows","size":"网页版","tags":["Scratch","打包","在线工具"],"updated":"2026-11-14","url":"https://maxmzh.com/packager/"},{"action":"soon","actionText":"即将上架","desc":"用 C++ 编写的 3D 狙击小游戏：扮演狙击手完成瞄准射击挑战。游戏已经开发完成，正在准备上架分发，敬请期待。","icon":"🎯","name":"Sniper3D 狙击游戏","platform":"windows","tags":["游戏","3D","射击"],"url":""},{"action":"download","actionText":"下载 APK","desc":"MAX科技云的 Android 客户端完整功能版，功能全部内置在安装包里，装好就能用。体积稍大，但不依赖网络加载功能，用起来更稳，推荐大多数人装这个版本。","featured":true,"icon":"☁️","name":"MAX科技云","platform":"android","size":"10.6 MB","tags":["工具","完整版"],"updated":"2026-10-02","url":"https://maxmzh.com/Downloads/MAXkjy.apk"},{"action":"download","actionText":"下载 APK","desc":"MAX科技云的轻量在线版，安装包只有 187 KB，下载安装都很快；界面和功能通过网络在线加载，适合手机存储空间紧张、想先快速体验的人。版本 4.0。","icon":"🌐","name":"MAX科技云 · 在线版","platform":"android","size":"187 KB","tags":["工具","轻量版"],"updated":"2026-10-02","url":"https://maxmzh.com/Downloads/MAXkjy4.0%20zxb.apk","version":"4.0"},{"action":"open","actionText":"在线使用","desc":"基于 TurboWarp 的在线 Scratch 编辑器，打开浏览器就能创作、运行 Scratch 作品，不用装任何软件。编辑器里可以直接保存草稿，写完还能一键发布到 MAX编程社区，和大家分享你的作品。","icon":"✏️","name":"MAX 编辑器","platform":"web","size":"网页版","tags":["Scratch","编辑器","创作"],"updated":"2026-11-13","url":"https://maxmzh.com/tw-editor/"},{"action":"open","actionText":"开始对弈","desc":"能和朋友联机对弈的在线五子棋：创建一个房间会得到 6 位房号，把房号或邀请链接发给朋友，对方输入房号就能加入对局；没轮到下棋的朋友也可以进房观战。无需注册下载，打开网页就能玩。","icon":"♟️","name":"联机五子棋","platform":"web","size":"网页版","tags":["游戏","联机","双人对战"],"updated":"2026-11-14","url":"https://maxmzh.com/gomoku.html"},{"action":"open","actionText":"在线使用","desc":"随开随用的在线网络小工具集合：可以把长链接生成短链方便分享，也能查询域名的 WHOIS 注册信息、做 DNS 解析查询。做网站、查域名时顺手就能用，不用另外装软件。","icon":"🧰","name":"网络工具箱","platform":"web","size":"网页版","tags":["工具","短链","WHOIS"],"updated":"2026-11-14","url":"https://maxmzh.com/net-tools.html"},{"action":"open","actionText":"在线使用","desc":"在线 AI 编程助手：填入你自己的 API Key，就能让 AI 帮你写代码、调 bug、讲思路。自带密钥（BYOK）模式，Key 只保存在你本地浏览器里，不经过本站服务器，用得放心。","icon":"🤖","name":"AI 编程助手","platform":"web","size":"网页版","tags":["AI","编程","助手"],"updated":"2026-11-14","url":"https://maxmzh.com/ai-code.html"}],"updated":"2026-11-14"}
+{
+ "apps": [
+  {
+   "action": "open",
+   "actionText": "在线使用",
+   "desc": "把 Scratch（.sb3）作品一键打包成可以独立打开的 HTML 单文件或 Windows EXE，打包完的作品脱离编辑器也能直接运行和分享。整个过程在线完成、免安装，在 MAX编程社区创作完作品后，用它打包成成品发给朋友最方便。",
+   "featured": true,
+   "icon": "📦",
+   "name": "MAX 打包工具",
+   "platform": "windows",
+   "size": "网页版",
+   "tags": [
+    "Scratch",
+    "打包",
+    "在线工具"
+   ],
+   "updated": "2026-11-14",
+   "url": "https://maxmzh.com/packager/"
+  },
+  {
+   "action": "soon",
+   "actionText": "即将上架",
+   "desc": "用 C++ 编写的 3D 狙击小游戏：扮演狙击手完成瞄准射击挑战。游戏已经开发完成，正在准备上架分发，敬请期待。",
+   "icon": "🎯",
+   "name": "Sniper3D 狙击游戏",
+   "platform": "windows",
+   "tags": [
+    "游戏",
+    "3D",
+    "射击"
+   ],
+   "url": ""
+  },
+  {
+   "action": "open",
+   "actionText": "在线使用",
+   "desc": "基于 TurboWarp 的在线 Scratch 编辑器，打开浏览器就能创作、运行 Scratch 作品，不用装任何软件。编辑器里可以直接保存草稿，写完还能一键发布到 MAX编程社区，和大家分享你的作品。",
+   "icon": "✏️",
+   "name": "MAX 编辑器",
+   "platform": "web",
+   "size": "网页版",
+   "tags": [
+    "Scratch",
+    "编辑器",
+    "创作"
+   ],
+   "updated": "2026-11-13",
+   "url": "https://maxmzh.com/tw-editor/"
+  },
+  {
+   "action": "open",
+   "actionText": "开始对弈",
+   "desc": "能和朋友联机对弈的在线五子棋：创建一个房间会得到 6 位房号，把房号或邀请链接发给朋友，对方输入房号就能加入对局；没轮到下棋的朋友也可以进房观战。无需注册下载，打开网页就能玩。",
+   "icon": "♟️",
+   "name": "联机五子棋",
+   "platform": "web",
+   "size": "网页版",
+   "tags": [
+    "游戏",
+    "联机",
+    "双人对战"
+   ],
+   "updated": "2026-11-14",
+   "url": "https://maxmzh.com/gomoku.html"
+  },
+  {
+   "action": "open",
+   "actionText": "在线使用",
+   "desc": "随开随用的在线网络小工具集合：可以把长链接生成短链方便分享，也能查询域名的 WHOIS 注册信息、做 DNS 解析查询。做网站、查域名时顺手就能用，不用另外装软件。",
+   "icon": "🧰",
+   "name": "网络工具箱",
+   "platform": "web",
+   "size": "网页版",
+   "tags": [
+    "工具",
+    "短链",
+    "WHOIS"
+   ],
+   "updated": "2026-11-14",
+   "url": "https://maxmzh.com/net-tools.html"
+  },
+  {
+   "action": "open",
+   "actionText": "在线使用",
+   "desc": "在线 AI 编程助手：填入你自己的 API Key，就能让 AI 帮你写代码、调 bug、讲思路。自带密钥（BYOK）模式，Key 只保存在你本地浏览器里，不经过本站服务器，用得放心。",
+   "icon": "🤖",
+   "name": "AI 编程助手",
+   "platform": "web",
+   "size": "网页版",
+   "tags": [
+    "AI",
+    "编程",
+    "助手"
+   ],
+   "updated": "2026-11-14",
+   "url": "https://maxmzh.com/ai-code.html"
+  }
+ ],
+ "updated": "2026-11-14"
+}
