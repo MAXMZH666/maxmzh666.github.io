@@ -472,7 +472,7 @@ def _store_conn():
     conn.execute("CREATE TABLE IF NOT EXISTS submissions (id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT, username TEXT, name TEXT, url TEXT, category TEXT, desc TEXT, contact TEXT, status TEXT DEFAULT 'pending', created_at TEXT, apk_file TEXT, apk_pkg TEXT, apk_ver TEXT, apk_label TEXT)")
     try:
         scols = [r[1] for r in conn.execute("PRAGMA table_info(submissions)").fetchall()]
-        for col in ("apk_file", "apk_pkg", "apk_ver", "apk_label"):
+        for col in ("apk_file", "apk_pkg", "apk_ver", "apk_label", "apk_is_apks", "apk_splits"):
             if scols and col not in scols:
                 conn.execute("ALTER TABLE submissions ADD COLUMN " + col + " TEXT")
         conn.commit()
@@ -723,6 +723,48 @@ def _apk_info(data):
         return info
 
 
+def _apks_info(data):
+    """分包 bundle（.apks/.zip，内含 base + split APK）：以 base 的清单为准，汇总分包信息。"""
+    with _zipfile.ZipFile(_io.BytesIO(data)) as z:
+        names = [n for n in z.namelist() if n.lower().endswith(".apk")]
+        if not names:
+            raise ValueError("no apk entries")
+        if len(names) > 32:
+            raise ValueError("too many splits")
+        entries = []
+        for n in names:
+            raw = z.read(n)
+            if len(raw) > _STORE_UPLOAD_MAX:
+                raise ValueError("split too large")
+            try:
+                ii = _apk_info(raw)
+            except Exception:
+                ii = {}
+            bname = n.rsplit("/", 1)[-1]
+            split = ii.get("split") or ("" if bname.lower() == "base.apk" else bname[:-4])
+            entries.append({"file": bname, "split": split, "size": len(raw), "info": ii})
+        cands = [e for e in entries if not e["split"]] or entries
+        base = next((e for e in cands if e["file"].lower() == "base.apk"), cands[0])
+        bi = base["info"]
+        if not bi.get("package"):
+            raise ValueError("no base package")
+        archs = set(bi.get("architectures") or [])
+        for e in entries:
+            for a in (e["info"].get("architectures") or []):
+                archs.add(a)
+            for abi in ("arm64-v8a", "armeabi-v7a", "x86_64", "x86"):
+                if abi in (e["split"] or "") or abi.replace("-", "_") in (e["split"] or ""):
+                    archs.add(abi)
+        splits = [{"file": e["file"], "split": e["split"], "size": e["size"]}
+                  for e in entries if e is not base]
+        out = dict(bi)
+        out["is_apks"] = True
+        out["total_splits"] = len(splits)
+        out["splits"] = splits
+        out["architectures"] = sorted(archs)
+        return out
+
+
 def store_upload(headers, raw):
     me = _auth_user(headers)
     if not me:
@@ -733,10 +775,18 @@ def store_upload(headers, raw):
         return 400, {"error": "APK 太大（上限 60MB）"}
     if raw[:2] != b"PK":
         return 400, {"error": "这不是有效的 APK 文件"}
+    is_bundle = False
     try:
-        info = _apk_info(raw)
+        with _zipfile.ZipFile(_io.BytesIO(raw)) as _z:
+            _zn = _z.namelist()
+        if "AndroidManifest.xml" not in _zn and any(n.lower().endswith(".apk") for n in _zn):
+            is_bundle = True
     except Exception:
-        return 400, {"error": "APK 解析失败，文件可能损坏或不是安卓安装包"}
+        pass
+    try:
+        info = _apks_info(raw) if is_bundle else _apk_info(raw)
+    except Exception:
+        return 400, {"error": "APK 解析失败，文件可能损坏或不是安卓安装包/分包"}
     if not info.get("package"):
         return 400, {"error": "APK 里读不到包名，换一个文件试试"}
     conflict = None
@@ -762,7 +812,8 @@ def store_upload(headers, raw):
     except Exception:
         conflict = None
     os.makedirs(_STORE_UPLOADS, exist_ok=True)
-    fname = "%s_%d_%s.apk" % (me["uid"][:13], int(_time.time()), _secrets.token_hex(3))
+    fname = "%s_%d_%s.%s" % (me["uid"][:13], int(_time.time()), _secrets.token_hex(3),
+                             "apks" if info.get("is_apks") else "apk")
     fpath = os.path.join(_STORE_UPLOADS, fname)
     with open(fpath, "wb") as f:
         f.write(raw)
@@ -928,13 +979,14 @@ def store_get(fullpath, headers):
             conn = _store_conn()
             try:
                 rows = conn.execute(
-                    "SELECT id, username, name, url, category, desc, contact, status, created_at, apk_file, apk_pkg, apk_ver, apk_label "
+                    "SELECT id, username, name, url, category, desc, contact, status, created_at, apk_file, apk_pkg, apk_ver, apk_label, apk_is_apks, apk_splits "
                     "FROM submissions WHERE status = ? ORDER BY id DESC LIMIT 100", (status,)).fetchall()
             finally:
                 conn.close()
         out = [{"id": r[0], "username": r[1], "name": r[2], "url": r[3], "category": r[4],
                 "desc": r[5], "contact": r[6], "status": r[7], "created_at": r[8],
-                "apk_file": r[9], "apk_pkg": r[10], "apk_ver": r[11], "apk_label": r[12]} for r in rows]
+                "apk_file": r[9], "apk_pkg": r[10], "apk_ver": r[11], "apk_label": r[12],
+                "apk_is_apks": r[13] or "0", "apk_splits": r[14] or "[]"} for r in rows]
         return 200, {"submissions": out}
     if path == "/store/my/submissions":
         me = _auth_user(headers)
@@ -944,12 +996,12 @@ def store_get(fullpath, headers):
             conn = _store_conn()
             try:
                 rows = conn.execute(
-                    "SELECT id, name, category, status, created_at, apk_pkg, apk_ver, apk_label "
+                    "SELECT id, name, category, status, created_at, apk_pkg, apk_ver, apk_label, apk_is_apks "
                     "FROM submissions WHERE uid = ? ORDER BY id DESC LIMIT 100", (me["uid"],)).fetchall()
             finally:
                 conn.close()
         out = [{"id": r[0], "name": r[1], "category": r[2], "status": r[3], "created_at": r[4],
-                "apk_pkg": r[5], "apk_ver": r[6], "apk_label": r[7]} for r in rows]
+                "apk_pkg": r[5], "apk_ver": r[6], "apk_label": r[7], "apk_is_apks": r[8] or "0"} for r in rows]
         return 200, {"submissions": out}
     if path == "/store/rating-tags":
         if not app:
@@ -1143,6 +1195,8 @@ def store_post(path, b, headers, ip):
             apk_pkg = info.get("package")
             apk_ver = info.get("version_name")
             apk_label = info.get("label")
+            apk_is_apks = "1" if info.get("is_apks") else "0"
+            apk_splits = json.dumps(info.get("splits") or [], ensure_ascii=False)
             if not name and apk_label:
                 name = apk_label
         if not name or not desc or (not apk_file and not (url.startswith("http://") or url.startswith("https://"))):
@@ -1151,10 +1205,11 @@ def store_post(path, b, headers, ip):
             conn = _store_conn()
             try:
                 cur = conn.execute(
-                    "INSERT INTO submissions (uid, username, name, url, category, desc, contact, created_at, apk_file, apk_pkg, apk_ver, apk_label) "
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO submissions (uid, username, name, url, category, desc, contact, created_at, apk_file, apk_pkg, apk_ver, apk_label, apk_is_apks, apk_splits) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (me["uid"], me["username"], name, url, category, desc, contact,
-                     datetime.now(timezone.utc).isoformat(), apk_file, apk_pkg, apk_ver, apk_label))
+                     datetime.now(timezone.utc).isoformat(), apk_file, apk_pkg, apk_ver, apk_label,
+                     apk_is_apks if apk_file else "0", apk_splits if apk_file else "[]"))
                 conn.commit()
                 sid = cur.lastrowid
             finally:
