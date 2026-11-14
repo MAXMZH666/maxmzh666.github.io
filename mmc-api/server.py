@@ -464,6 +464,10 @@ def _store_conn():
     except Exception:
         pass
     conn.execute("CREATE TABLE IF NOT EXISTS ratings (app TEXT, uid TEXT, score INTEGER, updated_at TEXT, PRIMARY KEY (app, uid))")
+    conn.execute("CREATE TABLE IF NOT EXISTS feedbacks (id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT, username TEXT, type TEXT, content TEXT, status TEXT DEFAULT 'pending', note TEXT, created_at TEXT)")
+    conn.execute("CREATE TABLE IF NOT EXISTS reports (id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT, username TEXT, app TEXT, reason TEXT, status TEXT DEFAULT 'pending', created_at TEXT)")
+    conn.execute("CREATE TABLE IF NOT EXISTS comment_likes (comment_id INTEGER, uid TEXT, PRIMARY KEY (comment_id, uid))")
+    conn.execute("CREATE TABLE IF NOT EXISTS rating_tags (app TEXT, tag TEXT, uid TEXT, PRIMARY KEY (app, tag, uid))")
     conn.execute("CREATE TABLE IF NOT EXISTS submissions (id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT, username TEXT, name TEXT, url TEXT, category TEXT, desc TEXT, contact TEXT, status TEXT DEFAULT 'pending', created_at TEXT, apk_file TEXT, apk_pkg TEXT, apk_ver TEXT, apk_label TEXT)")
     try:
         scols = [r[1] for r in conn.execute("PRAGMA table_info(submissions)").fetchall()]
@@ -536,6 +540,8 @@ import io as _io
 import struct as _struct
 import time as _time
 import zipfile as _zipfile
+
+STORE_TAGS = ["流畅", "好用", "界面美", "功能强", "省电", "无广告", "更新勤", "稳定"]
 
 _STORE_UPLOADS = os.environ.get("MMC_STORE_UPLOADS", "/opt/mmc-api/store_uploads")
 _STORE_UPLOAD_MAX = 60 * 1024 * 1024
@@ -791,13 +797,17 @@ def store_get(fullpath, headers):
             try:
                 rows = conn.execute(
                     "SELECT c.id, c.username, c.content, c.created_at, c.uid, c.parent, "
-                    "(SELECT p.username FROM comments p WHERE p.id = c.parent) FROM comments c "
-                    "WHERE c.app = ? AND c.hidden = 0 ORDER BY c.id DESC LIMIT ?", (app, limit)).fetchall()
+                    "(SELECT p.username FROM comments p WHERE p.id = c.parent), "
+                    "(SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id), "
+                    "(SELECT 1 FROM comment_likes WHERE comment_id = c.id AND uid = ?) "
+                    "FROM comments c "
+                    "WHERE c.app = ? AND c.hidden = 0 ORDER BY c.id DESC LIMIT ?",
+                    ((me or {}).get("uid", ""), app, limit)).fetchall()
             finally:
                 conn.close()
         out = [{"id": r[0], "username": r[1], "content": r[2], "created_at": r[3],
                 "mine": bool(me and r[4] == me["uid"]), "parent": r[5] or 0,
-                "puser": r[6] or ""} for r in rows]
+                "puser": r[6] or "", "likes": r[7] or 0, "liked": bool(r[8])} for r in rows]
         return 200, {"comments": out}
     if path == "/store/rating":
         if not app:
@@ -862,6 +872,82 @@ def store_get(fullpath, headers):
                 "desc": r[5], "contact": r[6], "status": r[7], "created_at": r[8],
                 "apk_file": r[9], "apk_pkg": r[10], "apk_ver": r[11], "apk_label": r[12]} for r in rows]
         return 200, {"submissions": out}
+    if path == "/store/my/submissions":
+        me = _auth_user(headers)
+        if not me:
+            return 401, {"error": "请先登录 MAX 账号"}
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                rows = conn.execute(
+                    "SELECT id, name, category, status, created_at, apk_pkg, apk_ver, apk_label "
+                    "FROM submissions WHERE uid = ? ORDER BY id DESC LIMIT 100", (me["uid"],)).fetchall()
+            finally:
+                conn.close()
+        out = [{"id": r[0], "name": r[1], "category": r[2], "status": r[3], "created_at": r[4],
+                "apk_pkg": r[5], "apk_ver": r[6], "apk_label": r[7]} for r in rows]
+        return 200, {"submissions": out}
+    if path == "/store/rating-tags":
+        if not app:
+            return 400, {"error": "缺少 app 参数"}
+        me = _auth_user(headers)
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                rows = conn.execute(
+                    "SELECT tag, COUNT(*), MAX(uid = ?) FROM rating_tags WHERE app = ? GROUP BY tag",
+                    ((me or {}).get("uid", ""), app)).fetchall()
+            finally:
+                conn.close()
+        tags = [{"tag": r[0], "count": r[1], "mine": bool(r[2])} for r in rows if r[1] > 0]
+        tags.sort(key=lambda t: -t["count"])
+        return 200, {"tags": tags, "all_tags": STORE_TAGS}
+    if path == "/store/leaderboards":
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                up = conn.execute(
+                    "SELECT username, COUNT(*) FROM submissions WHERE status = 'approved' "
+                    "GROUP BY username ORDER BY COUNT(*) DESC LIMIT 10").fetchall()
+                rev = conn.execute(
+                    "SELECT username, COUNT(*) FROM comments WHERE hidden = 0 "
+                    "GROUP BY username ORDER BY COUNT(*) DESC LIMIT 10").fetchall()
+            finally:
+                conn.close()
+        return 200, {"uploads": [{"username": r[0], "count": r[1]} for r in up],
+                     "reviews": [{"username": r[0], "count": r[1]} for r in rev]}
+    if path == "/store/feedbacks":
+        me = _auth_user(headers)
+        if not me or not me["is_admin"]:
+            return 403, {"error": "需要管理员账号"}
+        status = _clean((q.get("status") or ["pending"])[0], 20) or "pending"
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                rows = conn.execute(
+                    "SELECT id, username, type, content, status, created_at FROM feedbacks "
+                    "WHERE status = ? ORDER BY id DESC LIMIT 100", (status,)).fetchall()
+            finally:
+                conn.close()
+        out = [{"id": r[0], "username": r[1], "type": r[2], "content": r[3], "status": r[4],
+                "created_at": r[5]} for r in rows]
+        return 200, {"feedbacks": out}
+    if path == "/store/reports":
+        me = _auth_user(headers)
+        if not me or not me["is_admin"]:
+            return 403, {"error": "需要管理员账号"}
+        status = _clean((q.get("status") or ["pending"])[0], 20) or "pending"
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                rows = conn.execute(
+                    "SELECT id, username, app, reason, status, created_at FROM reports "
+                    "WHERE status = ? ORDER BY id DESC LIMIT 100", (status,)).fetchall()
+            finally:
+                conn.close()
+        out = [{"id": r[0], "username": r[1], "app": r[2], "reason": r[3], "status": r[4],
+                "created_at": r[5]} for r in rows]
+        return 200, {"reports": out}
     return 404, {"error": "not found"}
 
 
@@ -1016,6 +1102,160 @@ def store_post(path, b, headers, ip):
             finally:
                 conn.close()
         return 200, {"favorites": clean}
+    if path == "/store/submission/withdraw":
+        me = _auth_user(headers)
+        if not me:
+            return 401, {"error": "请先登录 MAX 账号"}
+        try:
+            sid = int(b.get("id") or 0)
+        except Exception:
+            sid = 0
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                row = conn.execute("SELECT uid, status FROM submissions WHERE id = ?", (sid,)).fetchone()
+                if not row:
+                    return 404, {"error": "投稿不存在"}
+                if row[0] != me["uid"]:
+                    return 403, {"error": "只能撤回自己的投稿"}
+                if row[1] != "pending":
+                    return 400, {"error": "只有待审核的投稿能撤回"}
+                conn.execute("DELETE FROM submissions WHERE id = ?", (sid,))
+                conn.commit()
+            finally:
+                conn.close()
+        return 200, {"ok": True}
+    if path == "/store/feedback":
+        me = _auth_user(headers)
+        if not me:
+            return 401, {"error": "请先登录 MAX 账号"}
+        ftype = _clean(b.get("type"), 20) or "功能建议"
+        if ftype not in ("功能建议", "问题咨询", "改进建议", "应用纠错"):
+            ftype = "功能建议"
+        content = _clean(b.get("content"), 1000)
+        if not content:
+            return 400, {"error": "反馈内容不能为空"}
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                conn.execute(
+                    "INSERT INTO feedbacks (uid, username, type, content, created_at) VALUES (?, ?, ?, ?, ?)",
+                    (me["uid"], me["username"], ftype, content,
+                     datetime.now(timezone.utc).isoformat()))
+                conn.commit()
+            finally:
+                conn.close()
+        return 200, {"ok": True}
+    if path == "/store/feedback/handle":
+        me = _auth_user(headers)
+        if not me or not me["is_admin"]:
+            return 403, {"error": "需要管理员账号"}
+        try:
+            fid = int(b.get("id") or 0)
+        except Exception:
+            fid = 0
+        status = _clean(b.get("status"), 20)
+        if status not in ("done", "pending"):
+            return 400, {"error": "状态不对"}
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                conn.execute("UPDATE feedbacks SET status = ? WHERE id = ?", (status, fid))
+                conn.commit()
+            finally:
+                conn.close()
+        return 200, {"ok": True}
+    if path == "/store/report":
+        me = _auth_user(headers)
+        if not me:
+            return 401, {"error": "请先登录 MAX 账号"}
+        app = _clean(b.get("app"), 60)
+        reason = _clean(b.get("reason"), 300)
+        if not app or not reason:
+            return 400, {"error": "应用和举报原因都要填"}
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                conn.execute(
+                    "INSERT INTO reports (uid, username, app, reason, created_at) VALUES (?, ?, ?, ?, ?)",
+                    (me["uid"], me["username"], app, reason,
+                     datetime.now(timezone.utc).isoformat()))
+                conn.commit()
+            finally:
+                conn.close()
+        return 200, {"ok": True}
+    if path == "/store/report/handle":
+        me = _auth_user(headers)
+        if not me or not me["is_admin"]:
+            return 403, {"error": "需要管理员账号"}
+        try:
+            rid = int(b.get("id") or 0)
+        except Exception:
+            rid = 0
+        status = _clean(b.get("status"), 20)
+        if status not in ("done", "pending"):
+            return 400, {"error": "状态不对"}
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                conn.execute("UPDATE reports SET status = ? WHERE id = ?", (status, rid))
+                conn.commit()
+            finally:
+                conn.close()
+        return 200, {"ok": True}
+    if path == "/store/comment/like":
+        me = _auth_user(headers)
+        if not me:
+            return 401, {"error": "请先登录 MAX 账号"}
+        try:
+            cid = int(b.get("id") or 0)
+        except Exception:
+            cid = 0
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                row = conn.execute("SELECT 1 FROM comment_likes WHERE comment_id = ? AND uid = ?",
+                                   (cid, me["uid"])).fetchone()
+                if row:
+                    conn.execute("DELETE FROM comment_likes WHERE comment_id = ? AND uid = ?",
+                                 (cid, me["uid"]))
+                    liked = False
+                else:
+                    conn.execute("INSERT OR IGNORE INTO comment_likes (comment_id, uid) VALUES (?, ?)",
+                                 (cid, me["uid"]))
+                    liked = True
+                conn.commit()
+                cnt = conn.execute("SELECT COUNT(*) FROM comment_likes WHERE comment_id = ?",
+                                   (cid,)).fetchone()[0]
+            finally:
+                conn.close()
+        return 200, {"likes": cnt, "liked": liked}
+    if path == "/store/rating-tags":
+        me = _auth_user(headers)
+        if not me:
+            return 401, {"error": "请先登录 MAX 账号"}
+        app = _clean(b.get("app"), 60)
+        tag = _clean(b.get("tag"), 10)
+        if not app or tag not in STORE_TAGS:
+            return 400, {"error": "标签不对"}
+        known = _known_apps()
+        if known is not None and app not in known:
+            return 400, {"error": "应用不存在"}
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                row = conn.execute("SELECT 1 FROM rating_tags WHERE app = ? AND tag = ? AND uid = ?",
+                                   (app, tag, me["uid"])).fetchone()
+                if row:
+                    conn.execute("DELETE FROM rating_tags WHERE app = ? AND tag = ? AND uid = ?",
+                                 (app, tag, me["uid"]))
+                else:
+                    conn.execute("INSERT OR IGNORE INTO rating_tags (app, tag, uid) VALUES (?, ?, ?)",
+                                 (app, tag, me["uid"]))
+                conn.commit()
+            finally:
+                conn.close()
+        return 200, {"ok": True}
     if path == "/store/submission/review":
         me = _auth_user(headers)
         if not me or not me["is_admin"]:
