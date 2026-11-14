@@ -468,6 +468,7 @@ def _store_conn():
     conn.execute("CREATE TABLE IF NOT EXISTS reports (id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT, username TEXT, app TEXT, reason TEXT, status TEXT DEFAULT 'pending', created_at TEXT)")
     conn.execute("CREATE TABLE IF NOT EXISTS comment_likes (comment_id INTEGER, uid TEXT, PRIMARY KEY (comment_id, uid))")
     conn.execute("CREATE TABLE IF NOT EXISTS rating_tags (app TEXT, tag TEXT, uid TEXT, PRIMARY KEY (app, tag, uid))")
+    conn.execute("CREATE TABLE IF NOT EXISTS downloads (app TEXT PRIMARY KEY, count INTEGER DEFAULT 0)")
     conn.execute("CREATE TABLE IF NOT EXISTS submissions (id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT, username TEXT, name TEXT, url TEXT, category TEXT, desc TEXT, contact TEXT, status TEXT DEFAULT 'pending', created_at TEXT, apk_file TEXT, apk_pkg TEXT, apk_ver TEXT, apk_label TEXT)")
     try:
         scols = [r[1] for r in conn.execute("PRAGMA table_info(submissions)").fetchall()]
@@ -671,12 +672,51 @@ def _arsc_string(arsc, resid):
     return None
 
 
+def _axml_sdk(axml):
+    """读 uses-sdk 的 minSdkVersion / targetSdkVersion（尽力而为）。"""
+    out = {"min_sdk": None, "target_sdk": None}
+    try:
+        strings = []
+        pos = 8
+        while pos + 8 <= len(axml):
+            ctype, _h, csize = _struct.unpack_from("<HHI", axml, pos)
+            if csize < 8:
+                break
+            if ctype == 0x0001:
+                strings = _sp_strings(axml, pos)
+            elif ctype == 0x0102 and strings:
+                _ns, name_i, astart, asize, acount = _struct.unpack_from("<IIHHH", axml, pos + 16)
+                ename = strings[name_i] if 0 <= name_i < len(strings) else ""
+                if ename == "uses-sdk":
+                    abase = pos + 16 + astart
+                    for i in range(acount):
+                        ap = abase + i * asize
+                        _ans, an_i, _raw = _struct.unpack_from("<IIi", axml, ap)
+                        vdata = _struct.unpack_from("<I", axml, ap + 16)[0]
+                        aname = strings[an_i] if 0 <= an_i < len(strings) else ""
+                        if aname == "minSdkVersion":
+                            out["min_sdk"] = vdata
+                        elif aname == "targetSdkVersion":
+                            out["target_sdk"] = vdata
+                    break
+            pos += csize
+    except Exception:
+        pass
+    return out
+
+
 def _apk_info(data):
+    import hashlib as _hl
     with _zipfile.ZipFile(_io.BytesIO(data)) as z:
         names = set(z.namelist())
         if "AndroidManifest.xml" not in names:
             raise ValueError("no manifest")
-        info = _axml_parse(z.read("AndroidManifest.xml"))
+        axml = z.read("AndroidManifest.xml")
+        info = _axml_parse(axml)
+        info.update(_axml_sdk(axml))
+        archs = sorted({n.split("/")[1] for n in names if n.startswith("lib/") and n.count("/") >= 2})
+        info["architectures"] = archs
+        info["sha256"] = _hl.sha256(data).hexdigest()
         if not info["label"] and info.get("label_ref") and "resources.arsc" in names:
             info["label"] = _arsc_string(z.read("resources.arsc"), info["label_ref"])
         info.pop("label_ref", None)
@@ -699,6 +739,28 @@ def store_upload(headers, raw):
         return 400, {"error": "APK 解析失败，文件可能损坏或不是安卓安装包"}
     if not info.get("package"):
         return 400, {"error": "APK 里读不到包名，换一个文件试试"}
+    conflict = None
+    try:
+        known = _known_apps() or set()
+        cat_names = {a for a in known}
+        pkg = info.get("package")
+        # 与商店现有应用同包名（按已知官方包名）或同名同版本在审 → 提示冲突（不阻断，管理员判断）
+        if pkg in ("com.maxmzh.store",) or info.get("label") in cat_names:
+            conflict = {"blocking": False, "code": "existing_app",
+                        "message": "商店里已有包名或名称相同的应用，提交后管理员会人工确认是更新还是新应用"}
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                row = conn.execute(
+                    "SELECT id FROM submissions WHERE apk_pkg = ? AND apk_ver = ? AND status = 'pending' LIMIT 1",
+                    (pkg, info.get("version_name"))).fetchone()
+            finally:
+                conn.close()
+        if row and not conflict:
+            conflict = {"blocking": False, "code": "duplicate_pending",
+                        "message": "已有一条相同包名+版本的投稿在审核中，重复提交管理员会合并处理"}
+    except Exception:
+        conflict = None
     os.makedirs(_STORE_UPLOADS, exist_ok=True)
     fname = "%s_%d_%s.apk" % (me["uid"][:13], int(_time.time()), _secrets.token_hex(3))
     fpath = os.path.join(_STORE_UPLOADS, fname)
@@ -707,7 +769,7 @@ def store_upload(headers, raw):
     meta = {"info": info, "size": len(raw), "uid": me["uid"], "ts": int(_time.time())}
     with open(fpath + ".json", "w", encoding="utf-8") as f:
         f.write(json.dumps(meta, ensure_ascii=False))
-    return 200, {"file": fname, "size": len(raw), "info": info}
+    return 200, {"file": fname, "size": len(raw), "info": info, "conflict": conflict}
 
 
 def _upload_info_for(uid, fname):
@@ -817,6 +879,8 @@ def store_get(fullpath, headers):
             conn = _store_conn()
             try:
                 agg = _rating_agg(conn, app, me["uid"] if me else None)
+                drow = conn.execute("SELECT count FROM downloads WHERE app = ?", (app,)).fetchone()
+                agg["downloads"] = drow[0] if drow else 0
             finally:
                 conn.close()
         return 200, agg
@@ -902,6 +966,24 @@ def store_get(fullpath, headers):
         tags = [{"tag": r[0], "count": r[1], "mine": bool(r[2])} for r in rows if r[1] > 0]
         tags.sort(key=lambda t: -t["count"])
         return 200, {"tags": tags, "all_tags": STORE_TAGS}
+    if path == "/store/app-config":
+        cfg = {"maintenance": False, "message": "", "min_version_code": 1, "update_message": ""}
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                rows = conn.execute("SELECT key, value FROM meta WHERE key LIKE 'cfg_%'").fetchall()
+            finally:
+                conn.close()
+        kv = {r[0][4:]: r[1] for r in rows}
+        if kv.get("maintenance") == "1":
+            cfg["maintenance"] = True
+        cfg["message"] = kv.get("message", "")
+        try:
+            cfg["min_version_code"] = int(kv.get("min_version_code", "1"))
+        except Exception:
+            pass
+        cfg["update_message"] = kv.get("update_message", "")
+        return 200, cfg
     if path == "/store/leaderboards":
         with _store_lock:
             conn = _store_conn()
@@ -1102,6 +1184,49 @@ def store_post(path, b, headers, ip):
             finally:
                 conn.close()
         return 200, {"favorites": clean}
+    if path == "/store/download-hit":
+        app = _clean(b.get("app"), 60)
+        if not app:
+            return 400, {"error": "缺少 app 参数"}
+        known = _known_apps()
+        if known is not None and app not in known:
+            return 400, {"error": "应用不存在"}
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                conn.execute("INSERT INTO downloads (app, count) VALUES (?, 1) "
+                             "ON CONFLICT(app) DO UPDATE SET count = count + 1", (app,))
+                conn.commit()
+                cnt = conn.execute("SELECT count FROM downloads WHERE app = ?", (app,)).fetchone()[0]
+            finally:
+                conn.close()
+        return 200, {"downloads": cnt}
+    if path == "/store/app-config":
+        me = _auth_user(headers)
+        if not me or not me["is_admin"]:
+            return 403, {"error": "需要管理员账号"}
+        pairs = {}
+        if "maintenance" in b:
+            pairs["cfg_maintenance"] = "1" if b.get("maintenance") else "0"
+        if "message" in b:
+            pairs["cfg_message"] = _clean(b.get("message"), 300)
+        if "update_message" in b:
+            pairs["cfg_update_message"] = _clean(b.get("update_message"), 300)
+        if "min_version_code" in b:
+            try:
+                pairs["cfg_min_version_code"] = str(max(1, int(b.get("min_version_code"))))
+            except Exception:
+                return 400, {"error": "min_version_code 不对"}
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                for k, v in pairs.items():
+                    conn.execute("INSERT INTO meta (key, value) VALUES (?, ?) "
+                                 "ON CONFLICT(key) DO UPDATE SET value = excluded.value", (k, v))
+                conn.commit()
+            finally:
+                conn.close()
+        return 200, {"ok": True}
     if path == "/store/submission/withdraw":
         me = _auth_user(headers)
         if not me:
