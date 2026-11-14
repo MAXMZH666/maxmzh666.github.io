@@ -8,91 +8,110 @@
 <link rel="icon" type="image/png" href="https://maxmzh.com/favicon.png">
 <style>
     * { box-sizing: border-box; }
-    body { margin: 0; font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif; background: #0d1120; color: #e8ecf8; min-height: 100vh; }
+    :root { --bg: #0d1120; --card: #151a2e; --panel: #171d33; --text: #e8ecf8; --sub: #c6cdea; --muted: #9aa5c7; --faint: #5f6a8c; --border: rgba(255,255,255,.15); --border-soft: rgba(255,255,255,.09); --chip-bg: rgba(255,255,255,.14); --soft-bg: rgba(255,255,255,.04); --soon-bg: #232946; }
+    :root[data-theme="light"] { --bg: #f2f4fb; --card: #ffffff; --panel: #ffffff; --text: #1d2436; --sub: #3d4763; --muted: #66718c; --faint: #98a1b8; --border: rgba(23,32,68,.16); --border-soft: rgba(23,32,68,.1); --chip-bg: rgba(23,32,68,.08); --soft-bg: rgba(23,32,68,.04); --soon-bg: #e6e9f4; }
+    :root[data-theme="light"] .app, :root[data-theme="light"] .stat, :root[data-theme="light"] .disc { box-shadow: 0 1px 5px rgba(23,32,68,.07); }
+    .topnav { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+    .topnav a, .topnav button.navbtn { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border-soft); background: var(--card); color: var(--sub); font-size: 13.5px; text-decoration: none; cursor: pointer; font-family: inherit; }
+    .topnav a:hover, .topnav button.navbtn:hover { border-color: rgba(77,124,254,.6); text-decoration: none; }
+    #nav-toggle { display: none; margin-left: 4px; width: 42px; height: 42px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 19px; cursor: pointer; align-items: center; justify-content: center; flex: none; }
+    .tut { background: var(--card); border: 1px solid var(--border-soft); border-radius: 16px; padding: 18px; }
+    .tut h3 { margin: 0 0 8px; font-size: 16px; }
+    .tut p { color: var(--muted); font-size: 13.5px; line-height: 1.75; margin: 0; }
+    #to-top { position: fixed; right: 18px; bottom: 18px; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); background: var(--panel); color: var(--text); font-size: 18px; cursor: pointer; z-index: 900; display: none; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+    #to-top.show { display: block; }
+    @media (max-width: 720px) {
+        #nav-toggle { display: inline-flex; }
+        .topnav { display: none; flex-direction: column; align-items: stretch; }
+        .topnav.open { display: flex; }
+        .topnav a, .topnav button.navbtn { text-align: center; padding: 11px 14px; }
+    }
+
+    body { margin: 0; font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
     .wrap { max-width: 1080px; margin: 0 auto; padding: 28px 18px 60px; }
     header.top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
     .logo { font-size: 28px; font-weight: 800; background: linear-gradient(90deg,#4d7cfe,#6d5cff); -webkit-background-clip: text; background-clip: text; color: transparent; text-decoration: none; }
-    .tag { color: #9aa5c7; font-size: 13px; }
+    .tag { color: var(--muted); font-size: 13px; }
     .search { margin-left: auto; }
-    .search input { background: #151a2e; border: 1px solid rgba(255,255,255,.14); color: #fff; border-radius: 999px; padding: 9px 16px; font-size: 14px; width: 210px; outline: none; }
+    .search input { background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: 999px; padding: 9px 16px; font-size: 14px; width: 210px; outline: none; }
     .search input:focus { border-color: #4d7cfe; }
     .hero { margin: 30px 0 8px; }
     .hero h1 { font-size: 30px; margin: 0 0 8px; }
-    .hero p { color: #9aa5c7; margin: 0; font-size: 14px; }
+    .hero p { color: var(--muted); margin: 0; font-size: 14px; }
     .sec-title { font-size: 19px; margin: 26px 0 14px; }
     .feat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
     .feat { background: linear-gradient(135deg, rgba(77,124,254,.16), rgba(109,92,255,.10)); border: 1px solid rgba(109,92,255,.35); border-radius: 16px; padding: 20px; display: flex; gap: 16px; cursor: pointer; }
     .feat .icon { font-size: 46px; width: 76px; height: 76px; display: flex; align-items: center; justify-content: center; background: rgba(77,124,254,.16); border-radius: 16px; flex: none; }
     .feat .name { font-size: 18px; font-weight: 700; }
-    .feat .desc { color: #c6cdea; font-size: 13.5px; line-height: 1.6; margin: 6px 0 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .feat .desc { color: var(--sub); font-size: 13.5px; line-height: 1.6; margin: 6px 0 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .toolbar { display: flex; align-items: center; gap: 12px; margin: 24px 0 20px; flex-wrap: wrap; }
     .tabs { display: flex; gap: 10px; flex-wrap: wrap; }
-    .tab { border: 1px solid rgba(255,255,255,.16); background: #151a2e; color: #c6cdea; border-radius: 999px; padding: 9px 18px; font-size: 15px; cursor: pointer; }
+    .tab { border: 1px solid var(--border); background: var(--card); color: var(--sub); border-radius: 999px; padding: 9px 18px; font-size: 15px; cursor: pointer; }
     .tab.active { background: linear-gradient(135deg,#4d7cfe,#6d5cff); color: #fff; border-color: transparent; font-weight: 600; }
-    .tab .cnt { display: inline-block; min-width: 20px; text-align: center; font-size: 11.5px; line-height: 18px; padding: 0 5px; border-radius: 999px; background: rgba(255,255,255,.14); color: #c6cdea; margin-left: 6px; vertical-align: 1px; }
+    .tab .cnt { display: inline-block; min-width: 20px; text-align: center; font-size: 11.5px; line-height: 18px; padding: 0 5px; border-radius: 999px; background: var(--chip-bg); color: var(--sub); margin-left: 6px; vertical-align: 1px; }
     .tab.active .cnt { background: rgba(255,255,255,.25); color: #fff; }
-    .sortbox { margin-left: auto; color: #9aa5c7; font-size: 13.5px; display: flex; align-items: center; gap: 8px; }
-    .sortbox select { background: #151a2e; border: 1px solid rgba(255,255,255,.16); color: #e8ecf8; border-radius: 10px; padding: 8px 10px; font-size: 13.5px; outline: none; }
+    .sortbox { margin-left: auto; color: var(--muted); font-size: 13.5px; display: flex; align-items: center; gap: 8px; }
+    .sortbox select { background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: 10px; padding: 8px 10px; font-size: 13.5px; outline: none; }
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
-    .app { background: #151a2e; border: 1px solid rgba(255,255,255,.09); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 10px; cursor: pointer; transition: border-color .15s; }
+    .app { background: var(--card); border: 1px solid var(--border-soft); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 10px; cursor: pointer; transition: border-color .15s; }
     .app:hover { border-color: rgba(77,124,254,.5); }
     .app .head { display: flex; align-items: center; gap: 14px; }
     .app .icon { font-size: 40px; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; background: rgba(77,124,254,.12); border-radius: 14px; flex: none; }
     .app .name { font-size: 17px; font-weight: 700; }
-    .app .meta { color: #9aa5c7; font-size: 12px; margin-top: 3px; }
+    .app .meta { color: var(--muted); font-size: 12px; margin-top: 3px; }
     .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: rgba(109,92,255,.18); color: #b9aefc; margin-right: 6px; }
     .badge.feat-badge { background: rgba(255,190,60,.18); color: #ffd479; }
-    .app .desc { color: #c6cdea; font-size: 13.5px; line-height: 1.6; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .app .desc { color: var(--sub); font-size: 13.5px; line-height: 1.6; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
     .tags { display: flex; gap: 6px; flex-wrap: wrap; }
-    .tagchip { font-size: 11px; padding: 2px 9px; border-radius: 999px; border: 1px solid rgba(255,255,255,.14); color: #9aa5c7; }
+    .tagchip { font-size: 11px; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); }
     .btn { display: inline-block; text-align: center; background: linear-gradient(135deg,#4d7cfe,#6d5cff); color: #fff; text-decoration: none; border-radius: 10px; padding: 10px 16px; font-size: 14px; font-weight: 600; border: none; cursor: pointer; }
-    .btn.soon { background: #232946; color: #9aa5c7; pointer-events: none; }
-    .empty { grid-column: 1 / -1; text-align: center; color: #9aa5c7; padding: 56px 20px; border: 1.5px dashed rgba(255,255,255,.14); border-radius: 16px; }
+    .btn.soon { background: var(--soon-bg); color: var(--muted); pointer-events: none; }
+    .empty { grid-column: 1 / -1; text-align: center; color: var(--muted); padding: 56px 20px; border: 1.5px dashed var(--border); border-radius: 16px; }
     .empty .big { font-size: 40px; margin-bottom: 10px; }
-    footer { margin-top: 44px; text-align: center; color: #5f6a8c; font-size: 12.5px; line-height: 1.9; }
+    footer { margin-top: 44px; text-align: center; color: var(--faint); font-size: 12.5px; line-height: 1.9; }
     footer a { color: #8fa3d9; }
     .modal-mask { position: fixed; inset: 0; background: rgba(5,8,18,.72); display: flex; align-items: center; justify-content: center; padding: 18px; z-index: 1000; }
     .modal-mask[hidden] { display: none; }
-    .modal { background: #171d33; border: 1px solid rgba(255,255,255,.13); border-radius: 18px; max-width: 520px; width: 100%; max-height: 86vh; overflow-y: auto; padding: 26px; position: relative; }
-    .modal-x { position: absolute; top: 12px; right: 14px; background: none; border: none; color: #9aa5c7; font-size: 26px; cursor: pointer; line-height: 1; }
+    .modal { background: var(--panel); border: 1px solid var(--border); border-radius: 18px; max-width: 520px; width: 100%; max-height: 86vh; overflow-y: auto; padding: 26px; position: relative; }
+    .modal-x { position: absolute; top: 12px; right: 14px; background: none; border: none; color: var(--muted); font-size: 26px; cursor: pointer; line-height: 1; }
     .m-head { display: flex; gap: 16px; align-items: center; margin-bottom: 14px; padding-right: 26px; }
     .m-icon { font-size: 52px; width: 84px; height: 84px; display: flex; align-items: center; justify-content: center; background: rgba(77,124,254,.13); border-radius: 18px; flex: none; }
     .m-name { font-size: 21px; font-weight: 800; }
-    .m-meta { color: #9aa5c7; font-size: 12.5px; margin-top: 5px; line-height: 1.7; }
-    .m-desc { color: #d5dbf2; font-size: 14.5px; line-height: 1.8; }
+    .m-meta { color: var(--muted); font-size: 12.5px; margin-top: 5px; line-height: 1.7; }
+    .m-desc { color: var(--sub); font-size: 14.5px; line-height: 1.8; }
     .m-tags { margin-top: 14px; }
     .m-tip { margin-top: 16px; background: rgba(255,190,60,.09); border: 1px solid rgba(255,190,60,.25); color: #e8cf9a; border-radius: 12px; padding: 11px 14px; font-size: 13px; line-height: 1.7; }
     .m-btn { display: block; margin-top: 20px; padding: 13px 16px; font-size: 15px; }
-    .tagline { color: #c6cdea; font-size: 15px; margin-top: 10px; letter-spacing: 1px; }
+    .tagline { color: var(--sub); font-size: 15px; margin-top: 10px; letter-spacing: 1px; }
     .stats { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
-    .stat { background: #151a2e; border: 1px solid rgba(255,255,255,.09); border-radius: 12px; padding: 10px 16px; min-width: 104px; }
+    .stat { background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; padding: 10px 16px; min-width: 104px; }
     .stat b { display: block; font-size: 19px; }
-    .stat span { color: #9aa5c7; font-size: 12px; }
-    .acc-note { color: #9aa5c7; font-size: 13px; margin: 12px 0 0; }
-    .acc-note b { color: #c6cdea; }
+    .stat span { color: var(--muted); font-size: 12px; }
+    .acc-note { color: var(--muted); font-size: 13px; margin: 12px 0 0; }
+    .acc-note b { color: var(--sub); }
     .disc-sec { margin-top: 8px; }
     .disc-list { display: flex; flex-direction: column; gap: 10px; }
-    .disc { display: flex; gap: 14px; align-items: center; background: #151a2e; border: 1px solid rgba(255,255,255,.09); border-radius: 14px; padding: 14px 18px; cursor: pointer; }
+    .disc { display: flex; gap: 14px; align-items: center; background: var(--card); border: 1px solid var(--border-soft); border-radius: 14px; padding: 14px 18px; cursor: pointer; }
     .disc:hover { border-color: rgba(77,124,254,.5); }
     .disc .rank { font-size: 20px; font-weight: 800; color: #ffd479; width: 30px; text-align: center; flex: none; }
     .disc .icon { font-size: 30px; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; background: rgba(77,124,254,.12); border-radius: 12px; flex: none; }
     .disc .name { font-weight: 700; font-size: 15.5px; }
-    .disc .desc { color: #9aa5c7; font-size: 13px; margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+    .disc .desc { color: var(--muted); font-size: 13px; margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
     .disc .go { margin-left: auto; color: #8faeff; font-size: 13.5px; flex: none; }
-    .m-shot { width: 100%; border-radius: 12px; border: 1px solid rgba(255,255,255,.1); margin-bottom: 14px; display: block; }
-    .m-qr { margin-top: 18px; display: flex; gap: 14px; align-items: center; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09); border-radius: 12px; padding: 12px 14px; font-size: 14px; }
+    .m-shot { width: 100%; border-radius: 12px; border: 1px solid var(--border-soft); margin-bottom: 14px; display: block; }
+    .m-qr { margin-top: 18px; display: flex; gap: 14px; align-items: center; background: var(--soft-bg); border: 1px solid var(--border-soft); border-radius: 12px; padding: 12px 14px; font-size: 14px; }
     .m-qr[hidden] { display: none; }
     .m-qr img { border-radius: 8px; background: #fff; flex: none; }
-    .m-qr span { color: #9aa5c7; font-size: 12.5px; }
+    .m-qr span { color: var(--muted); font-size: 12.5px; }
     .series-banner { border-radius: 16px; padding: 22px 24px; margin-bottom: 16px; background: linear-gradient(120deg, #2b4acb, #4d7cfe 45%, #6d5cff); position: relative; overflow: hidden; }
     .series-banner .big-m { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 120px; font-weight: 900; color: rgba(255,255,255,.14); line-height: 1; }
     .series-banner .bt { font-size: 20px; font-weight: 800; position: relative; }
     .series-banner .bs { color: rgba(255,255,255,.85); font-size: 13.5px; margin-top: 5px; position: relative; max-width: 78%; line-height: 1.6; }
     .more-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 26px; }
     .more-row[hidden] { display: none; }
-    .more-row a { flex: 1; min-width: 200px; text-align: center; padding: 13px; border: 1px solid rgba(255,255,255,.14); border-radius: 12px; color: #c6cdea; text-decoration: none; background: #151a2e; font-size: 14.5px; }
+    .more-row a { flex: 1; min-width: 200px; text-align: center; padding: 13px; border: 1px solid var(--border); border-radius: 12px; color: var(--sub); text-decoration: none; background: var(--card); font-size: 14.5px; }
     .more-row a:hover { border-color: rgba(77,124,254,.6); text-decoration: none; }
-    .about-p { color: #9aa5c7; font-size: 14px; line-height: 1.9; margin: 0; }
+    .about-p { color: var(--muted); font-size: 14px; line-height: 1.9; margin: 0; }
     .about-p a { color: #8faeff; }
     .risk .modal { max-width: 480px; }
     .risk h2 { margin: 2px 0 12px; font-size: 20px; }
@@ -107,6 +126,7 @@
         .modal { padding: 20px; }
     }
 </style>
+<script>try { document.documentElement.dataset.theme = localStorage.getItem('maxstore_theme') || 'dark'; } catch (e) { document.documentElement.dataset.theme = 'dark'; }</script>
 </head>
 <body>
 <div data-max-account="float"></div>
@@ -115,7 +135,18 @@
         <a class="logo" href="https://store.maxmzh.com/">MAX 应用商店</a>
         <span class="tag">MAXMZH 官方出品 · 免费下载</span>
         <div class="search"><input type="search" id="q" placeholder="搜索应用…"></div>
+        <button id="nav-toggle" aria-label="打开菜单">☰</button>
     </header>
+    <nav class="topnav" id="topnav">
+        <a href="https://store.maxmzh.com/">🏠 首页</a>
+        <a href="#apps-top">📚 全部应用</a>
+        <a href="#third-wrap">🤝 第三方分享</a>
+        <a href="https://forum.maxmzh.com/forum-new.html" target="_blank" rel="noopener">📥 投稿</a>
+        <a href="#tutorials">📖 使用教程</a>
+        <a href="https://forum.maxmzh.com/" target="_blank" rel="noopener">💬 反馈与联系</a>
+        <a href="https://maxmzh.com/community-legal.html" target="_blank" rel="noopener">🛡️ 隐私与协议</a>
+        <button type="button" class="navbtn" id="theme-toggle">🌗 切换主题</button>
+    </nav>
 
     <div class="hero">
         <h1>让设备，多一点可能。</h1>
@@ -137,7 +168,7 @@
 
     <section id="series-wrap" hidden>
         <h2 class="sec-title">MAX 系列应用</h2>
-        <p style="color:#9aa5c7;font-size:13.5px;margin:-6px 0 14px">统一账号 · 打开即用 · 持续更新</p>
+        <p style="color:var(--muted);font-size:13.5px;margin:-6px 0 14px">统一账号 · 打开即用 · 持续更新</p>
         <div class="series-banner"><div class="big-m">M</div><div class="bt">MAX 系列应用</div><div class="bs">编辑器里创作，打包成作品，再约朋友联机对弈 —— 一个 MAX 账号全打通。</div></div>
         <div class="feat-grid" id="series-grid"></div>
     </section>
@@ -174,6 +205,16 @@
         <h2 class="sec-title">🤝 第三方应用分享</h2>
         <p class="about-p" style="margin-bottom:14px">这里收录的是其他团队的作品，本站只做收集和介绍，不提供下载文件，点开会前往对方官网。版权归原作者所有，如有问题请到 MAX论坛反馈，我们会及时处理。<br>📥 想分享你喜欢的应用，或者你自己的作品？<a href="https://forum.maxmzh.com/forum-new.html">去 MAX论坛发帖申请收录 →</a></p>
         <div class="grid" id="third-grid"></div>
+    </section>
+
+    <section id="tutorials">
+        <h2 class="sec-title">📖 使用教程</h2>
+        <div class="feat-grid">
+            <div class="tut"><h3>🌐 网页应用怎么用</h3><p>点应用卡片上的「在线使用」就直接打开了，不用下载、不用安装，和打开一个网页一样。用最新版的 Chrome、Edge 或手机自带浏览器效果最好。</p></div>
+            <div class="tut"><h3>📱 把应用放到手机桌面</h3><p>在手机上打开想用的应用页面，点浏览器菜单里的「添加到主屏幕」，桌面上就会多一个图标，以后点图标直接进，跟装了 App 一样。</p></div>
+            <div class="tut"><h3>🔗 分享应用给朋友</h3><p>点开任意应用的详情，地址栏的链接（#app- 开头）就是这个应用的专属链接，复制发给朋友，对方打开直达详情；详情里还有二维码，扫码也能打开。</p></div>
+            <div class="tut"><h3>❓ 应用打不开怎么办</h3><p>先刷新一次页面；还是不行，截个图到 MAX论坛发帖反馈，写清应用名和用的什么浏览器，我们看到就会处理。</p></div>
+        </div>
     </section>
 
     <section>
@@ -223,6 +264,7 @@
     </div>
 </div>
 
+<button id="to-top" aria-label="回到顶部" title="回到顶部">↑</button>
 <script src="https://maxmzh.com/js/max-account.js?v=20261114b"></script>
 <script>
 (function () {
@@ -241,6 +283,20 @@
             document.body.style.overflow = 'hidden';
         }
     } catch (e) {}
+    /* 主题切换（深/浅，本机记住） */
+    document.getElementById('theme-toggle').addEventListener('click', function () {
+        var next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+        document.documentElement.dataset.theme = next;
+        try { localStorage.setItem('maxstore_theme', next); } catch (e) {}
+    });
+    /* 手机端汉堡菜单 */
+    var topnav = document.getElementById('topnav');
+    document.getElementById('nav-toggle').addEventListener('click', function () { topnav.classList.toggle('open'); });
+    topnav.addEventListener('click', function (e) { if (e.target.closest('a')) topnav.classList.remove('open'); });
+    /* 回到顶部 */
+    var toTop = document.getElementById('to-top');
+    window.addEventListener('scroll', function () { toTop.classList.toggle('show', window.scrollY > 600); }, { passive: true });
+    toTop.addEventListener('click', function () { window.scrollTo({ top: 0, behavior: 'smooth' }); });
     document.getElementById('risk-ok').addEventListener('click', function () {
         riskMask.hidden = true;
         document.body.style.overflow = '';
@@ -278,7 +334,7 @@
     function featCard(a) {
         var idx = apps.indexOf(a);
         return '<article class="feat" data-i="' + idx + '" title="点击查看详情"><div class="icon">' + esc(a.icon || '📱') + '</div>' +
-            '<div><div class="name">' + esc(a.name) + '</div><div class="meta" style="color:#9aa5c7;font-size:12px;margin-top:3px"><span class="badge">' + esc(NAMES[a.platform] || a.platform) + '</span>' + esc(metaParts(a).join(' · ')) + '</div>' +
+            '<div><div class="name">' + esc(a.name) + '</div><div class="meta" style="color:var(--muted);font-size:12px;margin-top:3px"><span class="badge">' + esc(NAMES[a.platform] || a.platform) + '</span>' + esc(metaParts(a).join(' · ')) + '</div>' +
             '<div class="desc">' + esc(a.desc) + '</div>' + actionBtn(a) + '</div></article>';
     }
     function sorted(list) {
@@ -325,7 +381,7 @@
         }).filter(Boolean);
         if (platform === 'all' && !query && series.length) {
             var accCard = '<article class="feat"><div class="icon">🔑</div><div><div class="name">我的 MAX 账号</div>' +
-                '<div class="meta" style="color:#9aa5c7;font-size:12px;margin-top:3px"><span class="badge">全站通用</span>统一账号 · 一键授权</div>' +
+                '<div class="meta" style="color:var(--muted);font-size:12px;margin-top:3px"><span class="badge">全站通用</span>统一账号 · 一键授权</div>' +
                 '<div class="desc">登录一次，MAX编程社区、MAX论坛、MAX图床和编辑器都通用，不用每个站重复注册登录。</div>' +
                 '<a class="btn" href="https://maxmzh.com/login.html">去登录</a></div></article>';
             document.getElementById('series-grid').innerHTML = series.map(featCard).join('') + accCard;
