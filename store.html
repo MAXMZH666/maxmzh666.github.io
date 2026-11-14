@@ -63,7 +63,26 @@
     .m-tags { margin-top: 14px; }
     .m-tip { margin-top: 16px; background: rgba(255,190,60,.09); border: 1px solid rgba(255,190,60,.25); color: #e8cf9a; border-radius: 12px; padding: 11px 14px; font-size: 13px; line-height: 1.7; }
     .m-btn { display: block; margin-top: 20px; padding: 13px 16px; font-size: 15px; }
+    .tagline { color: #c6cdea; font-size: 15px; margin-top: 10px; letter-spacing: 1px; }
+    .stats { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+    .stat { background: #151a2e; border: 1px solid rgba(255,255,255,.09); border-radius: 12px; padding: 10px 16px; min-width: 104px; }
+    .stat b { display: block; font-size: 19px; }
+    .stat span { color: #9aa5c7; font-size: 12px; }
+    .acc-note { color: #9aa5c7; font-size: 13px; margin: 12px 0 0; }
+    .acc-note b { color: #c6cdea; }
+    .disc-sec { margin-top: 8px; }
+    .disc-list { display: flex; flex-direction: column; gap: 10px; }
+    .disc { display: flex; gap: 14px; align-items: center; background: #151a2e; border: 1px solid rgba(255,255,255,.09); border-radius: 14px; padding: 14px 18px; cursor: pointer; }
+    .disc:hover { border-color: rgba(77,124,254,.5); }
+    .disc .rank { font-size: 20px; font-weight: 800; color: #ffd479; width: 30px; text-align: center; flex: none; }
+    .disc .icon { font-size: 30px; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; background: rgba(77,124,254,.12); border-radius: 12px; flex: none; }
+    .disc .name { font-weight: 700; font-size: 15.5px; }
+    .disc .desc { color: #9aa5c7; font-size: 13px; margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+    .disc .go { margin-left: auto; color: #8faeff; font-size: 13.5px; flex: none; }
+    .risk .modal { max-width: 480px; }
+    .risk h2 { margin: 2px 0 12px; font-size: 20px; }
     @media (max-width: 600px) {
+        .stat { flex: 1; min-width: 96px; }
         .grid, .feat-grid { grid-template-columns: 1fr; }
         .hero h1 { font-size: 24px; }
         .search { margin-left: 0; flex: 1; }
@@ -84,13 +103,26 @@
     </header>
 
     <div class="hero">
-        <h1>把好用的，都装进口袋</h1>
+        <h1>让设备，多一点可能。</h1>
+        <div class="tagline">把好用的，都装进口袋</div>
         <p>这里是 MAX 系列应用的官方分发页，按你的设备选平台，直接下载最新版；网页应用打开就能用。</p>
+        <div class="stats">
+            <div class="stat"><b id="st-total">–</b><span>应用总数</span></div>
+            <div class="stat"><b id="st-cats">–</b><span>应用分类</span></div>
+            <div class="stat"><b id="st-updated">–</b><span>最近更新</span></div>
+        </div>
+        <p class="acc-note">🔑 MAX 系列应用共用一个 <b>MAX 账号</b>：右上角登录一次，社区、论坛、编辑器都通用。</p>
     </div>
 
     <section id="feat-wrap" hidden>
         <h2 class="sec-title">⭐ 编辑精选</h2>
         <div class="feat-grid" id="feat-grid"></div>
+    </section>
+
+    <section id="series-wrap" hidden>
+        <h2 class="sec-title">MAX 系列应用</h2>
+        <p style="color:#9aa5c7;font-size:13.5px;margin:-6px 0 14px">统一账号 · 打开即用 · 持续更新</p>
+        <div class="feat-grid" id="series-grid"></div>
     </section>
 
     <div class="toolbar">
@@ -111,10 +143,27 @@
 
     <main class="grid" id="grid"><div class="empty"><div class="big">🛍️</div>正在上架…</div></main>
 
+    <section class="disc-sec" id="disc-wrap" hidden>
+        <h2 class="sec-title">🔭 发现更多应用</h2>
+        <div class="disc-list" id="disc-list"></div>
+    </section>
+
     <footer>
         应用均由 MAXMZH 开发与维护，下载文件托管于本站服务器。<br>
         <a href="https://maxmzh.com/">主站</a> · <a href="https://maxmzh.com/community.html">MAX编程社区</a> · <a href="https://forum.maxmzh.com/">MAX论坛</a> · <a href="https://img.maxmzh.com/">MAX图床</a>
     </footer>
+</div>
+
+<div class="modal-mask risk" id="risk-mask" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="risk-title">
+        <h2 id="risk-title">⚠️ 下载前请注意</h2>
+        <div class="m-desc">
+            本站应用均为 MAXMZH 官方出品，请只从本页下载最新版，不要安装来历不明的同名安装包。<br><br>
+            Android 安装包来自本站服务器：安装时如果系统提示「禁止安装未知来源应用」，到系统设置里临时允许浏览器或文件管理器安装即可，装好后可以再关掉这个权限。<br><br>
+            网页应用打开就能用，不需要安装。
+        </div>
+        <button class="btn m-btn" id="risk-ok" style="width:100%;text-align:center">我知道了，继续逛商店</button>
+    </div>
 </div>
 
 <div class="modal-mask" id="mask" hidden>
@@ -145,6 +194,19 @@
     var featWrap = document.getElementById('feat-wrap');
     var featGrid = document.getElementById('feat-grid');
     var mask = document.getElementById('mask');
+    /* 首次打开安全提示（对标参考站，本机记住后不再弹） */
+    var riskMask = document.getElementById('risk-mask');
+    try {
+        if (!localStorage.getItem('maxstore_risk_ok')) {
+            riskMask.hidden = false;
+            document.body.style.overflow = 'hidden';
+        }
+    } catch (e) {}
+    document.getElementById('risk-ok').addEventListener('click', function () {
+        riskMask.hidden = true;
+        document.body.style.overflow = '';
+        try { localStorage.setItem('maxstore_risk_ok', '1'); } catch (e) {}
+    });
 
     function esc(s) {
         return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -195,8 +257,39 @@
         featGrid.innerHTML = feats.map(featCard).join('');
         featWrap.hidden = false;
     }
-    function render() {
+    function renderStats() {
+        var cats = {};
+        apps.forEach(function (a) { cats[a.platform] = 1; });
+        var latest = apps.map(function (a) { return a.updated || ''; }).sort().pop() || '';
+        document.getElementById('st-total').textContent = apps.length;
+        document.getElementById('st-cats').textContent = Object.keys(cats).length;
+        document.getElementById('st-updated').textContent = latest || '—';
+    }
+    function renderHome() {
         renderFeatured();
+        /* MAX 系列应用：创作三件套常驻展示（全部视图、无搜索时） */
+        var sw = document.getElementById('series-wrap');
+        var series = ['MAX 编辑器', '联机五子棋', 'MAX 打包工具'].map(function (n) {
+            return apps.filter(function (a) { return a.name === n; })[0];
+        }).filter(Boolean);
+        if (platform === 'all' && !query && series.length) {
+            document.getElementById('series-grid').innerHTML = series.map(featCard).join('');
+            sw.hidden = false;
+        } else sw.hidden = true;
+        /* 发现更多应用：按更新日期列最近 4 条（参考站的「按最新上架发现应用」） */
+        var dw = document.getElementById('disc-wrap');
+        if (platform === 'all' && !query && apps.length) {
+            var recent = apps.slice().sort(function (x, y) { return String(y.updated || '').localeCompare(String(x.updated || '')); }).slice(0, 4);
+            document.getElementById('disc-list').innerHTML = recent.map(function (a, i) {
+                return '<div class="disc" data-i="' + apps.indexOf(a) + '"><div class="rank">' + (i + 1) + '</div><div class="icon">' + esc(a.icon || '📱') + '</div>' +
+                    '<div style="min-width:0"><div class="name">' + esc(a.name) + '</div><div class="desc">' + esc(a.desc) + '</div></div>' +
+                    '<div class="go">查看介绍与下载 →</div></div>';
+            }).join('');
+            dw.hidden = false;
+        } else dw.hidden = true;
+    }
+    function render() {
+        renderHome();
         var list = apps.filter(function (a) {
             var text = (a.name + ' ' + a.desc + ' ' + ((a.tags || []).join(' '))).toLowerCase();
             return (platform === 'all' || a.platform === platform) && (!query || text.indexOf(query) >= 0);
@@ -264,7 +357,7 @@
     });
     document.querySelector('.tab[data-p="all"]').classList.add('active');
     fetch('store-apps.json', { cache: 'no-cache' }).then(function (r) { return r.json(); }).then(function (d) {
-        apps = d.apps || []; renderCounts(); render();
+        apps = d.apps || []; renderCounts(); renderStats(); render();
     }).catch(function () {
         grid.innerHTML = '<div class="empty"><div class="big">⚠️</div>应用列表加载失败，请刷新重试。</div>';
     });
