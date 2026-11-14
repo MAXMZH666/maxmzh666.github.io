@@ -258,11 +258,9 @@
         featWrap.hidden = false;
     }
     function renderStats() {
-        var cats = {};
-        apps.forEach(function (a) { cats[a.platform] = 1; });
         var latest = apps.map(function (a) { return a.updated || ''; }).sort().pop() || '';
         document.getElementById('st-total').textContent = apps.length;
-        document.getElementById('st-cats').textContent = Object.keys(cats).length;
+        document.getElementById('st-cats').textContent = Object.keys(NAMES).length;
         document.getElementById('st-updated').textContent = latest || '—';
     }
     function renderHome() {
