@@ -3,6 +3,10 @@
 # 给 nginx 加 /store-api/ 反代（幂等插入，失败回滚）、重启自检。
 set -e
 SRC_DIR="$(cd "$(dirname "$0")" && pwd)"
+# scp -r 到已存在的目录会多套一层 mmc-api/，自动下钻到真正含 server.py 的那层
+if [ ! -f "$SRC_DIR/server.py" ] && [ -f "$SRC_DIR/mmc-api/server.py" ]; then
+    SRC_DIR="$SRC_DIR/mmc-api"
+fi
 
 # 1) 服务代码与重启
 sudo cp "$SRC_DIR/server.py" /opt/mmc-api/server.py
