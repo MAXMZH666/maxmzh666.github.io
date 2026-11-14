@@ -41,10 +41,18 @@
         st.id = 'growth-css'; st.textContent = CSS;
         document.head.appendChild(st);
     }
-    /* 发经验：ref 非空时按 (user_id, ref) 防重复；读-改-写 profiles.exp 后记 exp_log */
+    /* 发经验：给自己优先单次 RPC（服务端防重复+记账）；给他人或 RPC 不可用时回退客户端流程 */
     async function awardExp(sb, uid, delta, reason, ref) {
         try {
             if (!sb || !uid || !delta) return false;
+            var sess = await sb.auth.getSession();
+            var myId = sess && sess.data && sess.data.session && sess.data.session.user && sess.data.session.user.id;
+            if (myId && myId === uid) {
+                var rr = await sb.rpc('award_exp', { p_delta: delta, p_reason: reason || '经验变动', p_ref: ref || null });
+                if (!rr.error) return true;
+            }
+        } catch (e) {}
+        try {
             if (ref) {
                 var q = await sb.from('exp_log').select('id').eq('user_id', uid).eq('ref', ref).limit(1);
                 if (q.data && q.data.length) return false;
@@ -97,6 +105,10 @@
     }
     async function addPoints(sb, uid, amount) {
         try {
+            var rr = await sb.rpc('add_points', { p_delta: amount });
+            if (!rr.error) return true;
+        } catch (e) {}
+        try {
             var pr = await sb.from('profiles').select('points').eq('id', uid).single();
             var cur = (pr.data && pr.data.points) || 0;
             var r = await sb.from('profiles').update({ points: cur + amount }).eq('id', uid);
@@ -105,13 +117,38 @@
     }
     async function checkinState(sb, uid) {
         var todayStr = fmtDay(new Date());
-        var cr = await sb.from('checkins').select('check_date').eq('user_id', uid).eq('check_date', todayStr).limit(1);
-        var checked = !!(cr.data && cr.data.length);
-        var streak = await calcStreak(sb, uid);
+        var r = await sb.from('checkins').select('check_date').eq('user_id', uid)
+            .order('check_date', { ascending: false }).limit(40);
+        var dates = (r.data || []).map(function (x) { return x.check_date; });
+        var checked = dates.indexOf(todayStr) >= 0;
+        var streak = 0;
+        if (dates.length) {
+            var today = new Date();
+            var startOk = dates[0] === todayStr || dates[0] === fmtDay(new Date(today.getTime() - 86400000));
+            if (startOk) {
+                var cursor = dates[0] === todayStr ? today : new Date(today.getTime() - 86400000);
+                for (var i = 0; i < dates.length; i++) {
+                    if (dates[i] === fmtDay(cursor)) { streak++; cursor = new Date(cursor.getTime() - 86400000); }
+                    else break;
+                }
+            }
+        }
         return { checked: checked, streak: streak, todayStr: todayStr };
     }
-    /* 执行签到：插入记录（主键防重复）→ 发积分（含里程碑）→ 发经验 +5 */
+    /* 执行签到：优先单次 RPC（签到+积分+经验一次完成），回退客户端流程 */
     async function doCheckin(sb, me) {
+        try {
+            var rr = await sb.rpc('do_checkin');
+            if (!rr.error && rr.data) {
+                var d = rr.data;
+                if (d.already) return { streak: d.streak || 0, msg: '今日已签到', already: true };
+                var rmsg = '签到成功 +5 积分 +5 经验';
+                if (d.streak === 7) rmsg += '，连续 7 天额外 +10 积分！';
+                else if (d.streak === 30) rmsg += '，连续 30 天额外 +30 积分！';
+                else if (d.streak > 1) rmsg += '，已连续 ' + d.streak + ' 天';
+                return { streak: d.streak || 1, msg: rmsg };
+            }
+        } catch (e) {}
         var todayStr = fmtDay(new Date());
         var ir = await sb.from('checkins').insert({ user_id: me.id, check_date: todayStr, points_awarded: 5 });
         if (ir.error) throw ir.error;

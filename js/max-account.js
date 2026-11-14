@@ -30,7 +30,7 @@
             }
             if (window.supabase) return make();
             var s = document.createElement('script');
-            s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+            s.src = '/js/supabase.min.js?v=20261114a';
             s.onload = make;
             s.onerror = reject;
             document.head.appendChild(s);

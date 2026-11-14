@@ -173,9 +173,8 @@
     </footer>
 
     <script src="js/scripts.min.js?v=20261113a"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/community.min.js?v=20261114a"></script>
-    <script src="js/growth.js?v=20261114a"></script>
+    <script src="js/supabase.min.js?v=20261114a"></script>
+    <script src="js/community.bundle.js?v=20261114b"></script>
     <div class="modal-backdrop" id="buy-modal" style="display:none">
         <div class="modal"><h3>确认购买</h3>
             <p class="form-hint" id="buy-modal-name"></p>
@@ -351,7 +350,11 @@
         return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
     }
     async function addPoints(uid, amount) {
-        /* 读-改-写加积分 */
+        /* 优先单次 RPC 原子加分，回退读-改-写 */
+        try {
+            var rr = await sb.rpc('add_points', { p_delta: amount });
+            if (!rr.error) return true;
+        } catch (e) {}
         try {
             var pr = await sb.from('profiles').select('points').eq('id', uid).single();
             var cur = (pr.data && pr.data.points) || 0;
