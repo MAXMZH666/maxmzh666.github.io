@@ -439,7 +439,14 @@ _store_last_comment = {}
 
 def _store_conn():
     conn = sqlite3.connect(_STORE_DB, timeout=5)
-    conn.execute("CREATE TABLE IF NOT EXISTS comments (id INTEGER PRIMARY KEY AUTOINCREMENT, app TEXT, uid TEXT, username TEXT, content TEXT, created_at TEXT, hidden INTEGER DEFAULT 0)")
+    conn.execute("CREATE TABLE IF NOT EXISTS comments (id INTEGER PRIMARY KEY AUTOINCREMENT, app TEXT, uid TEXT, username TEXT, content TEXT, created_at TEXT, hidden INTEGER DEFAULT 0, parent INTEGER DEFAULT 0)")
+    try:
+        cols = [r[1] for r in conn.execute("PRAGMA table_info(comments)").fetchall()]
+        if cols and "parent" not in cols:
+            conn.execute("ALTER TABLE comments ADD COLUMN parent INTEGER DEFAULT 0")
+            conn.commit()
+    except Exception:
+        pass
     conn.execute("CREATE TABLE IF NOT EXISTS ratings (app TEXT, uid TEXT, score INTEGER, updated_at TEXT, PRIMARY KEY (app, uid))")
     conn.execute("CREATE TABLE IF NOT EXISTS submissions (id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT, username TEXT, name TEXT, url TEXT, category TEXT, desc TEXT, contact TEXT, status TEXT DEFAULT 'pending', created_at TEXT)")
     conn.execute("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT)")
@@ -489,11 +496,15 @@ def _rating_agg(conn, app, uid=None):
     row = conn.execute("SELECT AVG(score), COUNT(*) FROM ratings WHERE app = ?", (app,)).fetchone()
     avg = round(row[0], 1) if row and row[0] is not None else 0
     cnt = row[1] if row else 0
+    dist = [0, 0, 0, 0, 0]
+    for sc, n in conn.execute("SELECT score, COUNT(*) FROM ratings WHERE app = ? GROUP BY score", (app,)).fetchall():
+        if 1 <= sc <= 5:
+            dist[5 - sc] = n
     mine = None
     if uid:
         r2 = conn.execute("SELECT score FROM ratings WHERE app = ? AND uid = ?", (app, uid)).fetchone()
         mine = r2[0] if r2 else None
-    return {"avg": avg, "count": cnt, "mine": mine}
+    return {"avg": avg, "count": cnt, "mine": mine, "dist": dist}
 
 
 def store_get(fullpath, headers):
@@ -526,12 +537,14 @@ def store_get(fullpath, headers):
             conn = _store_conn()
             try:
                 rows = conn.execute(
-                    "SELECT id, username, content, created_at, uid FROM comments "
-                    "WHERE app = ? AND hidden = 0 ORDER BY id DESC LIMIT ?", (app, limit)).fetchall()
+                    "SELECT c.id, c.username, c.content, c.created_at, c.uid, c.parent, "
+                    "(SELECT p.username FROM comments p WHERE p.id = c.parent) FROM comments c "
+                    "WHERE c.app = ? AND c.hidden = 0 ORDER BY c.id DESC LIMIT ?", (app, limit)).fetchall()
             finally:
                 conn.close()
         out = [{"id": r[0], "username": r[1], "content": r[2], "created_at": r[3],
-                "mine": bool(me and r[4] == me["uid"])} for r in rows]
+                "mine": bool(me and r[4] == me["uid"]), "parent": r[5] or 0,
+                "puser": r[6] or ""} for r in rows]
         return 200, {"comments": out}
     if path == "/store/rating":
         if not app:
@@ -569,6 +582,16 @@ def store_get(fullpath, headers):
                 conn.close()
         out = [{"id": r[0], "app": r[1], "content": r[2], "created_at": r[3]} for r in rows]
         return 200, {"comments": out}
+    if path == "/store/top-rated":
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                rows = conn.execute(
+                    "SELECT app, AVG(score), COUNT(*) FROM ratings GROUP BY app "
+                    "HAVING COUNT(*) >= 1 ORDER BY AVG(score) DESC, COUNT(*) DESC LIMIT 10").fetchall()
+            finally:
+                conn.close()
+        return 200, {"top": [{"app": r[0], "avg": round(r[1], 1), "count": r[2]} for r in rows]}
     if path == "/store/submissions":
         me = _auth_user(headers)
         if not me or not me["is_admin"]:
@@ -600,8 +623,20 @@ def store_post(path, b, headers, ip):
         known = _known_apps()
         if known is not None and app not in known:
             return 400, {"error": "应用不存在"}
+        try:
+            parent = int(b.get("parent") or 0)
+        except Exception:
+            parent = 0
         now = datetime.now(timezone.utc)
         with _store_lock:
+            if parent > 0:
+                conn0 = _store_conn()
+                try:
+                    prow = conn0.execute("SELECT app FROM comments WHERE id = ? AND hidden = 0", (parent,)).fetchone()
+                finally:
+                    conn0.close()
+                if not prow or prow[0] != app:
+                    return 400, {"error": "回复的评论不存在"}
             last = _store_last_comment.get(me["uid"], 0)
             if now.timestamp() - last < 5:
                 return 429, {"error": "发太快了，歇 5 秒再发"}
@@ -609,8 +644,8 @@ def store_post(path, b, headers, ip):
             conn = _store_conn()
             try:
                 cur = conn.execute(
-                    "INSERT INTO comments (app, uid, username, content, created_at) VALUES (?, ?, ?, ?, ?)",
-                    (app, me["uid"], me["username"], content, now.isoformat()))
+                    "INSERT INTO comments (app, uid, username, content, created_at, parent) VALUES (?, ?, ?, ?, ?, ?)",
+                    (app, me["uid"], me["username"], content, now.isoformat(), parent))
                 conn.commit()
                 cid = cur.lastrowid
             finally:
