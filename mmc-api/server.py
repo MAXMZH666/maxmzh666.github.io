@@ -32,10 +32,17 @@ class H(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
-        if self.path == "/health":
+        path = self.path.split("?", 1)[0]
+        if path == "/health":
             self._json(200, {"ok": True, "db": db_up()})
-        elif self.path == "/":
+        elif path == "/":
             self._json(200, {"service": "mmc-api", "status": "foundation", "ws": WS_PORT})
+        elif path.startswith("/store/"):
+            try:
+                code, obj = store_get(self.path, self.headers)
+            except Exception as e:
+                code, obj = 500, {"error": str(e)}
+            self._json(code, obj)
         else:
             self._json(404, {"error": "not found"})
 
@@ -63,6 +70,13 @@ class H(BaseHTTPRequestHandler):
         try:
             if path == "/img/upload":
                 code, obj = img_upload(self.headers, raw)
+            elif path.startswith("/store/"):
+                try:
+                    body = json.loads(raw or b"{}")
+                except Exception:
+                    self._json(400, {"error": "bad json"})
+                    return
+                code, obj = store_post(path, body, self.headers, ip)
             elif path in ("/auth/send-code", "/auth/verify-register", "/stats/hit"):
                 try:
                     body = json.loads(raw or b"{}")
@@ -406,6 +420,295 @@ async def _ws_main():
     async with websockets.serve(_ws_handler, "127.0.0.1", WS_PORT):
         print(f"mmc-api ws listening on 127.0.0.1:{WS_PORT}", flush=True)
         await asyncio.Future()
+# ---------------- 应用商店后台（/store/*，自托管 SQLite，MAX 账号鉴权） ----------------
+import urllib.parse
+
+_STORE_DB = os.environ.get("MMC_STORE_DB", "/opt/mmc-api/store.db")
+_store_lock = threading.Lock()
+_STORE_DEFAULT_ANNOUNCE = "欢迎来到 MAX 应用商店安卓版！评论和评分功能已经开放，登录 MAX 账号就能给应用打分、留言。"
+_store_last_comment = {}
+
+
+def _store_conn():
+    conn = sqlite3.connect(_STORE_DB, timeout=5)
+    conn.execute("CREATE TABLE IF NOT EXISTS comments (id INTEGER PRIMARY KEY AUTOINCREMENT, app TEXT, uid TEXT, username TEXT, content TEXT, created_at TEXT, hidden INTEGER DEFAULT 0)")
+    conn.execute("CREATE TABLE IF NOT EXISTS ratings (app TEXT, uid TEXT, score INTEGER, updated_at TEXT, PRIMARY KEY (app, uid))")
+    conn.execute("CREATE TABLE IF NOT EXISTS submissions (id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT, username TEXT, name TEXT, url TEXT, category TEXT, desc TEXT, contact TEXT, status TEXT DEFAULT 'pending', created_at TEXT)")
+    conn.execute("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT)")
+    return conn
+
+
+def _profile_of(uid):
+    try:
+        st, rows = _http("GET", SB_URL + "/rest/v1/profiles?id=eq." + uid + "&select=username,is_admin", _svc_headers())
+    except Exception:
+        return "", False
+    if st == 200 and rows:
+        return rows[0].get("username") or "", bool(rows[0].get("is_admin"))
+    return "", False
+
+
+def _auth_user(headers):
+    auth = headers.get("Authorization") or ""
+    token = auth[7:] if auth.startswith("Bearer ") else ""
+    if not token:
+        return None
+    uid = _validate_token(token)
+    if not uid:
+        return None
+    name, admin = _profile_of(uid)
+    return {"uid": uid, "username": name, "is_admin": admin}
+
+
+def _known_apps():
+    try:
+        with open("/var/www/maxmzh/store-apps.json") as f:
+            d = json.load(f)
+        names = [a.get("name", "") for a in d.get("apps", [])] + [a.get("name", "") for a in d.get("third", [])]
+        return set(n for n in names if n)
+    except Exception:
+        return None
+
+
+def _clean(s, maxlen):
+    s = str(s or "").strip()
+    s = re.sub(r"[<>\x00-\x08\x0b\x0c\x0e-\x1f]", "", s)
+    return s[:maxlen]
+
+
+def _rating_agg(conn, app, uid=None):
+    row = conn.execute("SELECT AVG(score), COUNT(*) FROM ratings WHERE app = ?", (app,)).fetchone()
+    avg = round(row[0], 1) if row and row[0] is not None else 0
+    cnt = row[1] if row else 0
+    mine = None
+    if uid:
+        r2 = conn.execute("SELECT score FROM ratings WHERE app = ? AND uid = ?", (app, uid)).fetchone()
+        mine = r2[0] if r2 else None
+    return {"avg": avg, "count": cnt, "mine": mine}
+
+
+def store_get(fullpath, headers):
+    u = urllib.parse.urlparse(fullpath)
+    path = u.path
+    q = urllib.parse.parse_qs(u.query)
+    app = _clean((q.get("app") or [""])[0], 60)
+    if path == "/store/announcement":
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                row = conn.execute("SELECT value FROM meta WHERE key = 'announcement'").fetchone()
+            finally:
+                conn.close()
+        return 200, {"text": row[0] if row else _STORE_DEFAULT_ANNOUNCE}
+    if path == "/store/me":
+        me = _auth_user(headers)
+        if not me:
+            return 401, {"error": "请先登录 MAX 账号"}
+        return 200, me
+    if path == "/store/comments":
+        if not app:
+            return 400, {"error": "缺少 app 参数"}
+        try:
+            limit = max(1, min(100, int((q.get("limit") or ["50"])[0])))
+        except Exception:
+            limit = 50
+        me = _auth_user(headers)
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                rows = conn.execute(
+                    "SELECT id, username, content, created_at, uid FROM comments "
+                    "WHERE app = ? AND hidden = 0 ORDER BY id DESC LIMIT ?", (app, limit)).fetchall()
+            finally:
+                conn.close()
+        out = [{"id": r[0], "username": r[1], "content": r[2], "created_at": r[3],
+                "mine": bool(me and r[4] == me["uid"])} for r in rows]
+        return 200, {"comments": out}
+    if path == "/store/rating":
+        if not app:
+            return 400, {"error": "缺少 app 参数"}
+        me = _auth_user(headers)
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                agg = _rating_agg(conn, app, me["uid"] if me else None)
+            finally:
+                conn.close()
+        return 200, agg
+    if path == "/store/submissions":
+        me = _auth_user(headers)
+        if not me or not me["is_admin"]:
+            return 403, {"error": "需要管理员账号"}
+        status = _clean((q.get("status") or ["pending"])[0], 20) or "pending"
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                rows = conn.execute(
+                    "SELECT id, username, name, url, category, desc, contact, status, created_at "
+                    "FROM submissions WHERE status = ? ORDER BY id DESC LIMIT 100", (status,)).fetchall()
+            finally:
+                conn.close()
+        out = [{"id": r[0], "username": r[1], "name": r[2], "url": r[3], "category": r[4],
+                "desc": r[5], "contact": r[6], "status": r[7], "created_at": r[8]} for r in rows]
+        return 200, {"submissions": out}
+    return 404, {"error": "not found"}
+
+
+def store_post(path, b, headers, ip):
+    if path == "/store/comment":
+        me = _auth_user(headers)
+        if not me:
+            return 401, {"error": "请先登录 MAX 账号"}
+        app = _clean(b.get("app"), 60)
+        content = _clean(b.get("content"), 300)
+        if not app or not content:
+            return 400, {"error": "评论不能为空"}
+        known = _known_apps()
+        if known is not None and app not in known:
+            return 400, {"error": "应用不存在"}
+        now = datetime.now(timezone.utc)
+        with _store_lock:
+            last = _store_last_comment.get(me["uid"], 0)
+            if now.timestamp() - last < 5:
+                return 429, {"error": "发太快了，歇 5 秒再发"}
+            _store_last_comment[me["uid"]] = now.timestamp()
+            conn = _store_conn()
+            try:
+                cur = conn.execute(
+                    "INSERT INTO comments (app, uid, username, content, created_at) VALUES (?, ?, ?, ?, ?)",
+                    (app, me["uid"], me["username"], content, now.isoformat()))
+                conn.commit()
+                cid = cur.lastrowid
+            finally:
+                conn.close()
+        return 200, {"id": cid, "username": me["username"], "content": content,
+                     "created_at": now.isoformat(), "mine": True}
+    if path == "/store/rate":
+        me = _auth_user(headers)
+        if not me:
+            return 401, {"error": "请先登录 MAX 账号"}
+        app = _clean(b.get("app"), 60)
+        try:
+            score = int(b.get("score"))
+        except Exception:
+            return 400, {"error": "评分不合法"}
+        if not app or score < 0 or score > 5:
+            return 400, {"error": "评分不合法"}
+        known = _known_apps()
+        if known is not None and app not in known:
+            return 400, {"error": "应用不存在"}
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                if score == 0:
+                    conn.execute("DELETE FROM ratings WHERE app = ? AND uid = ?", (app, me["uid"]))
+                else:
+                    conn.execute(
+                        "INSERT INTO ratings (app, uid, score, updated_at) VALUES (?, ?, ?, ?) "
+                        "ON CONFLICT(app, uid) DO UPDATE SET score = excluded.score, updated_at = excluded.updated_at",
+                        (app, me["uid"], score, datetime.now(timezone.utc).isoformat()))
+                conn.commit()
+                agg = _rating_agg(conn, app, me["uid"])
+            finally:
+                conn.close()
+        return 200, agg
+    if path == "/store/comment/delete":
+        me = _auth_user(headers)
+        if not me:
+            return 401, {"error": "请先登录 MAX 账号"}
+        try:
+            cid = int(b.get("id"))
+        except Exception:
+            return 400, {"error": "缺少评论 id"}
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                row = conn.execute("SELECT uid FROM comments WHERE id = ?", (cid,)).fetchone()
+                if not row:
+                    return 404, {"error": "评论不存在"}
+                if row[0] != me["uid"] and not me["is_admin"]:
+                    return 403, {"error": "只能删自己的评论"}
+                conn.execute("UPDATE comments SET hidden = 1 WHERE id = ?", (cid,))
+                conn.commit()
+            finally:
+                conn.close()
+        return 200, {"ok": True}
+    if path == "/store/submit":
+        me = _auth_user(headers)
+        if not me:
+            return 401, {"error": "请先登录 MAX 账号"}
+        name = _clean(b.get("name"), 60)
+        url = _clean(b.get("url"), 300)
+        category = _clean(b.get("category"), 20)
+        desc = _clean(b.get("desc"), 500)
+        contact = _clean(b.get("contact"), 100)
+        if not name or not desc or not (url.startswith("http://") or url.startswith("https://")):
+            return 400, {"error": "名称、链接（http 开头）、介绍都要填"}
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                cur = conn.execute(
+                    "INSERT INTO submissions (uid, username, name, url, category, desc, contact, created_at) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    (me["uid"], me["username"], name, url, category, desc, contact,
+                     datetime.now(timezone.utc).isoformat()))
+                conn.commit()
+                sid = cur.lastrowid
+            finally:
+                conn.close()
+        return 200, {"id": sid, "status": "pending"}
+    if path == "/store/submission/review":
+        me = _auth_user(headers)
+        if not me or not me["is_admin"]:
+            return 403, {"error": "需要管理员账号"}
+        try:
+            sid = int(b.get("id"))
+        except Exception:
+            return 400, {"error": "缺少投稿 id"}
+        status = _clean(b.get("status"), 20)
+        if status not in ("approved", "rejected", "pending"):
+            return 400, {"error": "状态不合法"}
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                conn.execute("UPDATE submissions SET status = ? WHERE id = ?", (status, sid))
+                conn.commit()
+            finally:
+                conn.close()
+        return 200, {"ok": True, "status": status}
+    if path == "/store/submission/delete":
+        me = _auth_user(headers)
+        if not me or not me["is_admin"]:
+            return 403, {"error": "需要管理员账号"}
+        try:
+            sid = int(b.get("id"))
+        except Exception:
+            return 400, {"error": "缺少投稿 id"}
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                conn.execute("DELETE FROM submissions WHERE id = ?", (sid,))
+                conn.commit()
+            finally:
+                conn.close()
+        return 200, {"ok": True}
+    if path == "/store/announce":
+        me = _auth_user(headers)
+        if not me or not me["is_admin"]:
+            return 403, {"error": "需要管理员账号"}
+        text = _clean(b.get("text"), 300)
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                conn.execute(
+                    "INSERT INTO meta (key, value) VALUES ('announcement', ?) "
+                    "ON CONFLICT(key) DO UPDATE SET value = excluded.value", (text,))
+                conn.commit()
+            finally:
+                conn.close()
+        return 200, {"ok": True, "text": text}
+    return 404, {"error": "not found"}
+
 
 if __name__ == "__main__":
     import threading
