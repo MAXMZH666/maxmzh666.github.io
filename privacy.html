@@ -25,7 +25,7 @@
     footer a { color: var(--muted); }
     a { color: #7ea2ff; }
 </style>
-<script>try { document.documentElement.dataset.theme = localStorage.getItem('maxstore_theme') || 'dark'; } catch (e) { document.documentElement.dataset.theme = 'dark'; }</script>
+<script>(function(){try{var t=localStorage.getItem('maxstore_theme')||'auto';if(t==='auto'){t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme='dark';}})();</script>
 </head>
 <body>
 <div class="wrap">
@@ -81,11 +81,17 @@
 </div>
 <script src="https://maxmzh.com/js/max-account.js?v=20261114b"></script>
 <script>
-document.getElementById('theme-toggle').addEventListener('click', function () {
-    var next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
-    document.documentElement.dataset.theme = next;
-    try { localStorage.setItem('maxstore_theme', next); } catch (e) {}
-});
+(function () {
+    var MODES = ['auto', 'light', 'dark'];
+    function resolve(m) { return m === 'auto' ? (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : m; }
+    document.getElementById('theme-toggle').addEventListener('click', function () {
+        var cur = 'auto';
+        try { cur = localStorage.getItem('maxstore_theme') || 'auto'; } catch (e) {}
+        var next = MODES[(MODES.indexOf(cur) + 1) % MODES.length];
+        try { localStorage.setItem('maxstore_theme', next); } catch (e) {}
+        document.documentElement.dataset.theme = resolve(next);
+    });
+})();
 </script>
 </body>
 </html>

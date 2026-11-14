@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>应用详情 · MAX 应用商店</title>
+<meta name="description" content="MAX 应用商店应用详情：介绍、截图、版本信息、扫码打开与相关应用。">
+<style>
+    * { box-sizing: border-box; }
+    :root { --bg: #0d1120; --card: #151a2e; --panel: #171d33; --text: #e8ecf8; --sub: #c6cdea; --muted: #9aa5c7; --faint: #5f6a8c; --border: rgba(255,255,255,.15); --border-soft: rgba(255,255,255,.09); --soft-bg: rgba(255,255,255,.04); --soon-bg: #232946; }
+    :root[data-theme="light"] { --bg: #f2f4fb; --card: #ffffff; --panel: #ffffff; --text: #1d2436; --sub: #3d4763; --muted: #66718c; --faint: #98a1b8; --border: rgba(23,32,68,.16); --border-soft: rgba(23,32,68,.1); --soft-bg: rgba(23,32,68,.04); --soon-bg: #e6e9f4; }
+    :root[data-theme="light"] .badge { background: rgba(109,92,255,.14); color: #5a48c9; }
+    body { margin: 0; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 22px 18px 60px; }
+    header.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .back { color: var(--sub); text-decoration: none; font-size: 14.5px; border: 1px solid var(--border-soft); background: var(--card); padding: 8px 14px; border-radius: 999px; }
+    #theme-toggle { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 17px; cursor: pointer; }
+    .hero { display: flex; gap: 18px; align-items: flex-start; margin-top: 26px; flex-wrap: wrap; }
+    .hero .icon { font-size: 52px; background: var(--soft-bg); border-radius: 18px; width: 96px; height: 96px; display: flex; align-items: center; justify-content: center; flex: none; }
+    .hero h1 { font-size: 26px; margin: 2px 0 8px; }
+    .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: rgba(109,92,255,.18); color: #b9aefc; margin-right: 6px; }
+    .badge.feat-badge { background: rgba(255,190,60,.18); color: #ffd479; }
+    :root[data-theme="light"] .badge.feat-badge { background: rgba(255,170,0,.16); color: #9a6a00; }
+    .badge.third-badge { background: rgba(60,200,140,.16); color: #7fe0b2; }
+    .hero .sub { color: var(--muted); font-size: 13.5px; margin-top: 6px; }
+    .btn { display: inline-block; background: linear-gradient(135deg, #4d7cfe, #6d5cff); color: #fff; text-decoration: none; padding: 12px 30px; border-radius: 12px; font-size: 15.5px; margin-top: 14px; }
+    .btn.soon { background: var(--soon-bg); color: var(--muted); pointer-events: none; }
+    .card { background: var(--card); border: 1px solid var(--border-soft); border-radius: 16px; padding: 20px 22px; margin-top: 18px; }
+    .card h2 { margin: 0 0 12px; font-size: 17px; }
+    .shot { width: 100%; border-radius: 12px; border: 1px solid var(--border-soft); display: block; }
+    .meta-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .meta-table td { padding: 8px 6px; border-top: 1px solid var(--border-soft); color: var(--muted); }
+    .meta-table td:first-child { color: var(--sub); width: 96px; }
+    .meta-table tr:first-child td { border-top: none; }
+    .desc { color: var(--sub); line-height: 1.9; font-size: 14.5px; white-space: pre-line; }
+    .tag { display: inline-block; font-size: 12px; color: var(--muted); border: 1px solid var(--border); padding: 3px 10px; border-radius: 999px; margin: 0 6px 6px 0; }
+    .tip { border: 1px solid rgba(255,190,60,.35); background: rgba(255,170,0,.07); border-radius: 12px; padding: 12px 14px; color: var(--sub); font-size: 13.5px; line-height: 1.8; margin-top: 14px; }
+    .qr { display: flex; gap: 14px; align-items: center; }
+    .qr img { border-radius: 8px; background: #fff; flex: none; }
+    .qr p { color: var(--muted); font-size: 13.5px; line-height: 1.7; margin: 0; }
+    .rel { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--border-soft); text-decoration: none; color: inherit; }
+    .rel:first-of-type { border-top: none; }
+    .rel .ic { font-size: 26px; background: var(--soft-bg); border-radius: 10px; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; flex: none; }
+    .rel .nm { font-weight: 700; font-size: 15px; }
+    .rel .ds { color: var(--muted); font-size: 12.5px; }
+    .empty { text-align: center; color: var(--muted); padding: 60px 0; line-height: 2; }
+    .empty .big { font-size: 44px; }
+    footer { text-align: center; color: var(--faint); font-size: 13px; padding: 30px 0 6px; line-height: 2; }
+    footer a { color: var(--muted); }
+    a { color: #7ea2ff; }
+</style>
+<script>(function(){try{var t=localStorage.getItem('maxstore_theme')||'auto';if(t==='auto'){t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme='dark';}})();</script>
+</head>
+<body>
+<div class="wrap">
+    <header class="top">
+        <a class="back" href="https://store.maxmzh.com/">← MAX 应用商店</a>
+        <button id="theme-toggle" title="切换主题（自动/亮色/暗色）">🌗</button>
+    </header>
+    <main id="main"><div class="empty"><div class="big">⏳</div>正在加载应用信息…</div></main>
+    <footer>
+        © 2026 MAXMZH · MAX 应用商店，由 MAXMZH 开发与维护<br>
+        <a href="https://store.maxmzh.com/">商店首页</a> · <a href="https://forum.maxmzh.com/">MAX论坛</a> · <a href="https://maxmzh.com/">主站</a>
+    </footer>
+</div>
+<script src="https://maxmzh.com/js/max-account.js?v=20261114b"></script>
+<script>
+(function () {
+    var MODES = ['auto', 'light', 'dark'];
+    function resolve(m) { return m === 'auto' ? (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : m; }
+    document.getElementById('theme-toggle').addEventListener('click', function () {
+        var cur = 'auto';
+        try { cur = localStorage.getItem('maxstore_theme') || 'auto'; } catch (e) {}
+        var next = MODES[(MODES.indexOf(cur) + 1) % MODES.length];
+        try { localStorage.setItem('maxstore_theme', next); } catch (e) {}
+        document.documentElement.dataset.theme = resolve(next);
+    });
+})();
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+var NAMES = { windows: 'Windows', android: 'Android', wearable: '智能穿戴', web: '网页应用' };
+function qparam(name) { var m = new RegExp('[?&]' + name + '=([^&]*)').exec(location.search); return m ? decodeURIComponent(m[1]) : ''; }
+(function () {
+    var main = document.getElementById('main');
+    var raw = qparam('app');
+    var isThird = raw.charAt(0) === 't';
+    var idx = Number(isThird ? raw.slice(1) : raw);
+    fetch('store-apps.json').then(function (r) { return r.json(); }).then(function (d) {
+        var apps = d.apps || [], third = d.third || [];
+        var a = isThird ? third[idx] : apps[idx];
+        if (!a) { main.innerHTML = '<div class="empty"><div class="big">🔍</div>没找到这个应用，可能已经下架。<br><a href="https://store.maxmzh.com/">回商店首页看看 →</a></div>'; return; }
+        document.title = a.name + ' · MAX 应用商店';
+        var badges = '<span class="badge">' + esc(NAMES[a.platform] || a.platform) + '</span>' +
+            (a.featured ? '<span class="badge feat-badge">⭐ 精选</span>' : '') +
+            (isThird ? '<span class="badge third-badge">🤝 第三方</span>' : '');
+        var meta = [['分类', NAMES[a.platform] || a.platform]];
+        if (a.version) meta.push(['版本', a.version]);
+        if (a.size) meta.push(['大小', a.size]);
+        if (a.updated) meta.push(['更新时间', a.updated]);
+        if (isThird && a.author) meta.push(['提供方', a.author]);
+        if (!isThird) meta.push(['来源', 'MAX 官方出品']);
+        var metaHtml = meta.map(function (kv) { return '<tr><td>' + esc(kv[0]) + '</td><td>' + esc(kv[1]) + '</td></tr>'; }).join('');
+        var actionHtml = a.url
+            ? '<a class="btn" href="' + esc(a.url) + '" target="_blank" rel="noopener">' + esc(a.actionText || '打开应用') + '</a>'
+            : '<span class="btn soon">' + esc(a.actionText || '即将上架') + '</span>';
+        var tags = (a.tags || []).map(function (t) { return '<span class="tag">' + esc(t) + '</span>'; }).join('');
+        var html = '<div class="hero"><div class="icon">' + esc(a.icon || '📱') + '</div><div>' +
+            '<h1>' + esc(a.name) + '</h1><div>' + badges + '</div>' +
+            '<div class="sub">' + esc(isThird ? ('由 ' + (a.author || '第三方') + ' 提供') : 'MAXMZH 官方出品') + (a.updated ? ' · 更新于 ' + esc(a.updated) : '') + '</div>' +
+            actionHtml + '</div></div>';
+        if (a.shot) html += '<div class="card"><h2>应用截图</h2><img class="shot" src="' + esc(a.shot) + '" alt="' + esc(a.name) + ' 界面截图" loading="lazy"></div>';
+        html += '<div class="card"><h2>应用介绍</h2><div class="desc">' + esc(a.desc || '') + '</div>' + (tags ? '<div style="margin-top:12px">' + tags + '</div>' : '') +
+            (isThird ? '<div class="tip">🤝 <b>第三方分享：</b>本应用由「' + esc(a.author || '第三方') + '」提供，本站仅做收集分享，不提供下载文件，也不对内容与安全负责；点击按钮将前往对方官网。</div>' : '') +
+            (!isThird && a.platform === 'android' && a.action === 'download' ? '<div class="tip">📱 <b>安装提示：</b>下载后在文件管理里打开 APK 安装；若系统拦截，去设置给浏览器开启「允许安装未知应用」。更详细的步骤看<a href="https://store.maxmzh.com/tools.html">安装工具</a>页。</div>' : '') +
+            '</div>';
+        html += '<div class="card"><h2>应用信息</h2><table class="meta-table">' + metaHtml + '</table></div>';
+        if (a.url) html += '<div class="card"><h2>手机扫码打开</h2><div class="qr"><img id="qr-img" width="132" height="132" alt="应用二维码"><p>用手机相机扫一扫，<br>在手机上继续用这个应用。</p></div></div>';
+        var rel = [];
+        apps.forEach(function (b, i) { if (!isThird && i !== idx && b.platform === a.platform) rel.push({ a: b, href: 'app.html?app=' + i }); });
+        if (isThird) third.forEach(function (b, i) { if (i !== idx) rel.push({ a: b, href: 'app.html?app=t' + i }); });
+        rel = rel.slice(0, 3);
+        if (rel.length) {
+            html += '<div class="card"><h2>相关应用</h2>' + rel.map(function (r) {
+                return '<a class="rel" href="' + r.href + '"><div class="ic">' + esc(r.a.icon || '📱') + '</div><div><div class="nm">' + esc(r.a.name) + '</div><div class="ds">' + esc(NAMES[r.a.platform] || r.a.platform) + '</div></div></a>';
+            }).join('') + '</div>';
+        }
+        main.innerHTML = html;
+        if (a.url) {
+            var qi = document.getElementById('qr-img');
+            qi.onerror = function () { qi.closest('.card').style.display = 'none'; };
+            qi.src = 'https://api.qrserver.com/v1/create-qr-code/?size=132x132&margin=6&data=' + encodeURIComponent(a.url);
+        }
+    }).catch(function () {
+        main.innerHTML = '<div class="empty"><div class="big">⚠️</div>应用信息加载失败，请刷新重试。</div>';
+    });
+})();
+</script>
+</body>
+</html>
