@@ -75,6 +75,7 @@
     <script src="js/scripts.min.js?v=20261113a"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/community.min.js?v=20261114a"></script>
+    <script src="js/growth.js?v=20261114a"></script>
     <script>
     (async function () {
         await renderSubHeader();
@@ -91,7 +92,7 @@
         }
         if (!uid) { wrap.innerHTML = '<p class="works-note">用户不存在。<a href="community.html">返回社区</a></p>'; return; }
         try {
-            var pr = await sb.from('profiles').select('username,created_at,avatar_url,bio,background_url,invite_code').eq('id', uid).single();
+            var pr = await sb.from('profiles').select('username,created_at,avatar_url,bio,background_url,invite_code,exp').eq('id', uid).single();
             if (pr.error || !pr.data) throw new Error('用户不存在');
             var works = (await sb.from('works').select('id,title,cover_url,created_at,category,views,work_type')
                 .eq('author_id', uid).order('created_at', { ascending: false })).data || [];
@@ -270,7 +271,7 @@
                 '<div class="profile-bg-wrap" id="profile-head">' +
                 '<div class="profile-head-inner">' +
                 (pr.data.avatar_url ? '<img src="' + esc(pr.data.avatar_url) + '" alt="头像" id="u-avatar" class="profile-avatar" loading="lazy" decoding="async">' : '<span class="profile-avatar" style="display:flex;align-items:center;justify-content:center;font-size:2rem;background:var(--surface-2)" id="u-avatar">👤</span>') +
-                '<div style="flex:1;min-width:200px"><h1 class="section-title" style="margin:0"><span id="u-title"></span>' + esc(pr.data.username) + '<span id="u-badges"></span></h1>' +
+                '<div style="flex:1;min-width:200px"><h1 class="section-title" style="margin:0"><span id="u-title"></span>' + esc(pr.data.username) + '<span id="u-badges"></span></h1><div id="u-level" style="margin-top:8px"></div>' +
                 (pr.data.bio ? '<p class="section-sub" style="margin:4px 0 0">' + esc(pr.data.bio) + '</p>' : '') + '</div></div>' +
                 (isSelf ? '<p><a class="btn btn-blue" href="community-profile-edit.html">✏️ 编辑个人资料</a> <a class="btn btn-ghost" href="community-settings.html">⚙️ 个人设置</a></p></div>' : '</div>') +
                 '<div class="profile-stats">' +
@@ -419,6 +420,25 @@
                         return '<span title="' + esc(b.name) + '" style="font-size:.7em;vertical-align:middle">' + esc(b.item_data) + '</span>';
                     }).join('');
                 }
+                /* 等级与经验进度（经验记录仅本人可见，由数据库权限保证） */
+                try {
+                    if (window.Growth && pr.data) {
+                        Growth.ensureCss();
+                        var li = Growth.levelOf(pr.data.exp || 0);
+                        var le = document.getElementById('u-level');
+                        if (le) {
+                            le.innerHTML = Growth.badge(pr.data.exp || 0) +
+                                '<span style="font-size:.85rem;color:var(--muted);margin-left:8px">经验 ' + li.exp + (li.next ? ' / ' + li.next : '（已满级）') + '</span>' +
+                                '<div class="exp-progress" style="margin-top:6px;max-width:320px"><i style="width:' + li.pct + '%"></i></div>';
+                            var lr2 = await sb.from('exp_log').select('delta,reason,created_at').eq('user_id', uid).order('created_at', { ascending: false }).limit(8);
+                            if (lr2.data && lr2.data.length) {
+                                le.innerHTML += '<div style="margin-top:10px;font-size:.85rem"><b>经验记录</b>' + lr2.data.map(function (r) {
+                                    return '<div style="color:var(--muted)">' + esc(r.reason) + ' <span style="color:#4d7cfe">+' + r.delta + '</span> · ' + String(r.created_at).slice(0, 10) + '</div>';
+                                }).join('') + '</div>';
+                            }
+                        }
+                    }
+                } catch (e) {}
             } catch (e) {}
         } catch (e) {
             wrap.innerHTML = '<p class="works-note">' + esc(e.message) + '。<a href="community.html">返回社区</a></p>';

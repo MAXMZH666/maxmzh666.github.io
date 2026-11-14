@@ -107,6 +107,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/community.min.js?v=20261114a"></script>
+    <script src="js/growth.js?v=20261114a"></script>
     <script src="js/scripts.min.js?v=20261113a"></script>
     <script src="/js/max-account.js?v=20261114b"></script>
     <script>
@@ -195,6 +196,7 @@
                 try { localStorage.removeItem(draftKey); } catch (e) {}
                 try { await recordTaskProgress('post_thread', 1); } catch (e) {}
                 try { await sendMentions(title + '\n' + content, me.id, tr.data.id, 'thread'); } catch (e) {}
+                if (window.Growth) await Growth.awardExp(sb, me.id, 10, '发布主题', 'thread:' + tr.data.id);
                 location.href = 'forum-thread.html?id=' + tr.data.id;
             } catch (err) { msg.textContent = '发布失败：' + err.message; btn.disabled = false; }
         });

@@ -137,6 +137,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/community.min.js?v=20261114a"></script>
+    <script src="js/growth.js?v=20261114a"></script>
     <script src="js/redpacket.js"></script>
     <script src="js/scripts.min.js?v=20261113a"></script>
     <script src="/js/max-account.js?v=20261114b"></script>
@@ -206,14 +207,16 @@
         } catch (e) { wrap.innerHTML = '<p class="works-note">帖子不存在或加载失败。</p>'; return; }
         /* 回帖列表（含楼中楼回复）：头像/徽章、点赞、编辑、分批显示、只看楼主 */
         var replyToPost = null; /* {id, name} 正在回复的回帖 */
-        var postRaw = {}, likeCounts = {}, myLikes = {}, profMap = {};
+        var postRaw = {}, postAuthor = {}, decorMap = {}, likeCounts = {}, myLikes = {}, profMap = {};
         var allRoots = [], shownRoots = 20, onlyOp = false;
         function postAva(pid) {
             var p = profMap[pid] || {};
             var name = p.username || '未知';
+            var dec = decorMap[pid] || {};
+            var fc = dec.frame ? ' avatar-frame ' + dec.frame.item_data : '';
             return p.avatar_url
-                ? '<img class="p-ava" src="' + esc(p.avatar_url) + '" alt="" loading="lazy">'
-                : '<span class="p-ava p-ava-fallback">' + esc(name.slice(0, 1).toUpperCase()) + '</span>';
+                ? '<img class="p-ava' + fc + '" src="' + esc(p.avatar_url) + '" alt="" loading="lazy">'
+                : '<span class="p-ava p-ava-fallback' + fc + '">' + esc(name.slice(0, 1).toUpperCase()) + '</span>';
         }
         function renderPost(p, floor, depth) {
             var prof = profMap[p.author_id] || {};
@@ -224,11 +227,14 @@
             var badges = '';
             if (p.author_id === thread.author_id) badges += ' <span class="badge-op">楼主</span>';
             if (prof.is_admin) badges += ' <span class="badge-admin">管理员</span>';
+            var decP = decorMap[p.author_id] || {};
+            var titleHtml = decP.title ? '<span class="title-pill">' + esc(decP.title.item_data) + '</span>' : '';
+            var lvHtml = (window.Growth && prof.exp != null) ? Growth.badge(prof.exp) : '';
             var lc = likeCounts[p.id] || 0;
             var hh = '<div class="' + cls + '" id="post-' + p.id + '"><div class="post-head">' +
                 postAva(p.author_id) +
                 (depth === 0 ? '<a class="floor" href="#post-' + p.id + '">' + floor + '楼</a>' : '<span class="floor">↳ 回复</span>') +
-                '<a class="uname" href="https://maxmzh.com/community-user.html?username=' + encodeURIComponent(name) + '">' + esc(name) + '</a>' + badges +
+                titleHtml + '<a class="uname" href="https://maxmzh.com/community-user.html?username=' + encodeURIComponent(name) + '">' + esc(name) + '</a>' + badges + lvHtml +
                 '<span>' + fmtDate(p.created_at) + '</span>' +
                 (p.edited_at ? '<span>· 已编辑</span>' : '') + '</div>' +
                 '<div class="post-body">' + md(p.content) + '</div>' +
@@ -283,6 +289,7 @@
                             var ir = await sb.from('forum_post_likes').insert({ post_id: pid, user_id: me.id });
                             if (ir.error) throw ir.error;
                             myLikes[pid] = 1; likeCounts[pid] = (likeCounts[pid] || 0) + 1;
+                            if (window.Growth && postAuthor[pid] && postAuthor[pid] !== me.id) Growth.awardExp(sb, postAuthor[pid], 2, '回帖被点赞', 'like:' + pid + ':' + me.id);
                         }
                         renderPosts();
                     } catch (e) { alert('点赞失败：' + e.message); }
@@ -318,12 +325,13 @@
                 var pr = await sb.from('forum_posts').select('*').eq('thread_id', id).order('created_at');
                 if (pr.error) throw pr.error;
                 var posts = pr.data || [];
-                postRaw = {}; posts.forEach(function (p) { postRaw[p.id] = p.content; });
+                postRaw = {}; postAuthor = {}; posts.forEach(function (p) { postRaw[p.id] = p.content; postAuthor[p.id] = p.author_id; });
                 var aids = Array.from(new Set(posts.map(function (p) { return p.author_id; })));
                 if (aids.length) {
-                    var ur2 = await sb.from('profiles').select('id,username,avatar_url,is_admin').in('id', aids);
+                    var ur2 = await sb.from('profiles').select('id,username,avatar_url,is_admin,exp').in('id', aids);
                     (ur2.data || []).forEach(function (p) { profMap[p.id] = p; });
                 }
+                if (aids.length && window.Growth) { Growth.ensureCss(); decorMap = await Growth.decorOf(sb, aids); }
                 likeCounts = {}; myLikes = {};
                 if (posts.length) {
                     var lr = await sb.from('forum_post_likes').select('post_id,user_id').in('post_id', posts.map(function (p) { return p.id; }));
@@ -475,6 +483,7 @@
                     replyToPost = null;
                     msg.textContent = '';
                     try { await sendMentions(c, me.id, id, 'thread'); } catch (e) {}
+                    if (window.Growth) Growth.awardExp(sb, me.id, 3, '发表回帖', null);
                     shownRoots = 100000;
                     await loadPosts();
                 } catch (e) { msg.textContent = '发表失败：' + e.message; }

@@ -258,6 +258,7 @@
         @media (max-width: 760px) { .web-editor-grid { grid-template-columns: 1fr; } }
     </style>
     <script src="js/community.min.js?v=20261114a"></script>
+    <script src="js/growth.js?v=20261114a"></script>
     <script>
     function fmtMB(n) { return (n / 1048576).toFixed(1) + 'MB'; }
 
@@ -695,6 +696,7 @@
                     if (ins.error) throw ins.error;
                     /* 保存标签 */
                     await saveWorkTags(ins.data.id, parseTags(document.getElementById('f-tags').value));
+                    if (window.Growth) await Growth.awardExp(sb, me.id, 15, '发布作品', 'work:' + ins.data.id);
                     /* 从草稿发布的：删除草稿（文件已作为作品文件保留） */
                     if (window._preDraftId) {
                         try { await sb.from('drafts').delete().eq('id', window._preDraftId).eq('user_id', me.id); } catch (e) {}

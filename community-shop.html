@@ -175,6 +175,7 @@
     <script src="js/scripts.min.js?v=20261113a"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/community.min.js?v=20261114a"></script>
+    <script src="js/growth.js?v=20261114a"></script>
     <div class="modal-backdrop" id="buy-modal" style="display:none">
         <div class="modal"><h3>确认购买</h3>
             <p class="form-hint" id="buy-modal-name"></p>
@@ -409,13 +410,14 @@
                     /* 算签到后的连续天数（含今天） */
                     var newStreak = await calcStreak(me.id);
                     var bonus = 5;
-                    var msg = '签到成功 +5 积分';
+                    var msg = '签到成功 +5 积分 +5 经验';
                     /* 里程碑奖励：7天+10，30天+30 */
                     if (newStreak === 7) { bonus += 10; msg += '，连续7天额外 +10！'; }
                     else if (newStreak === 30) { bonus += 30; msg += '，连续30天额外 +30！'; }
                     else if (newStreak > 1) { msg += '，已连续 ' + newStreak + ' 天'; }
                     var ok = await addPoints(me.id, bonus);
                     if (!ok) throw new Error('积分更新失败');
+                    if (window.Growth) await Growth.awardExp(sb, me.id, 5, '每日签到', 'checkin:' + todayStr);
                     alert(msg);
                     /* 刷新显示 */
                     btn.textContent = '今日已签 ✓';
