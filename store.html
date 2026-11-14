@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="MAX应用商店：MAXMZH 官方应用分发，Windows、Android、智能穿戴三平台。">
+<meta name="description" content="MAX应用商店：MAXMZH 官方应用分发，Windows、Android、智能穿戴与网页应用。">
 <title>MAX应用商店 - MAXMZH</title>
 <link rel="icon" type="image/png" href="https://maxmzh.com/favicon.png">
 <style>
@@ -19,23 +19,59 @@
     .hero { margin: 30px 0 8px; }
     .hero h1 { font-size: 30px; margin: 0 0 8px; }
     .hero p { color: #9aa5c7; margin: 0; font-size: 14px; }
-    .tabs { display: flex; gap: 10px; margin: 24px 0 20px; flex-wrap: wrap; }
-    .tab { border: 1px solid rgba(255,255,255,.16); background: #151a2e; color: #c6cdea; border-radius: 999px; padding: 9px 20px; font-size: 15px; cursor: pointer; }
+    .sec-title { font-size: 19px; margin: 26px 0 14px; }
+    .feat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+    .feat { background: linear-gradient(135deg, rgba(77,124,254,.16), rgba(109,92,255,.10)); border: 1px solid rgba(109,92,255,.35); border-radius: 16px; padding: 20px; display: flex; gap: 16px; cursor: pointer; }
+    .feat .icon { font-size: 46px; width: 76px; height: 76px; display: flex; align-items: center; justify-content: center; background: rgba(77,124,254,.16); border-radius: 16px; flex: none; }
+    .feat .name { font-size: 18px; font-weight: 700; }
+    .feat .desc { color: #c6cdea; font-size: 13.5px; line-height: 1.6; margin: 6px 0 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .toolbar { display: flex; align-items: center; gap: 12px; margin: 24px 0 20px; flex-wrap: wrap; }
+    .tabs { display: flex; gap: 10px; flex-wrap: wrap; }
+    .tab { border: 1px solid rgba(255,255,255,.16); background: #151a2e; color: #c6cdea; border-radius: 999px; padding: 9px 18px; font-size: 15px; cursor: pointer; }
     .tab.active { background: linear-gradient(135deg,#4d7cfe,#6d5cff); color: #fff; border-color: transparent; font-weight: 600; }
+    .tab .cnt { display: inline-block; min-width: 20px; text-align: center; font-size: 11.5px; line-height: 18px; padding: 0 5px; border-radius: 999px; background: rgba(255,255,255,.14); color: #c6cdea; margin-left: 6px; vertical-align: 1px; }
+    .tab.active .cnt { background: rgba(255,255,255,.25); color: #fff; }
+    .sortbox { margin-left: auto; color: #9aa5c7; font-size: 13.5px; display: flex; align-items: center; gap: 8px; }
+    .sortbox select { background: #151a2e; border: 1px solid rgba(255,255,255,.16); color: #e8ecf8; border-radius: 10px; padding: 8px 10px; font-size: 13.5px; outline: none; }
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
-    .app { background: #151a2e; border: 1px solid rgba(255,255,255,.09); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+    .app { background: #151a2e; border: 1px solid rgba(255,255,255,.09); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 10px; cursor: pointer; transition: border-color .15s; }
+    .app:hover { border-color: rgba(77,124,254,.5); }
     .app .head { display: flex; align-items: center; gap: 14px; }
     .app .icon { font-size: 40px; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; background: rgba(77,124,254,.12); border-radius: 14px; flex: none; }
     .app .name { font-size: 17px; font-weight: 700; }
     .app .meta { color: #9aa5c7; font-size: 12px; margin-top: 3px; }
     .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: rgba(109,92,255,.18); color: #b9aefc; margin-right: 6px; }
-    .app .desc { color: #c6cdea; font-size: 13.5px; line-height: 1.6; flex: 1; }
-    .btn { display: inline-block; text-align: center; background: linear-gradient(135deg,#4d7cfe,#6d5cff); color: #fff; text-decoration: none; border-radius: 10px; padding: 10px 16px; font-size: 14px; font-weight: 600; }
+    .badge.feat-badge { background: rgba(255,190,60,.18); color: #ffd479; }
+    .app .desc { color: #c6cdea; font-size: 13.5px; line-height: 1.6; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+    .tagchip { font-size: 11px; padding: 2px 9px; border-radius: 999px; border: 1px solid rgba(255,255,255,.14); color: #9aa5c7; }
+    .btn { display: inline-block; text-align: center; background: linear-gradient(135deg,#4d7cfe,#6d5cff); color: #fff; text-decoration: none; border-radius: 10px; padding: 10px 16px; font-size: 14px; font-weight: 600; border: none; cursor: pointer; }
     .btn.soon { background: #232946; color: #9aa5c7; pointer-events: none; }
     .empty { grid-column: 1 / -1; text-align: center; color: #9aa5c7; padding: 56px 20px; border: 1.5px dashed rgba(255,255,255,.14); border-radius: 16px; }
     .empty .big { font-size: 40px; margin-bottom: 10px; }
     footer { margin-top: 44px; text-align: center; color: #5f6a8c; font-size: 12.5px; line-height: 1.9; }
     footer a { color: #8fa3d9; }
+    .modal-mask { position: fixed; inset: 0; background: rgba(5,8,18,.72); display: flex; align-items: center; justify-content: center; padding: 18px; z-index: 1000; }
+    .modal-mask[hidden] { display: none; }
+    .modal { background: #171d33; border: 1px solid rgba(255,255,255,.13); border-radius: 18px; max-width: 520px; width: 100%; max-height: 86vh; overflow-y: auto; padding: 26px; position: relative; }
+    .modal-x { position: absolute; top: 12px; right: 14px; background: none; border: none; color: #9aa5c7; font-size: 26px; cursor: pointer; line-height: 1; }
+    .m-head { display: flex; gap: 16px; align-items: center; margin-bottom: 14px; padding-right: 26px; }
+    .m-icon { font-size: 52px; width: 84px; height: 84px; display: flex; align-items: center; justify-content: center; background: rgba(77,124,254,.13); border-radius: 18px; flex: none; }
+    .m-name { font-size: 21px; font-weight: 800; }
+    .m-meta { color: #9aa5c7; font-size: 12.5px; margin-top: 5px; line-height: 1.7; }
+    .m-desc { color: #d5dbf2; font-size: 14.5px; line-height: 1.8; }
+    .m-tags { margin-top: 14px; }
+    .m-tip { margin-top: 16px; background: rgba(255,190,60,.09); border: 1px solid rgba(255,190,60,.25); color: #e8cf9a; border-radius: 12px; padding: 11px 14px; font-size: 13px; line-height: 1.7; }
+    .m-btn { display: block; margin-top: 20px; padding: 13px 16px; font-size: 15px; }
+    @media (max-width: 600px) {
+        .grid, .feat-grid { grid-template-columns: 1fr; }
+        .hero h1 { font-size: 24px; }
+        .search { margin-left: 0; flex: 1; }
+        .search input { width: 100%; }
+        .sortbox { margin-left: 0; }
+        .feat .icon { width: 60px; height: 60px; font-size: 36px; }
+        .modal { padding: 20px; }
+    }
 </style>
 </head>
 <body>
@@ -49,15 +85,29 @@
 
     <div class="hero">
         <h1>把好用的，都装进口袋</h1>
-        <p>这里是 MAX 系列应用的官方分发页，按你的设备选平台，直接下载最新版。</p>
+        <p>这里是 MAX 系列应用的官方分发页，按你的设备选平台，直接下载最新版；网页应用打开就能用。</p>
     </div>
 
-    <nav class="tabs" id="tabs">
-        <button class="tab" data-p="all">全部</button>
-        <button class="tab" data-p="windows">🪟 Windows</button>
-        <button class="tab" data-p="android">🤖 Android</button>
-        <button class="tab" data-p="wearable">⌚ 智能穿戴</button>
-    </nav>
+    <section id="feat-wrap" hidden>
+        <h2 class="sec-title">⭐ 编辑精选</h2>
+        <div class="feat-grid" id="feat-grid"></div>
+    </section>
+
+    <div class="toolbar">
+        <nav class="tabs" id="tabs">
+            <button class="tab" data-p="all">全部<span class="cnt"></span></button>
+            <button class="tab" data-p="windows">🪟 Windows<span class="cnt"></span></button>
+            <button class="tab" data-p="android">🤖 Android<span class="cnt"></span></button>
+            <button class="tab" data-p="wearable">⌚ 智能穿戴<span class="cnt"></span></button>
+            <button class="tab" data-p="web">🌐 网页应用<span class="cnt"></span></button>
+        </nav>
+        <label class="sortbox">排序
+            <select id="sort">
+                <option value="recommend">默认推荐</option>
+                <option value="newest">最新更新</option>
+            </select>
+        </label>
+    </div>
 
     <main class="grid" id="grid"><div class="empty"><div class="big">🛍️</div>正在上架…</div></main>
 
@@ -67,37 +117,139 @@
     </footer>
 </div>
 
+<div class="modal-mask" id="mask" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-name">
+        <button class="modal-x" id="m-x" aria-label="关闭">×</button>
+        <div class="m-head">
+            <div class="m-icon" id="m-icon">📱</div>
+            <div>
+                <div class="m-name" id="m-name"></div>
+                <div class="m-meta" id="m-meta"></div>
+            </div>
+        </div>
+        <div class="m-desc" id="m-desc"></div>
+        <div class="tags m-tags" id="m-tags"></div>
+        <div class="m-tip" id="m-tip" hidden>📱 <b>安装提示：</b>下载完成后打开 APK 文件进行安装；如果系统提示「禁止安装未知来源应用」，请按提示去系统设置里临时允许浏览器或文件管理器安装应用，装好后可以再把这个权限关掉。</div>
+        <a class="btn m-btn" id="m-btn" href="#"></a>
+        <span class="btn soon m-btn" id="m-soon" hidden></span>
+    </div>
+</div>
+
 <script src="https://maxmzh.com/js/max-account.js?v=20261114b"></script>
 <script>
 (function () {
-    var NAMES = { windows: 'Windows', android: 'Android', wearable: '智能穿戴' };
-    var ICONS = { windows: '🪟', android: '🤖', wearable: '⌚' };
-    var apps = [], platform = 'all', query = '';
+    var NAMES = { windows: 'Windows', android: 'Android', wearable: '智能穿戴', web: '网页应用' };
+    var ICONS = { windows: '🪟', android: '🤖', wearable: '⌚', web: '🌐' };
+    var apps = [], platform = 'all', query = '', sort = 'recommend';
     var grid = document.getElementById('grid');
+    var featWrap = document.getElementById('feat-wrap');
+    var featGrid = document.getElementById('feat-grid');
+    var mask = document.getElementById('mask');
 
+    function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+    function metaParts(a) {
+        var m = [];
+        if (a.version) m.push('版本 ' + a.version);
+        if (a.size) m.push(a.size);
+        if (a.updated) m.push('更新于 ' + a.updated);
+        return m;
+    }
+    function actionBtn(a, cls) {
+        if (a.action === 'soon') return '<span class="btn soon ' + (cls || '') + '">' + esc(a.actionText || '即将上架') + '</span>';
+        return '<a class="btn ' + (cls || '') + '" href="' + esc(a.url) + '"' +
+            (a.action === 'download' ? ' download' : ' target="_blank" rel="noopener"') + '>' + esc(a.actionText || '打开') + '</a>';
+    }
+    function tagChips(a) {
+        if (!a.tags || !a.tags.length) return '';
+        return '<div class="tags">' + a.tags.map(function (t) { return '<span class="tagchip">' + esc(t) + '</span>'; }).join('') + '</div>';
+    }
     function card(a) {
-        var meta = [];
-        if (a.version) meta.push('版本 ' + a.version);
-        if (a.size) meta.push(a.size);
-        var btn = a.action === 'soon'
-            ? '<span class="btn soon">' + (a.actionText || '即将上架') + '</span>'
-            : '<a class="btn" href="' + a.url + '"' + (a.action === 'download' ? ' download' : ' target="_blank" rel="noopener"') + '>' + (a.actionText || '打开') + '</a>';
-        return '<article class="app"><div class="head"><div class="icon">' + (a.icon || '📱') + '</div>' +
-            '<div><div class="name">' + a.name + '</div><div class="meta"><span class="badge">' + (NAMES[a.platform] || a.platform) + '</span>' + meta.join(' · ') + '</div></div></div>' +
-            '<div class="desc">' + a.desc + '</div>' + btn + '</article>';
+        var idx = apps.indexOf(a);
+        return '<article class="app" data-i="' + idx + '" title="点击查看详情"><div class="head"><div class="icon">' + esc(a.icon || '📱') + '</div>' +
+            '<div><div class="name">' + esc(a.name) + '</div><div class="meta"><span class="badge">' + esc(NAMES[a.platform] || a.platform) + '</span>' +
+            (a.featured ? '<span class="badge feat-badge">⭐ 精选</span>' : '') + esc(metaParts(a).join(' · ')) + '</div></div></div>' +
+            '<div class="desc">' + esc(a.desc) + '</div>' + tagChips(a) + actionBtn(a) + '</article>';
+    }
+    function featCard(a) {
+        var idx = apps.indexOf(a);
+        return '<article class="feat" data-i="' + idx + '" title="点击查看详情"><div class="icon">' + esc(a.icon || '📱') + '</div>' +
+            '<div><div class="name">' + esc(a.name) + '</div><div class="meta" style="color:#9aa5c7;font-size:12px;margin-top:3px"><span class="badge">' + esc(NAMES[a.platform] || a.platform) + '</span>' + esc(metaParts(a).join(' · ')) + '</div>' +
+            '<div class="desc">' + esc(a.desc) + '</div>' + actionBtn(a) + '</div></article>';
+    }
+    function sorted(list) {
+        var out = list.slice();
+        if (sort === 'newest') {
+            out.sort(function (x, y) { return String(y.updated || '').localeCompare(String(x.updated || '')); });
+        } else {
+            out.sort(function (x, y) { return (y.featured ? 1 : 0) - (x.featured ? 1 : 0); });
+        }
+        return out;
+    }
+    function renderFeatured() {
+        var feats = apps.filter(function (a) { return a.featured; });
+        if (platform !== 'all' || query || !feats.length) { featWrap.hidden = true; return; }
+        featGrid.innerHTML = feats.map(featCard).join('');
+        featWrap.hidden = false;
     }
     function render() {
+        renderFeatured();
         var list = apps.filter(function (a) {
-            return (platform === 'all' || a.platform === platform) &&
-                   (!query || (a.name + a.desc).toLowerCase().indexOf(query) >= 0);
+            var text = (a.name + ' ' + a.desc + ' ' + ((a.tags || []).join(' '))).toLowerCase();
+            return (platform === 'all' || a.platform === platform) && (!query || text.indexOf(query) >= 0);
         });
         if (!list.length) {
-            grid.innerHTML = '<div class="empty"><div class="big">' + (ICONS[platform] || '🛍️') + '</div>' +
-                (platform === 'wearable' ? '智能穿戴应用正在开发中，敬请期待。' : '这个分类下暂时没有匹配的应用。') + '</div>';
+            var msg;
+            if (platform === 'wearable' && !query) msg = '智能穿戴应用正在开发中，敬请期待。';
+            else if (query) msg = '没有找到与「' + esc(query) + '」相关的应用，换个关键词试试。';
+            else msg = '这个分类下暂时没有匹配的应用。';
+            grid.innerHTML = '<div class="empty"><div class="big">' + (ICONS[platform] || '🛍️') + '</div>' + msg + '</div>';
             return;
         }
-        grid.innerHTML = list.map(card).join('');
+        grid.innerHTML = sorted(list).map(card).join('');
     }
+    function renderCounts() {
+        document.querySelectorAll('.tab').forEach(function (t) {
+            var p = t.dataset.p;
+            var n = p === 'all' ? apps.length : apps.filter(function (a) { return a.platform === p; }).length;
+            t.querySelector('.cnt').textContent = n;
+        });
+    }
+    function openModal(a) {
+        document.getElementById('m-icon').textContent = a.icon || '📱';
+        document.getElementById('m-name').textContent = a.name;
+        var lines = ['分类：' + (NAMES[a.platform] || a.platform)];
+        metaParts(a).forEach(function (x) { lines.push(x); });
+        document.getElementById('m-meta').innerHTML = lines.map(esc).join('<br>');
+        document.getElementById('m-desc').textContent = a.desc || '';
+        document.getElementById('m-tags').innerHTML = (a.tags || []).map(function (t) { return '<span class="tagchip">' + esc(t) + '</span>'; }).join('');
+        document.getElementById('m-tip').hidden = !(a.platform === 'android' && a.action === 'download');
+        var btn = document.getElementById('m-btn'), soon = document.getElementById('m-soon');
+        if (a.action === 'soon') {
+            btn.hidden = true; soon.hidden = false;
+            soon.textContent = (a.actionText || '即将上架') + '，敬请期待';
+        } else {
+            soon.hidden = true; btn.hidden = false;
+            btn.textContent = a.actionText || '打开';
+            btn.href = a.url;
+            if (a.action === 'download') { btn.setAttribute('download', ''); btn.removeAttribute('target'); }
+            else { btn.setAttribute('target', '_blank'); btn.setAttribute('rel', 'noopener'); btn.removeAttribute('download'); }
+        }
+        mask.hidden = false;
+        document.body.style.overflow = 'hidden';
+    }
+    function closeModal() { mask.hidden = true; document.body.style.overflow = ''; }
+    document.addEventListener('click', function (e) {
+        if (e.target.closest('a.btn, .tab, select, input, button.modal-x')) return;
+        var el = e.target.closest('[data-i]');
+        if (el) openModal(apps[Number(el.dataset.i)]);
+    });
+    document.getElementById('m-x').addEventListener('click', closeModal);
+    mask.addEventListener('click', function (e) { if (e.target === mask) closeModal(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !mask.hidden) closeModal(); });
     document.getElementById('tabs').addEventListener('click', function (e) {
         var b = e.target.closest('.tab'); if (!b) return;
         platform = b.dataset.p;
@@ -107,9 +259,12 @@
     document.getElementById('q').addEventListener('input', function (e) {
         query = e.target.value.trim().toLowerCase(); render();
     });
+    document.getElementById('sort').addEventListener('change', function (e) {
+        sort = e.target.value; render();
+    });
     document.querySelector('.tab[data-p="all"]').classList.add('active');
     fetch('store-apps.json', { cache: 'no-cache' }).then(function (r) { return r.json(); }).then(function (d) {
-        apps = d.apps || []; render();
+        apps = d.apps || []; renderCounts(); render();
     }).catch(function () {
         grid.innerHTML = '<div class="empty"><div class="big">⚠️</div>应用列表加载失败，请刷新重试。</div>';
     });
