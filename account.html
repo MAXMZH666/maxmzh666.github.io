@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAX 账号 · MAX 应用商店</title>
+<meta name="description" content="MAX 账号：一个账号通达 MAX编程社区、MAX论坛、MAX 编辑器、应用商店与图床。查看登录状态、注册与登录方式、账号安全提示。">
+<style>
+    * { box-sizing: border-box; }
+    :root { --bg: #0d1120; --card: #151a2e; --panel: #171d33; --text: #e8ecf8; --sub: #c6cdea; --muted: #9aa5c7; --faint: #5f6a8c; --border: rgba(255,255,255,.15); --border-soft: rgba(255,255,255,.09); --soft-bg: rgba(255,255,255,.04); }
+    :root[data-theme="light"] { --bg: #f2f4fb; --card: #ffffff; --panel: #ffffff; --text: #1d2436; --sub: #3d4763; --muted: #66718c; --faint: #98a1b8; --border: rgba(23,32,68,.16); --border-soft: rgba(23,32,68,.1); --soft-bg: rgba(23,32,68,.04); }
+    body { margin: 0; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 22px 18px 60px; }
+    header.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .back { color: var(--sub); text-decoration: none; font-size: 14.5px; border: 1px solid var(--border-soft); background: var(--card); padding: 8px 14px; border-radius: 999px; }
+    #theme-toggle { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 17px; cursor: pointer; }
+    h1 { font-size: 28px; margin: 26px 0 8px; }
+    h2.sec { font-size: 20px; margin: 30px 0 12px; }
+    .intro { color: var(--muted); line-height: 1.8; margin: 0 0 8px; font-size: 15px; }
+    .card { background: var(--card); border: 1px solid var(--border-soft); border-radius: 16px; padding: 20px 22px; margin-bottom: 16px; }
+    .card h2 { margin: 0 0 10px; font-size: 18px; }
+    .card p, .card li { color: var(--muted); line-height: 1.85; font-size: 14.5px; }
+    .card ul, .card ol { margin: 6px 0; padding-left: 22px; }
+    .card b, .card strong { color: var(--sub); }
+    .status { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .avatar { width: 58px; height: 58px; border-radius: 50%; background: linear-gradient(135deg, #4d7cfe, #6d5cff); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; color: #fff; flex: none; }
+    .status .who { font-size: 17px; font-weight: 700; }
+    .status .mail { color: var(--muted); font-size: 13.5px; margin-top: 3px; }
+    .btn { display: inline-block; background: linear-gradient(135deg, #4d7cfe, #6d5cff); color: #fff; border: none; text-decoration: none; padding: 10px 20px; border-radius: 10px; font-size: 14.5px; cursor: pointer; font-family: inherit; }
+    .btn.ghost { background: var(--soft-bg); border: 1px solid var(--border); color: var(--sub); }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; margin-left: auto; }
+    .places { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+    .place { background: var(--card); border: 1px solid var(--border-soft); border-radius: 16px; padding: 18px; }
+    .place h3 { margin: 0 0 8px; font-size: 16px; }
+    .place p { color: var(--muted); font-size: 13.5px; line-height: 1.75; margin: 0 0 12px; }
+    footer { text-align: center; color: var(--faint); font-size: 13px; padding: 26px 0 6px; line-height: 2; }
+    footer a { color: var(--muted); }
+    a { color: #7ea2ff; }
+</style>
+<script>try { document.documentElement.dataset.theme = localStorage.getItem('maxstore_theme') || 'dark'; } catch (e) { document.documentElement.dataset.theme = 'dark'; }</script>
+</head>
+<body>
+<div class="wrap">
+    <header class="top">
+        <a class="back" href="https://store.maxmzh.com/">← MAX 应用商店</a>
+        <button id="theme-toggle" title="切换主题">🌗</button>
+    </header>
+
+    <h1>👤 MAX 账号</h1>
+    <p class="intro">一个账号，走遍 MAX 的全部产品：在社区发作品、在论坛讨论、在编辑器里存草稿，都认这一个账号，不用每个地方重新注册。</p>
+
+    <div class="card">
+        <h2>我的账号状态</h2>
+        <div class="status" id="status-box">
+            <div class="avatar" id="st-avatar">M</div>
+            <div>
+                <div class="who" id="st-who">正在读取登录状态…</div>
+                <div class="mail" id="st-mail">稍等一下</div>
+            </div>
+            <div class="row" id="st-actions"></div>
+        </div>
+    </div>
+
+    <h2 class="sec">MAX 账号能用在哪</h2>
+    <div class="places">
+        <div class="place"><h3>💻 MAX编程社区</h3><p>发布和试玩 Scratch 作品、评论点赞、收藏关注、参加赛事、私信聊天，积分和邀请奖励也记在这个账号上。</p><a class="btn ghost" href="https://maxmzh.com/community.html" target="_blank" rel="noopener">打开社区</a></div>
+        <div class="place"><h3>💬 MAX论坛</h3><p>发帖、回帖、给商店投稿应用、反馈问题。和社区共用账号与数据，在论坛登录后回社区也是登录状态。</p><a class="btn ghost" href="https://forum.maxmzh.com/" target="_blank" rel="noopener">打开论坛</a></div>
+        <div class="place"><h3>✏️ MAX 编辑器</h3><p>登录后创作的草稿会自动保存到账号，还能把作品一键发布到社区，不用下载再上传。</p><a class="btn ghost" href="https://maxmzh.com/tw-editor/" target="_blank" rel="noopener">打开编辑器</a></div>
+        <div class="place"><h3>🛍️ MAX 应用商店</h3><p>就是你现在在的商店。浏览下载不需要登录；投稿应用、参与社区联动时会用到账号身份。</p><a class="btn ghost" href="https://store.maxmzh.com/">打开商店</a></div>
+        <div class="place"><h3>🖼️ MAX 图床</h3><p>登录后上传图片拿到直链，写帖子、发作品封面时贴图方便，图片存在本站自己的服务器上。</p><a class="btn ghost" href="https://img.maxmzh.com/" target="_blank" rel="noopener">打开图床</a></div>
+        <div class="place"><h3>🔑 独立登录页</h3><p>所有产品点「使用 MAX 账号登录」都会来到统一的 MAX 账号登录页，登录完自动回到你刚才的页面。</p><a class="btn ghost" href="https://maxmzh.com/login.html">去登录页</a></div>
+    </div>
+
+    <h2 class="sec">注册与登录方式</h2>
+    <div class="card">
+        <ul>
+            <li><b>注册：</b>填用户名和邮箱，邮箱会收到一封 6 位验证码邮件，填码并设置密码即可完成，不用等审核。</li>
+            <li><b>登录：</b>邮箱 + 密码，再填一个图形验证码防止机器刷号。</li>
+            <li><b>忘记密码：</b>从登录页进入找回流程，用邮箱验证后重设。</li>
+            <li><b>邀请奖励：</b>注册时填朋友的邀请码，双方都能得积分，细则在社区的任务商城里。</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>⚠️ 账号安全提醒</h2>
+        <ul>
+            <li>站长和任何工作人员都不会向你索要密码或邮箱验证码，索要的一律是骗子。</li>
+            <li>只在 maxmzh.com 及其子域名（forum / store / img / api.maxmzh.com）输入账号密码，其他网址长得再像也不要填。</li>
+            <li>在公共电脑上用完记得退出登录。</li>
+        </ul>
+    </div>
+
+    <footer>
+        © 2026 MAXMZH · MAX 应用商店，由 MAXMZH 开发与维护<br>
+        <a href="https://store.maxmzh.com/">商店首页</a> · <a href="https://forum.maxmzh.com/">MAX论坛</a> · <a href="https://maxmzh.com/">主站</a>
+    </footer>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://maxmzh.com/js/max-account.js?v=20261114b"></script>
+<script>
+document.getElementById('theme-toggle').addEventListener('click', function () {
+    var next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem('maxstore_theme', next); } catch (e) {}
+});
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+(function () {
+    var who = document.getElementById('st-who'), mail = document.getElementById('st-mail'),
+        av = document.getElementById('st-avatar'), act = document.getElementById('st-actions');
+    function renderLoggedOut() {
+        who.textContent = '还没有登录';
+        mail.textContent = '登录后这里会显示你的账号信息';
+        av.textContent = 'M';
+        act.innerHTML = '<a class="btn" href="https://maxmzh.com/login.html?next=https://store.maxmzh.com/account.html">登录 MAX 账号</a>' +
+            '<a class="btn ghost" href="https://maxmzh.com/community-auth.html?mode=signup">注册新账号</a>';
+    }
+    if (!window.MaxAccount || !MaxAccount.ready) { renderLoggedOut(); return; }
+    MaxAccount.ready().then(function (r) {
+        if (!r || !r.user) { renderLoggedOut(); return; }
+        var name = (r.profile && r.profile.username) || r.user.email || 'MAX 用户';
+        who.textContent = name;
+        mail.textContent = r.user.email || '';
+        av.textContent = (name || 'M').slice(0, 1).toUpperCase();
+        act.innerHTML = '<a class="btn ghost" href="https://maxmzh.com/community-user.html?username=' + encodeURIComponent(name) + '" target="_blank" rel="noopener">我的社区主页</a>' +
+            '<a class="btn ghost" href="https://maxmzh.com/community-settings.html" target="_blank" rel="noopener">账号设置</a>' +
+            '<button class="btn" id="st-logout" type="button">退出登录</button>';
+        document.getElementById('st-logout').addEventListener('click', function () {
+            try {
+                var c = window.supabase.createClient('https://xkvpzxxtcnocofnsezpy.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhrdnB6eHh0Y25vY29mbnNlenB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5MTY4MzQsImV4cCI6MjEwNjQ5MjgzNH0.zTpvyEsutA9hV_UIg36g5owBRnxdHaI-sy_fLUsu6ec');
+                c.auth.signOut().then(function () { location.reload(); }, function () { location.reload(); });
+            } catch (e) { location.reload(); }
+        });
+    }).catch(renderLoggedOut);
+})();
+</script>
+</body>
+</html>
