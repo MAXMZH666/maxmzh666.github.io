@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>安装工具 · MAX 应用商店</title>
+<meta name="description" content="MAX 应用商店的工具与安装帮助：本站在线工具直达、Android APK 通用安装步骤、Windows 程序运行提示、安装失败排查。">
+<style>
+    * { box-sizing: border-box; }
+    :root { --bg: #0d1120; --card: #151a2e; --panel: #171d33; --text: #e8ecf8; --sub: #c6cdea; --muted: #9aa5c7; --faint: #5f6a8c; --border: rgba(255,255,255,.15); --border-soft: rgba(255,255,255,.09); --soft-bg: rgba(255,255,255,.04); }
+    :root[data-theme="light"] { --bg: #f2f4fb; --card: #ffffff; --panel: #ffffff; --text: #1d2436; --sub: #3d4763; --muted: #66718c; --faint: #98a1b8; --border: rgba(23,32,68,.16); --border-soft: rgba(23,32,68,.1); --soft-bg: rgba(23,32,68,.04); }
+    body { margin: 0; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 22px 18px 60px; }
+    header.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .back { color: var(--sub); text-decoration: none; font-size: 14.5px; border: 1px solid var(--border-soft); background: var(--card); padding: 8px 14px; border-radius: 999px; }
+    #theme-toggle { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 17px; cursor: pointer; }
+    h1 { font-size: 28px; margin: 26px 0 8px; }
+    .intro { color: var(--muted); line-height: 1.8; margin: 0 0 24px; font-size: 15px; }
+    .card { background: var(--card); border: 1px solid var(--border-soft); border-radius: 16px; padding: 20px 22px; margin-bottom: 16px; }
+    .card h2 { margin: 0 0 10px; font-size: 18px; }
+    .card p, .card li { color: var(--muted); line-height: 1.85; font-size: 14.5px; }
+    .card ol, .card ul { margin: 6px 0; padding-left: 22px; }
+    .card b, .card strong { color: var(--sub); }
+    .toolrow { display: flex; gap: 14px; align-items: center; padding: 12px 0; border-top: 1px solid var(--border-soft); }
+    .toolrow:first-of-type { border-top: none; }
+    .toolrow .ic { font-size: 30px; }
+    .toolrow .nm { font-weight: 700; font-size: 16px; }
+    .toolrow .ds { color: var(--muted); font-size: 13.5px; line-height: 1.7; }
+    .btn { margin-left: auto; flex: none; display: inline-block; background: linear-gradient(135deg, #4d7cfe, #6d5cff); color: #fff; text-decoration: none; padding: 9px 18px; border-radius: 10px; font-size: 14px; }
+    .warn { border-color: rgba(255,180,60,.4); background: rgba(255,170,0,.06); }
+    footer { text-align: center; color: var(--faint); font-size: 13px; padding: 26px 0 6px; line-height: 2; }
+    footer a { color: var(--muted); }
+    a { color: #7ea2ff; }
+</style>
+<script>try { document.documentElement.dataset.theme = localStorage.getItem('maxstore_theme') || 'dark'; } catch (e) { document.documentElement.dataset.theme = 'dark'; }</script>
+</head>
+<body>
+<div class="wrap">
+    <header class="top">
+        <a class="back" href="https://store.maxmzh.com/">← MAX 应用商店</a>
+        <button id="theme-toggle" title="切换主题">🌗</button>
+    </header>
+
+    <h1>🔧 安装工具</h1>
+    <p class="intro">商店里的大多数应用是网页应用，打开即用、不需要安装工具。这一页汇总两类内容：本站自带的在线工具直达，以及以后下载 APK 或 Windows 程序时的通用安装方法与失败排查。</p>
+
+    <div class="card">
+        <h2>本站在线工具（打开即用）</h2>
+        <div class="toolrow">
+            <div class="ic">📦</div>
+            <div><div class="nm">MAX 打包工具</div><div class="ds">把 Scratch（.sb3）作品打包成 HTML 单文件或 Windows EXE，在线完成、免安装。</div></div>
+            <a class="btn" href="https://maxmzh.com/packager/" target="_blank" rel="noopener">打开</a>
+        </div>
+        <div class="toolrow">
+            <div class="ic">🧰</div>
+            <div><div class="nm">网络工具箱</div><div class="ds">短链接生成、域名 WHOIS 查询、DNS 解析查询，做网站时顺手用。</div></div>
+            <a class="btn" href="https://maxmzh.com/net-tools.html" target="_blank" rel="noopener">打开</a>
+        </div>
+        <div class="toolrow">
+            <div class="ic">✏️</div>
+            <div><div class="nm">MAX 编辑器</div><div class="ds">在线 Scratch 编辑器，写完可直接发布到 MAX编程社区。</div></div>
+            <a class="btn" href="https://maxmzh.com/tw-editor/" target="_blank" rel="noopener">打开</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Android APK 通用安装步骤</h2>
+        <ol>
+            <li>从应用详情页下载 APK 文件，记清下载位置（一般在「下载」文件夹）。</li>
+            <li>点开 APK 文件，系统若提示禁止安装未知应用，去设置里给当前浏览器或文件管理器临时开启「允许安装未知应用」。</li>
+            <li>回到安装界面点「安装」，完成后直接打开应用。</li>
+            <li>装完后建议把上一步的临时授权关掉，保持系统默认更安全。</li>
+        </ol>
+        <p>只从可信来源下载 APK；安装时留意它申请的权限，明显超出功能需要的权限就不要继续。</p>
+    </div>
+
+    <div class="card">
+        <h2>Windows 程序运行提示</h2>
+        <p>从网上下载的 EXE 第一次运行时，Windows 可能弹出 SmartScreen 提示「Windows 已保护你的电脑」。这是系统对未签名程序的例行提醒，不等于文件有毒。确认文件确实来自本站详情页后，点「更多信息」→「仍要运行」即可。来源对不上的文件不要这样操作，直接删除。</p>
+    </div>
+
+    <div class="card">
+        <h2>安装失败怎么办</h2>
+        <ul>
+            <li><b>解析包时出现问题：</b>多半是文件没下完整或下载损坏，删掉重新下载；也要确认文件后缀是 .apk 而不是被改名。</li>
+            <li><b>签名冲突 / 与已安装应用不兼容：</b>手机里已有同包名但签名不同的版本。先备份旧应用的数据，再卸载旧版后安装，不要反复强装。</li>
+            <li><b>系统版本过低：</b>应用详情若标注了最低系统版本，低于它就装不上，只能升级系统或换设备。</li>
+            <li><b>存储空间不足：</b>清理缓存和不用的大文件，留出至少两倍于安装包大小的空间再试。</li>
+            <li><b>一直失败：</b>记下完整的报错文字和截图，到 <a href="https://forum.maxmzh.com/" target="_blank" rel="noopener">MAX论坛</a> 发帖求助，信息越全越好定位。</li>
+        </ul>
+    </div>
+
+    <div class="card warn">
+        <h2>⚠️ 安全提醒</h2>
+        <p>下载完成不等于安全。只安装来源能核实的文件；任何要求你关闭系统安全防护、或索要短信验证码和支付密码的「安装流程」都不正常，立即停止。</p>
+    </div>
+
+    <footer>
+        © 2026 MAXMZH · MAX 应用商店，由 MAXMZH 开发与维护<br>
+        <a href="https://store.maxmzh.com/">商店首页</a> · <a href="https://forum.maxmzh.com/">MAX论坛</a> · <a href="https://maxmzh.com/">主站</a>
+    </footer>
+</div>
+<script src="https://maxmzh.com/js/max-account.js?v=20261114b"></script>
+<script>
+document.getElementById('theme-toggle').addEventListener('click', function () {
+    var next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem('maxstore_theme', next); } catch (e) {}
+});
+</script>
+</body>
+</html>

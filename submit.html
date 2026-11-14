@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>应用投稿 · MAX 应用商店</title>
+<meta name="description" content="向 MAX 应用商店投稿应用：填写投稿表单生成投稿帖，去 MAX论坛提交，站长确认后上架第三方分享区。">
+<style>
+* { box-sizing: border-box;}
+:root { --bg: #0d1120; --card: #151a2e; --panel: #171d33; --text: #e8ecf8; --sub: #c6cdea; --muted: #9aa5c7; --faint: #5f6a8c; --border: rgba(255,255,255,.15); --border-soft: rgba(255,255,255,.09); --soft-bg: rgba(255,255,255,.04);}
+:root[data-theme="light"] { --bg: #f2f4fb; --card: #ffffff; --panel: #ffffff; --text: #1d2436; --sub: #3d4763; --muted: #66718c; --faint: #98a1b8; --border: rgba(23,32,68,.16); --border-soft: rgba(23,32,68,.1); --soft-bg: rgba(23,32,68,.04);}
+body { margin: 0; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text);}
+.wrap { max-width: 860px; margin: 0 auto; padding: 22px 18px 60px;}
+header.top { display: flex; align-items: center; justify-content: space-between; gap: 12px;}
+.back { color: var(--sub); text-decoration: none; font-size: 14.5px; border: 1px solid var(--border-soft); background: var(--card); padding: 8px 14px; border-radius: 999px;}
+#theme-toggle { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 17px; cursor: pointer;}
+h1 { font-size: 28px; margin: 26px 0 8px;}
+.intro { color: var(--muted); line-height: 1.8; margin: 0 0 24px; font-size: 15px;}
+.card { background: var(--card); border: 1px solid var(--border-soft); border-radius: 16px; padding: 20px 22px; margin-bottom: 16px;}
+.card h2 { margin: 0 0 10px; font-size: 18px;}
+.card p,.card li { color: var(--muted); line-height: 1.85; font-size: 14.5px;}
+.card ul,.card ol { margin: 6px 0; padding-left: 22px;}
+.card b,.card strong { color: var(--sub);}
+label { display: block; font-size: 14px; color: var(--sub); margin: 14px 0 6px;}
+label.req { color: #ff7a7a;}
+input[type="text"], input[type="url"], select, textarea { width: 100%; background: var(--soft-bg); border: 1px solid var(--border); color: var(--text); border-radius: 10px; padding: 10px 12px; font-size: 14.5px; font-family: inherit;}
+textarea { min-height: 84px; resize: vertical;}
+#out { min-height: 150px;}
+.btn { display: inline-block; background: linear-gradient(135deg, #4d7cfe, #6d5cff); color: #fff; border: none; text-decoration: none; padding: 11px 22px; border-radius: 10px; font-size: 14.5px; cursor: pointer; font-family: inherit;}
+.btn.ghost { background: var(--soft-bg); border: 1px solid var(--border); color: var(--sub);}
+.row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px;}
+.hint { font-size: 13px; color: var(--faint); margin-top: 8px;}
+footer { text-align: center; color: var(--faint); font-size: 13px; padding: 26px 0 6px; line-height: 2;}
+footer a { color: var(--muted);}
+a { color: #7ea2ff;}
+</style>
+<script>try { document.documentElement.dataset.theme = localStorage.getItem('maxstore_theme') || 'dark';} catch (e) { document.documentElement.dataset.theme = 'dark';}</script>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+<a class="back" href="https://store.maxmzh.com/">← MAX 应用商店</a>
+<button id="theme-toggle" title="切换主题">🌗</button>
+</header>
+
+<h1>📥 应用投稿</h1>
+<p class="intro">发现了好用的应用，或者你自己做了一个？填下面的表单生成投稿帖，去 MAX论坛发出来，站长确认后就会上架到商店的「第三方应用分享」区（自己的作品请在介绍里注明）。</p>
+
+<div class="card">
+<h2>收录标准</h2>
+<ul>
+<li>链接能公开正常打开，最好是应用官网或作者的发布页。</li>
+<li>介绍真实，不夸大功能；是别人的作品要注明原作者。</li>
+<li>不收录破解版、盗版、带恶意代码或违反法律的内容。</li>
+<li>上架后若原作者联系要求下架，核实后会移除。</li>
+</ul>
+</div>
+
+<div class="card">
+<h2>投稿表单</h2>
+<form id="f" onsubmit="return false">
+<label>应用名称 <span class="req">*</span></label>
+<input type="text" id="s-name" placeholder="例如：某某编辑器" required>
+<label>应用链接 <span class="req">*</span></label>
+<input type="url" id="s-url" placeholder="https:// 官网或发布页地址" required>
+<label>分类</label>
+<select id="s-cat">
+<option>网页应用</option><option>Windows</option><option>Android</option><option>智能穿戴</option><option>其他</option>
+</select>
+<label>提供方 / 原作者 <span class="req">*</span></label>
+<input type="text" id="s-author" placeholder="你自己的作品就写自己的名字" required>
+<label>一句话介绍 <span class="req">*</span></label>
+<input type="text" id="s-short" placeholder="它主要是做什么的" required>
+<label>详细介绍</label>
+<textarea id="s-long" placeholder="功能、使用感受、适合人群等，越真实越容易通过"></textarea>
+<label>你的联系方式（选填）</label>
+<input type="text" id="s-contact" placeholder="方便站长核实时联系你，可留论坛用户名">
+<div class="row">
+<button class="btn" id="gen" type="button">生成投稿内容</button>
+</div>
+<p class="hint">表单只在本页生成文本，不会把内容发到任何服务器。</p>
+</form>
+</div>
+
+<div class="card" id="out-card" hidden>
+<h2>投稿内容（复制后去论坛发帖）</h2>
+<textarea id="out" readonly></textarea>
+<div class="row">
+<button class="btn ghost" id="copy" type="button">📋 复制投稿内容</button>
+<a class="btn" href="https://forum.maxmzh.com/forum-new.html" target="_blank" rel="noopener">去 MAX论坛发帖 →</a>
+</div>
+<p class="hint">发帖时标题写「应用投稿：应用名称」，正文粘贴生成的投稿内容即可。站长看到后会核实链接，确认没问题就上架，并会在帖子里回复你。</p>
+</div>
+
+<div class="card">
+<h2>投稿流程</h2>
+<ol>
+<li>填表单 → 生成投稿内容。</li>
+<li>复制内容，去 MAX论坛发帖提交。</li>
+<li>站长核实链接与介绍（一般看帖后处理）。</li>
+<li>通过后上架「第三方应用分享」区，卡片会署名提供方。</li>
+</ol>
+</div>
+
+<footer>
+© 2026 MAXMZH · MAX 应用商店，由 MAXMZH 开发与维护<br>
+<a href="https://store.maxmzh.com/">商店首页</a> · <a href="https://forum.maxmzh.com/">MAX论坛</a> · <a href="https://maxmzh.com/">主站</a>
+</footer>
+</div>
+<script src="https://maxmzh.com/js/max-account.js?v=20261114b"></script>
+<script>
+document.getElementById('theme-toggle').addEventListener('click', function () {
+var next = document.documentElement.dataset.theme === 'light'? 'dark': 'light';
+document.documentElement.dataset.theme = next;
+try { localStorage.setItem('maxstore_theme', next);} catch (e) {}
+});
+function val(id) { return document.getElementById(id).value.trim();}
+document.getElementById('gen').addEventListener('click', function () {
+var name = val('s-name'), url = val('s-url'), author = val('s-author'), short = val('s-short');
+if (!name ||!url ||!author ||!short) { alert('带 * 的项目要填完哦'); return;}
+var lines = [
+'' + name, '',
+'应用名称：' + name,
+'应用链接：' + url,
+'分类：' + val('s-cat'),
+'提供方/原作者：' + author,
+'一句话介绍：' + short
+];
+if (val('s-long')) lines.push('详细介绍：' + val('s-long'));
+if (val('s-contact')) lines.push('联系方式：' + val('s-contact'));
+lines.push('', '以上信息真实，同意按商店的收录标准处理。');
+document.getElementById('out').value = lines.join('\n');
+document.getElementById('out-card').hidden = false;
+document.getElementById('out-card').scrollIntoView({ behavior: 'smooth'});
+});
+document.getElementById('copy').addEventListener('click', function () {
+var out = document.getElementById('out');
+out.select();
+if (navigator.clipboard && navigator.clipboard.writeText) {
+navigator.clipboard.writeText(out.value).then(function () { alert('已复制，去论坛粘贴发帖吧');}, function () { document.execCommand('copy');});
+} else document.execCommand('copy');
+});
+</script>
+</body>
+</html>

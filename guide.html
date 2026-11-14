@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>使用教程 · MAX 应用商店</title>
+<meta name="description" content="MAX 应用商店使用教程：在线使用网页应用、扫码在手机上打开、把应用添加到手机桌面、用 MAX 账号登录、分享应用链接。">
+<style>
+    * { box-sizing: border-box; }
+    :root { --bg: #0d1120; --card: #151a2e; --panel: #171d33; --text: #e8ecf8; --sub: #c6cdea; --muted: #9aa5c7; --faint: #5f6a8c; --border: rgba(255,255,255,.15); --border-soft: rgba(255,255,255,.09); --soft-bg: rgba(255,255,255,.04); }
+    :root[data-theme="light"] { --bg: #f2f4fb; --card: #ffffff; --panel: #ffffff; --text: #1d2436; --sub: #3d4763; --muted: #66718c; --faint: #98a1b8; --border: rgba(23,32,68,.16); --border-soft: rgba(23,32,68,.1); --soft-bg: rgba(23,32,68,.04); }
+    body { margin: 0; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 22px 18px 60px; }
+    header.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .back { color: var(--sub); text-decoration: none; font-size: 14.5px; border: 1px solid var(--border-soft); background: var(--card); padding: 8px 14px; border-radius: 999px; }
+    #theme-toggle { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 17px; cursor: pointer; }
+    h1 { font-size: 28px; margin: 26px 0 8px; }
+    .intro { color: var(--muted); line-height: 1.8; margin: 0 0 24px; font-size: 15px; }
+    .card { background: var(--card); border: 1px solid var(--border-soft); border-radius: 16px; padding: 20px 22px; margin-bottom: 16px; }
+    .card h2 { margin: 0 0 10px; font-size: 18px; }
+    .card p, .card li { color: var(--muted); line-height: 1.85; font-size: 14.5px; }
+    .card ol, .card ul { margin: 6px 0; padding-left: 22px; }
+    .card b, .card strong { color: var(--sub); }
+    .faq p { margin: 0 0 14px; }
+    .faq p:last-child { margin-bottom: 0; }
+    footer { text-align: center; color: var(--faint); font-size: 13px; padding: 26px 0 6px; line-height: 2; }
+    footer a { color: var(--muted); }
+    a { color: #7ea2ff; }
+</style>
+<script>try { document.documentElement.dataset.theme = localStorage.getItem('maxstore_theme') || 'dark'; } catch (e) { document.documentElement.dataset.theme = 'dark'; }</script>
+</head>
+<body>
+<div class="wrap">
+    <header class="top">
+        <a class="back" href="https://store.maxmzh.com/">← MAX 应用商店</a>
+        <button id="theme-toggle" title="切换主题">🌗</button>
+    </header>
+
+    <h1>📖 使用教程</h1>
+    <p class="intro">MAX 应用商店里的应用以网页应用为主：不用下载安装，打开就能用。这页把日常会用到的几件事讲清楚——在线使用、扫码到手机、放桌面、登录账号和分享链接。</p>
+
+    <div class="card">
+        <h2>一、在线使用网页应用</h2>
+        <ol>
+            <li>在商店首页找到想用的应用，点卡片上的蓝色按钮（如「在线使用」「开始对弈」）。</li>
+            <li>应用会在新页面打开，直接开始用，不需要下载、不需要安装，也不占手机空间。</li>
+            <li>建议用较新版本的 Chrome、Edge 或手机自带浏览器；太老的浏览器可能出现排版错位。</li>
+        </ol>
+    </div>
+
+    <div class="card">
+        <h2>二、在电脑上看到应用，想在手机上用</h2>
+        <ol>
+            <li>在电脑上点开应用卡片，会弹出详情窗口。</li>
+            <li>详情底部有二维码，用手机相机或微信扫一扫对准它。</li>
+            <li>手机上会直接打开这个应用，接着用就行。也可以把详情页的链接复制下来发到手机上打开。</li>
+        </ol>
+    </div>
+
+    <div class="card">
+        <h2>三、把应用放到手机桌面（像 App 一样）</h2>
+        <p><b>安卓手机：</b></p>
+        <ol>
+            <li>用浏览器打开应用页面，点浏览器右上角菜单（⋮）。</li>
+            <li>选择「添加到主屏幕」或「安装应用」，起个名字确认。</li>
+            <li>桌面上会出现图标，以后点图标直接进应用。</li>
+        </ol>
+        <p><b>iPhone：</b></p>
+        <ol>
+            <li>用 Safari 打开应用页面，点底部的分享按钮。</li>
+            <li>选择「添加到主屏幕」，确认名称后点「添加」。</li>
+        </ol>
+    </div>
+
+    <div class="card">
+        <h2>四、MAX 账号怎么用</h2>
+        <p>商店、MAX编程社区、MAX论坛共用同一个 <b>MAX 账号</b>。点页面右上角「使用 MAX 账号登录」，登录一次即可；编辑器存草稿、社区发作品、论坛发帖都认这个账号。还没有账号的话，在登录页点注册，用邮箱收一个 6 位验证码就能完成注册，不用记邀请码。</p>
+    </div>
+
+    <div class="card">
+        <h2>五、把应用分享给朋友</h2>
+        <ol>
+            <li>点开应用详情后，浏览器地址栏的链接（以 #app- 开头）就是这个应用的专属链接。</li>
+            <li>把链接发给朋友，对方打开会直接看到这个应用的详情页。</li>
+            <li>面对面分享时，直接让对方扫详情里的二维码更快。</li>
+        </ol>
+    </div>
+
+    <div class="card faq">
+        <h2>六、常见问题</h2>
+        <p><b>应用页面打开是空白或排版乱？</b><br>先刷新一次；还不行就换个较新的浏览器打开。个别应用（比如编辑器）体积较大，第一次加载需要等几秒。</p>
+        <p><b>在应用里做的东西会丢吗？</b><br>编辑器的草稿在登录后会保存到你的账号；五子棋是对局制的，关掉页面对局就结束。重要作品建议在社区里正式发布一份。</p>
+        <p><b>应用收费吗？</b><br>商店里标注 MAX 官方出品的应用全部免费。第三方分享的应用跳到对方官网后，规则以对方为准，详情里有说明。</p>
+        <p><b>还是解决不了？</b><br>截图后到 <a href="https://forum.maxmzh.com/" target="_blank" rel="noopener">MAX论坛</a> 发帖说明应用名和现象，我们看到会处理。</p>
+    </div>
+
+    <footer>
+        © 2026 MAXMZH · MAX 应用商店，由 MAXMZH 开发与维护<br>
+        <a href="https://store.maxmzh.com/">商店首页</a> · <a href="https://forum.maxmzh.com/">MAX论坛</a> · <a href="https://maxmzh.com/">主站</a>
+    </footer>
+</div>
+<script src="https://maxmzh.com/js/max-account.js?v=20261114b"></script>
+<script>
+document.getElementById('theme-toggle').addEventListener('click', function () {
+    var next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem('maxstore_theme', next); } catch (e) {}
+});
+</script>
+</body>
+</html>

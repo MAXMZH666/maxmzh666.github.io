@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>赞赏支持 · MAX 应用商店</title>
+<meta name="description" content="MAX 应用商店赞赏支持：商店与官方应用全部免费，自愿赞赏用于分担服务器与域名成本；也可以用分享、投稿、反馈来支持。">
+<style>
+    * { box-sizing: border-box; }
+    :root { --bg: #0d1120; --card: #151a2e; --panel: #171d33; --text: #e8ecf8; --sub: #c6cdea; --muted: #9aa5c7; --faint: #5f6a8c; --border: rgba(255,255,255,.15); --border-soft: rgba(255,255,255,.09); --soft-bg: rgba(255,255,255,.04); }
+    :root[data-theme="light"] { --bg: #f2f4fb; --card: #ffffff; --panel: #ffffff; --text: #1d2436; --sub: #3d4763; --muted: #66718c; --faint: #98a1b8; --border: rgba(23,32,68,.16); --border-soft: rgba(23,32,68,.1); --soft-bg: rgba(23,32,68,.04); }
+    body { margin: 0; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 22px 18px 60px; }
+    header.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .back { color: var(--sub); text-decoration: none; font-size: 14.5px; border: 1px solid var(--border-soft); background: var(--card); padding: 8px 14px; border-radius: 999px; }
+    #theme-toggle { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 17px; cursor: pointer; }
+    h1 { font-size: 28px; margin: 26px 0 8px; }
+    .intro { color: var(--muted); line-height: 1.8; margin: 0 0 24px; font-size: 15px; }
+    .card { background: var(--card); border: 1px solid var(--border-soft); border-radius: 16px; padding: 20px 22px; margin-bottom: 16px; }
+    .card h2 { margin: 0 0 10px; font-size: 18px; }
+    .card p, .card li { color: var(--muted); line-height: 1.85; font-size: 14.5px; }
+    .card b, .card strong { color: var(--sub); }
+    .qrbox { border: 1.5px dashed var(--border); border-radius: 16px; padding: 36px 18px; text-align: center; color: var(--muted); line-height: 1.9; }
+    .qrbox .big { font-size: 40px; }
+    .ways { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+    .way { background: var(--card); border: 1px solid var(--border-soft); border-radius: 16px; padding: 18px; }
+    .way h3 { margin: 0 0 8px; font-size: 16px; }
+    .way p { color: var(--muted); font-size: 13.5px; line-height: 1.75; margin: 0; }
+    footer { text-align: center; color: var(--faint); font-size: 13px; padding: 26px 0 6px; line-height: 2; }
+    footer a { color: var(--muted); }
+    a { color: #7ea2ff; }
+</style>
+<script>try { document.documentElement.dataset.theme = localStorage.getItem('maxstore_theme') || 'dark'; } catch (e) { document.documentElement.dataset.theme = 'dark'; }</script>
+</head>
+<body>
+<div class="wrap">
+    <header class="top">
+        <a class="back" href="https://store.maxmzh.com/">← MAX 应用商店</a>
+        <button id="theme-toggle" title="切换主题">🌗</button>
+    </header>
+
+    <h1>❤️ 赞赏支持</h1>
+    <p class="intro">MAX 应用商店和站内的官方应用全部免费，没有会员、没有解锁。网站跑在一台自己的服务器上，域名和服务器是每年真实要付的成本。如果你觉得这些应用帮到了你，可以自愿赞赏一点；不赞赏也完全不影响使用任何功能。</p>
+
+    <div class="card">
+        <h2>扫码赞赏</h2>
+        <div class="qrbox">
+            <div class="big">🧾</div>
+            收款码正在准备中，马上就来。<br>在那之前，下面的支持方式一样很有用。
+        </div>
+        <p style="margin-top:14px">赞赏完全自愿、金额随意，不附带任何权益，也不要在赞赏时填写账号密码等敏感信息。遇到以本站名义私下索要赞赏的，请到论坛核实，大概率是冒充的。</p>
+    </div>
+
+    <div class="card">
+        <h2>不用花钱的支持方式</h2>
+        <div class="ways">
+            <div class="way"><h3>🔗 分享给朋友</h3><p>把好用的应用用详情页的专属链接或二维码发给同学朋友，用的人多，商店就越有动力更新。</p></div>
+            <div class="way"><h3>📥 投稿好应用</h3><p>发现别的作者做的好作品？去<a href="https://store.maxmzh.com/submit.html">投稿页</a>提交，通过后会署名上架第三方分享区。</p></div>
+            <div class="way"><h3>💬 反馈与建议</h3><p>应用有 bug、教程没讲清、想要新功能，都可以去 <a href="https://forum.maxmzh.com/" target="_blank" rel="noopener">MAX论坛</a> 发帖，每条都会看。</p></div>
+        </div>
+    </div>
+
+    <footer>
+        © 2026 MAXMZH · MAX 应用商店，由 MAXMZH 开发与维护<br>
+        <a href="https://store.maxmzh.com/">商店首页</a> · <a href="https://forum.maxmzh.com/">MAX论坛</a> · <a href="https://maxmzh.com/">主站</a>
+    </footer>
+</div>
+<script src="https://maxmzh.com/js/max-account.js?v=20261114b"></script>
+<script>
+document.getElementById('theme-toggle').addEventListener('click', function () {
+    var next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem('maxstore_theme', next); } catch (e) {}
+});
+</script>
+</body>
+</html>
