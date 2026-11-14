@@ -15,7 +15,8 @@
     "在线工具"
    ],
    "updated": "2026-11-14",
-   "url": "https://maxmzh.com/packager/"
+   "url": "https://maxmzh.com/packager/",
+   "shot": "store-shots/packager.jpg"
   },
   {
    "action": "soon",
@@ -45,7 +46,8 @@
     "创作"
    ],
    "updated": "2026-11-13",
-   "url": "https://maxmzh.com/tw-editor/"
+   "url": "https://maxmzh.com/tw-editor/",
+   "shot": "store-shots/editor.jpg"
   },
   {
    "action": "open",
@@ -61,7 +63,8 @@
     "双人对战"
    ],
    "updated": "2026-11-14",
-   "url": "https://maxmzh.com/gomoku.html"
+   "url": "https://maxmzh.com/gomoku.html",
+   "shot": "store-shots/gomoku.jpg"
   },
   {
    "action": "open",
@@ -77,7 +80,8 @@
     "WHOIS"
    ],
    "updated": "2026-11-14",
-   "url": "https://maxmzh.com/net-tools.html"
+   "url": "https://maxmzh.com/net-tools.html",
+   "shot": "store-shots/nettools.jpg"
   },
   {
    "action": "open",
@@ -93,7 +97,8 @@
     "助手"
    ],
    "updated": "2026-11-14",
-   "url": "https://maxmzh.com/ai-code.html"
+   "url": "https://maxmzh.com/ai-code.html",
+   "shot": "store-shots/ai.jpg"
   }
  ],
  "updated": "2026-11-14"

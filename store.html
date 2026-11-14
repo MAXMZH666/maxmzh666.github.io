@@ -79,6 +79,9 @@
     .disc .name { font-weight: 700; font-size: 15.5px; }
     .disc .desc { color: #9aa5c7; font-size: 13px; margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
     .disc .go { margin-left: auto; color: #8faeff; font-size: 13.5px; flex: none; }
+    .m-shot { width: 100%; border-radius: 12px; border: 1px solid rgba(255,255,255,.1); margin-bottom: 14px; display: block; }
+    .about-p { color: #9aa5c7; font-size: 14px; line-height: 1.9; margin: 0; }
+    .about-p a { color: #8faeff; }
     .risk .modal { max-width: 480px; }
     .risk h2 { margin: 2px 0 12px; font-size: 20px; }
     @media (max-width: 600px) {
@@ -148,6 +151,11 @@
         <div class="disc-list" id="disc-list"></div>
     </section>
 
+    <section>
+        <h2 class="sec-title">关于 MAX 应用商店</h2>
+        <p class="about-p">MAX 应用商店是 MAXMZH 的官方应用分发页，收录 MAX 打包工具、MAX 编辑器、联机五子棋等自研应用与在线工具，全部免费。网页应用打开即用、无需安装；本站是这些应用的唯一官方来源，请不要安装来历不明的同名安装包。每个应用都有自己的介绍页链接（点开详情后地址栏的链接），可以直接分享给朋友。有问题或建议，欢迎到 <a href="https://forum.maxmzh.com/">MAX论坛</a> 发帖反馈。</p>
+    </section>
+
     <footer>
         应用均由 MAXMZH 开发与维护，下载文件托管于本站服务器。<br>
         <a href="https://maxmzh.com/">主站</a> · <a href="https://maxmzh.com/community.html">MAX编程社区</a> · <a href="https://forum.maxmzh.com/">MAX论坛</a> · <a href="https://img.maxmzh.com/">MAX图床</a>
@@ -176,6 +184,7 @@
                 <div class="m-meta" id="m-meta"></div>
             </div>
         </div>
+        <img class="m-shot" id="m-shot" alt="应用界面截图" hidden>
         <div class="m-desc" id="m-desc"></div>
         <div class="tags m-tags" id="m-tags"></div>
         <div class="m-tip" id="m-tip" hidden>📱 <b>安装提示：</b>下载完成后打开 APK 文件进行安装；如果系统提示「禁止安装未知来源应用」，请按提示去系统设置里临时允许浏览器或文件管理器安装应用，装好后可以再把这个权限关掉。</div>
@@ -197,7 +206,7 @@
     /* 首次打开安全提示（对标参考站，本机记住后不再弹） */
     var riskMask = document.getElementById('risk-mask');
     try {
-        if (!localStorage.getItem('maxstore_risk_ok')) {
+        if (!localStorage.getItem('maxstore_risk_ok') && !/^#app-\d+$/.test(location.hash || '')) {
             riskMask.hidden = false;
             document.body.style.overflow = 'hidden';
         }
@@ -271,7 +280,11 @@
             return apps.filter(function (a) { return a.name === n; })[0];
         }).filter(Boolean);
         if (platform === 'all' && !query && series.length) {
-            document.getElementById('series-grid').innerHTML = series.map(featCard).join('');
+            var accCard = '<article class="feat"><div class="icon">🔑</div><div><div class="name">我的 MAX 账号</div>' +
+                '<div class="meta" style="color:#9aa5c7;font-size:12px;margin-top:3px"><span class="badge">全站通用</span>统一账号 · 一键授权</div>' +
+                '<div class="desc">登录一次，MAX编程社区、MAX论坛、MAX图床和编辑器都通用，不用每个站重复注册登录。</div>' +
+                '<a class="btn" href="https://maxmzh.com/login.html">去登录</a></div></article>';
+            document.getElementById('series-grid').innerHTML = series.map(featCard).join('') + accCard;
             sw.hidden = false;
         } else sw.hidden = true;
         /* 发现更多应用：按更新日期列最近 4 条（参考站的「按最新上架发现应用」） */
@@ -310,6 +323,9 @@
         });
     }
     function openModal(a) {
+        var shot = document.getElementById('m-shot');
+        if (a.shot) { shot.src = a.shot; shot.hidden = false; } else { shot.hidden = true; shot.removeAttribute('src'); }
+        try { history.replaceState(null, '', '#app-' + apps.indexOf(a)); } catch (e) {}
         document.getElementById('m-icon').textContent = a.icon || '📱';
         document.getElementById('m-name').textContent = a.name;
         var lines = ['分类：' + (NAMES[a.platform] || a.platform)];
@@ -332,7 +348,10 @@
         mask.hidden = false;
         document.body.style.overflow = 'hidden';
     }
-    function closeModal() { mask.hidden = true; document.body.style.overflow = ''; }
+    function closeModal() {
+        mask.hidden = true; document.body.style.overflow = '';
+        try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+    }
     document.addEventListener('click', function (e) {
         if (e.target.closest('a.btn, .tab, select, input, button.modal-x')) return;
         var el = e.target.closest('[data-i]');
@@ -356,6 +375,8 @@
     document.querySelector('.tab[data-p="all"]').classList.add('active');
     fetch('store-apps.json', { cache: 'no-cache' }).then(function (r) { return r.json(); }).then(function (d) {
         apps = d.apps || []; renderCounts(); renderStats(); render();
+        var hm = /^#app-(\d+)$/.exec(location.hash || '');
+        if (hm && apps[Number(hm[1])]) openModal(apps[Number(hm[1])]);
     }).catch(function () {
         grid.innerHTML = '<div class="empty"><div class="big">⚠️</div>应用列表加载失败，请刷新重试。</div>';
     });
