@@ -80,6 +80,18 @@
     .disc .desc { color: #9aa5c7; font-size: 13px; margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
     .disc .go { margin-left: auto; color: #8faeff; font-size: 13.5px; flex: none; }
     .m-shot { width: 100%; border-radius: 12px; border: 1px solid rgba(255,255,255,.1); margin-bottom: 14px; display: block; }
+    .m-qr { margin-top: 18px; display: flex; gap: 14px; align-items: center; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09); border-radius: 12px; padding: 12px 14px; font-size: 14px; }
+    .m-qr[hidden] { display: none; }
+    .m-qr img { border-radius: 8px; background: #fff; flex: none; }
+    .m-qr span { color: #9aa5c7; font-size: 12.5px; }
+    .series-banner { border-radius: 16px; padding: 22px 24px; margin-bottom: 16px; background: linear-gradient(120deg, #2b4acb, #4d7cfe 45%, #6d5cff); position: relative; overflow: hidden; }
+    .series-banner .big-m { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 120px; font-weight: 900; color: rgba(255,255,255,.14); line-height: 1; }
+    .series-banner .bt { font-size: 20px; font-weight: 800; position: relative; }
+    .series-banner .bs { color: rgba(255,255,255,.85); font-size: 13.5px; margin-top: 5px; position: relative; max-width: 78%; line-height: 1.6; }
+    .more-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 26px; }
+    .more-row[hidden] { display: none; }
+    .more-row a { flex: 1; min-width: 200px; text-align: center; padding: 13px; border: 1px solid rgba(255,255,255,.14); border-radius: 12px; color: #c6cdea; text-decoration: none; background: #151a2e; font-size: 14.5px; }
+    .more-row a:hover { border-color: rgba(77,124,254,.6); text-decoration: none; }
     .about-p { color: #9aa5c7; font-size: 14px; line-height: 1.9; margin: 0; }
     .about-p a { color: #8faeff; }
     .risk .modal { max-width: 480px; }
@@ -113,6 +125,7 @@
             <div class="stat"><b id="st-total">–</b><span>应用总数</span></div>
             <div class="stat"><b id="st-cats">–</b><span>应用分类</span></div>
             <div class="stat"><b id="st-updated">–</b><span>最近更新</span></div>
+            <div class="stat" id="st-users-wrap"><b id="st-users">–</b><span>社区注册用户</span></div>
         </div>
         <p class="acc-note">🔑 MAX 系列应用共用一个 <b>MAX 账号</b>：右上角登录一次，社区、论坛、编辑器都通用。</p>
     </div>
@@ -125,10 +138,11 @@
     <section id="series-wrap" hidden>
         <h2 class="sec-title">MAX 系列应用</h2>
         <p style="color:#9aa5c7;font-size:13.5px;margin:-6px 0 14px">统一账号 · 打开即用 · 持续更新</p>
+        <div class="series-banner"><div class="big-m">M</div><div class="bt">MAX 系列应用</div><div class="bs">编辑器里创作，打包成作品，再约朋友联机对弈 —— 一个 MAX 账号全打通。</div></div>
         <div class="feat-grid" id="series-grid"></div>
     </section>
 
-    <div class="toolbar">
+    <div class="toolbar" id="apps-top">
         <nav class="tabs" id="tabs">
             <button class="tab" data-p="all">全部<span class="cnt"></span></button>
             <button class="tab" data-p="windows">🪟 Windows<span class="cnt"></span></button>
@@ -150,6 +164,11 @@
         <h2 class="sec-title">🔭 发现更多应用</h2>
         <div class="disc-list" id="disc-list"></div>
     </section>
+
+    <div class="more-row" id="more-row" hidden>
+        <a href="#apps-top">📚 查看全部应用 ↓</a>
+        <a href="#third-wrap">🤝 更多第三方应用 →</a>
+    </div>
 
     <section id="third-wrap" hidden>
         <h2 class="sec-title">🤝 第三方应用分享</h2>
@@ -195,6 +214,10 @@
         <div class="tags m-tags" id="m-tags"></div>
         <div class="m-tip" id="m-tip" hidden>📱 <b>安装提示：</b>下载完成后打开 APK 文件进行安装；如果系统提示「禁止安装未知来源应用」，请按提示去系统设置里临时允许浏览器或文件管理器安装应用，装好后可以再把这个权限关掉。</div>
         <div class="m-tip" id="m-tip3" hidden>🤝 <b>第三方分享：</b><span id="m-tip3-txt"></span></div>
+        <div class="m-qr" id="m-qr" hidden>
+            <img id="m-qr-img" width="132" height="132" alt="应用二维码">
+            <div>📱 手机扫码打开<br><span>用手机相机扫一扫，在手机上继续用这个应用</span></div>
+        </div>
         <a class="btn m-btn" id="m-btn" href="#"></a>
         <span class="btn soon m-btn" id="m-soon" hidden></span>
     </div>
@@ -319,6 +342,7 @@
             }).join('');
             dw.hidden = false;
         } else dw.hidden = true;
+        document.getElementById('more-row').hidden = !(platform === 'all' && !query);
     }
     function render() {
         renderHome();
@@ -360,6 +384,13 @@
         var tip3 = document.getElementById('m-tip3');
         tip3.hidden = !isThird;
         if (isThird) document.getElementById('m-tip3-txt').textContent = '本应用由「' + (a.author || '第三方') + '」提供，本站仅做收集分享，不提供下载文件，也不对内容与安全负责；点击按钮将前往对方官网。';
+        var qr = document.getElementById('m-qr');
+        if (a.url) {
+            var qi = document.getElementById('m-qr-img');
+            qi.onerror = function () { qr.hidden = true; };
+            qi.src = 'https://api.qrserver.com/v1/create-qr-code/?size=132x132&margin=6&data=' + encodeURIComponent(a.url);
+            qr.hidden = false;
+        } else qr.hidden = true;
         var btn = document.getElementById('m-btn'), soon = document.getElementById('m-soon');
         if (a.action === 'soon') {
             btn.hidden = true; soon.hidden = false;
@@ -410,6 +441,18 @@
     }).catch(function () {
         grid.innerHTML = '<div class="empty"><div class="big">⚠️</div>应用列表加载失败，请刷新重试。</div>';
     });
+    /* 社区注册用户数：真实数据（社区公开档案计数），取不到就隐藏这一格 */
+    fetch('https://xkvpzxxtcnocofnsezpy.supabase.co/rest/v1/profiles?select=id', {
+        headers: {
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhrdnB6eHh0Y25vY29mbnNlenB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5MTY4MzQsImV4cCI6MjEwNjQ5MjgzNH0.zTpvyEsutA9hV_UIg36g5owBRnxdHaI-sy_fLUsu6ec',
+            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhrdnB6eHh0Y25vY29mbnNlenB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5MTY4MzQsImV4cCI6MjEwNjQ5MjgzNH0.zTpvyEsutA9hV_UIg36g5owBRnxdHaI-sy_fLUsu6ec',
+            'Prefer': 'count=exact', 'Range': '0-0'
+        }
+    }).then(function (r) {
+        var n = (r.headers.get('content-range') || '').split('/')[1];
+        if (n && !isNaN(Number(n))) document.getElementById('st-users').textContent = n;
+        else document.getElementById('st-users-wrap').style.display = 'none';
+    }).catch(function () { document.getElementById('st-users-wrap').style.display = 'none'; });
 })();
 </script>
 </body>
