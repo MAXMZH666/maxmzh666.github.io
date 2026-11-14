@@ -153,6 +153,9 @@
             document.getElementById(fid).addEventListener('input', saveDraft);
         });
         sel.addEventListener('change', saveDraft);
+        /* 版块加载期间就已经输入的内容也存下来；关页前再存一次 */
+        if (document.getElementById('f-title').value || document.getElementById('f-content').value) saveDraft();
+        window.addEventListener('beforeunload', saveDraft);
         try {
             var dj = JSON.parse(localStorage.getItem(draftKey) || 'null');
             if (dj && (dj.t || dj.c)) {
