@@ -435,6 +435,7 @@ def _store_conn():
     conn.execute("CREATE TABLE IF NOT EXISTS ratings (app TEXT, uid TEXT, score INTEGER, updated_at TEXT, PRIMARY KEY (app, uid))")
     conn.execute("CREATE TABLE IF NOT EXISTS submissions (id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT, username TEXT, name TEXT, url TEXT, category TEXT, desc TEXT, contact TEXT, status TEXT DEFAULT 'pending', created_at TEXT)")
     conn.execute("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT)")
+    conn.execute("CREATE TABLE IF NOT EXISTS favorites (uid TEXT, app TEXT, created_at TEXT, PRIMARY KEY (uid, app))")
     return conn
 
 
@@ -535,6 +536,31 @@ def store_get(fullpath, headers):
             finally:
                 conn.close()
         return 200, agg
+    if path == "/store/favorites":
+        me = _auth_user(headers)
+        if not me:
+            return 401, {"error": "请先登录 MAX 账号"}
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                rows = conn.execute("SELECT app FROM favorites WHERE uid = ? ORDER BY created_at", (me["uid"],)).fetchall()
+            finally:
+                conn.close()
+        return 200, {"favorites": [r[0] for r in rows]}
+    if path == "/store/my/comments":
+        me = _auth_user(headers)
+        if not me:
+            return 401, {"error": "请先登录 MAX 账号"}
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                rows = conn.execute(
+                    "SELECT id, app, content, created_at FROM comments "
+                    "WHERE uid = ? AND hidden = 0 ORDER BY id DESC LIMIT 100", (me["uid"],)).fetchall()
+            finally:
+                conn.close()
+        out = [{"id": r[0], "app": r[1], "content": r[2], "created_at": r[3]} for r in rows]
+        return 200, {"comments": out}
     if path == "/store/submissions":
         me = _auth_user(headers)
         if not me or not me["is_admin"]:
@@ -657,6 +683,30 @@ def store_post(path, b, headers, ip):
             finally:
                 conn.close()
         return 200, {"id": sid, "status": "pending"}
+    if path == "/store/favorites":
+        me = _auth_user(headers)
+        if not me:
+            return 401, {"error": "请先登录 MAX 账号"}
+        favs = b.get("favorites")
+        if not isinstance(favs, list):
+            return 400, {"error": "收藏格式不对"}
+        clean = []
+        for f in favs[:200]:
+            f = _clean(f, 60)
+            if f and f not in clean:
+                clean.append(f)
+        with _store_lock:
+            conn = _store_conn()
+            try:
+                conn.execute("DELETE FROM favorites WHERE uid = ?", (me["uid"],))
+                now = datetime.now(timezone.utc).isoformat()
+                for f in clean:
+                    conn.execute("INSERT OR IGNORE INTO favorites (uid, app, created_at) VALUES (?, ?, ?)",
+                                 (me["uid"], f, now))
+                conn.commit()
+            finally:
+                conn.close()
+        return 200, {"favorites": clean}
     if path == "/store/submission/review":
         me = _auth_user(headers)
         if not me or not me["is_admin"]:
