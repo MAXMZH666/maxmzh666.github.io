@@ -54,7 +54,7 @@
                 <a href="forum.html#cat-5a90d1f4-61f4-4ae9-b4f0-0ca5bd48a71f">💻 MAX编程社区专栏</a>
                 <a href="forum-new.html">✏️ 发新帖</a>
                 <a href="https://maxmzh.com/community-home.html">MAX编程社区</a>
-                <span id="sub-auth"><a href="https://maxmzh.com/community-auth.html">登录</a></span>
+                <span id="sub-auth"></span>
             </nav>
         </div>
     </div>
@@ -63,7 +63,7 @@
         <section class="portfolio" style="max-width:760px">
             <p class="article-back"><a href="forum.html">← 返回论坛</a></p>
             <h1 class="section-title">✏️ 发新帖</h1>
-            <div id="need-login" class="works-note" style="display:none">请先<a href="https://maxmzh.com/community-auth.html">登录</a>后再发帖。</div>
+            <div id="need-login" class="works-note" style="display:none">请先<a href="login.html?next=forum-new.html">登录</a>后再发帖。</div>
             <form id="new-form" style="display:none">
                 <div class="form-row">
                     <label for="f-cat">版块</label>
@@ -101,7 +101,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/community.min.js?v=20261114a"></script>
     <script src="js/scripts.min.js?v=20261113a"></script>
-    <script src="/js/max-account.js?v=20261113a"></script>
+    <script src="/js/max-account.js?v=20261114b"></script>
     <script>
     (async function () {
         var sb = window.sb, me = await currentUser();
@@ -109,12 +109,25 @@
         document.getElementById('new-form').style.display = '';
         var sel = document.getElementById('f-cat');
         try {
-            var cr = await sb.from('forum_categories').select('*').order('sort_order');
-            (cr.data || []).forEach(function (c) {
+            /* 版块列表与论坛首页共用 10 分钟缓存 */
+            var catList = [];
+            try {
+                var cc = sessionStorage.getItem('forum_cats');
+                if (cc) { var cj = JSON.parse(cc); if (cj && (Date.now() - cj.t) < 600000) catList = cj.data || []; }
+            } catch (e) {}
+            if (!catList.length) {
+                var cr = await sb.from('forum_categories').select('*').order('sort_order');
+                catList = cr.data || [];
+                try { sessionStorage.setItem('forum_cats', JSON.stringify({ t: Date.now(), data: catList })); } catch (e) {}
+            }
+            catList.forEach(function (c) {
                 var o = document.createElement('option');
                 o.value = c.id; o.textContent = (c.icon || '') + ' ' + c.name;
                 sel.appendChild(o);
             });
+            /* 从某个版块点「发新帖」进来时预选该版块 */
+            var wantCat = new URLSearchParams(location.search).get('cat');
+            if (wantCat) sel.value = wantCat;
         } catch (e) {}
         document.getElementById('new-form').addEventListener('submit', async function (e) {
             e.preventDefault();
@@ -141,5 +154,27 @@
     })();
         try { var fh = document.getElementById('f-mdhelp'); if (fh) fh.innerHTML = mdHelpBtn('f-content'); } catch (e) {}
 </script>
+    <script>
+    /* 论坛账号区：登录走 MAX 账号登录页（同源 login.html，不跳社区登录界面）；已登录显示用户名和退出 */
+    (function () {
+        var el = document.getElementById('sub-auth');
+        if (!el || !window.sb) return;
+        function escn(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+        function render() {
+            window.sb.auth.getSession().then(function (r) {
+                var s = r && r.data && r.data.session;
+                if (!s) { el.innerHTML = '<a href="login.html?next=' + encodeURIComponent(location.href) + '">登录</a>'; return; }
+                window.sb.from('profiles').select('username').eq('id', s.user.id).single().then(function (pr) {
+                    var name = (pr.data && pr.data.username) || (s.user.email || '').split('@')[0];
+                    el.innerHTML = '<a href="https://maxmzh.com/community-user.html?username=' + encodeURIComponent(name) + '">' + escn(name) + '</a> · <a href="#" id="sub-logout">退出</a>';
+                    var lo = document.getElementById('sub-logout');
+                    if (lo) lo.addEventListener('click', function (e) { e.preventDefault(); window.sb.auth.signOut().then(function () { location.reload(); }); });
+                });
+            }).catch(function () {});
+        }
+        render();
+        try { window.sb.auth.onAuthStateChange(render); } catch (e) {}
+    })();
+    </script>
 </body>
 </html>

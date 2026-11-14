@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MAX 账号登录：一个账号，登录 MAX编程社区、MAX论坛、MAX应用商店等全部 MAX 产品。">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta property="og:title" content="MAXMZH - MAX 账号登录">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://maxmzh.com/logo.png">
+    <title>MAX 账号登录 - MAXMZH</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="css/styles.min.css?v=20261113a">
+    <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
+    <style>
+        .login-wrap { max-width: 430px; margin: 0 auto; padding: 48px 18px 64px; }
+        .login-card { border: 1px solid var(--border, rgba(255,255,255,.1)); border-radius: 18px; padding: 30px 26px 24px; background: var(--card, rgba(255,255,255,.03)); box-shadow: 0 18px 50px rgba(0,0,0,.35); }
+        .login-logo { width: 60px; height: 60px; margin: 0 auto 14px; border-radius: 18px; background: linear-gradient(135deg,#4d7cfe,#6d5cff); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 800; box-shadow: 0 8px 26px rgba(77,124,254,.45); }
+        .login-card h1 { text-align: center; font-size: 1.35rem; margin: 0 0 6px; }
+        .login-sub { text-align: center; color: var(--muted); font-size: .88rem; line-height: 1.6; margin: 0 0 22px; }
+        .form-row { margin-bottom: 15px; }
+        .form-row label { display: block; margin-bottom: 6px; font-weight: 600; font-size: .92rem; }
+        .form-row input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border, rgba(255,255,255,.12)); background: var(--card, rgba(255,255,255,.03)); color: inherit; font-size: 1rem; box-sizing: border-box; }
+        .captcha-row { display: flex; gap: 10px; align-items: center; }
+        .captcha-row canvas { border-radius: 8px; cursor: pointer; flex: none; }
+        .captcha-row input { flex: 1; min-width: 0; }
+        .btn-login { width: 100%; padding: 13px; border: none; border-radius: 11px; background: linear-gradient(135deg,#4d7cfe,#6d5cff); color: #fff; font-size: 1rem; font-weight: 700; cursor: pointer; box-shadow: 0 6px 20px rgba(77,124,254,.35); }
+        .btn-login:disabled { opacity: .55; cursor: default; }
+        .login-links { display: flex; justify-content: space-between; margin-top: 16px; font-size: .88rem; }
+        .login-links a { color: var(--accent, #4d7cfe); text-decoration: none; }
+        .form-note { min-height: 1.2em; font-size: .88rem; margin: 12px 0 0; text-align: center; }
+        .form-note.err { color: #ff6b6b; }
+        .form-note.ok { color: #51cf66; }
+        .already-box { text-align: center; }
+        .already-box .who { font-size: 1.05rem; font-weight: 700; margin-bottom: 16px; }
+        .btn-ghost { width: 100%; padding: 12px; margin-top: 10px; border-radius: 11px; border: 1px solid var(--border, rgba(255,255,255,.16)); background: transparent; color: inherit; font-size: .95rem; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav" aria-label="主导航">
+            <a class="brand" href="https://maxmzh.com/"><img src="logo.webp" alt="MAXMZH"></a>
+            <ul class="nav-links">
+                <li><a href="https://maxmzh.com/">主站</a></li>
+                <li><a href="https://maxmzh.com/community-home.html">MAX编程社区</a></li>
+                <li><a href="https://forum.maxmzh.com/">MAX论坛</a></li>
+                <li><a href="https://store.maxmzh.com/">应用商店</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="login-wrap">
+            <div class="login-card">
+                <div class="login-logo">M</div>
+                <h1>MAX 账号登录</h1>
+                <p class="login-sub">一个 MAX 账号，登录 MAX编程社区、MAX论坛、应用商店、MAX 编辑器等全部 MAX 产品。</p>
+
+                <div id="already" class="already-box" style="display:none">
+                    <p class="who" id="already-text"></p>
+                    <button type="button" class="btn-login" id="go-btn">继续</button>
+                    <button type="button" class="btn-ghost" id="logout-btn">退出登录</button>
+                </div>
+
+                <form id="login-form" style="display:none">
+                    <div class="form-row">
+                        <label for="a-email">邮箱</label>
+                        <input type="email" id="a-email" required placeholder="注册时用的邮箱" autocomplete="email">
+                    </div>
+                    <div class="form-row">
+                        <label for="a-password">密码</label>
+                        <input type="password" id="a-password" required minlength="6" placeholder="至少 6 位" autocomplete="current-password">
+                    </div>
+                    <div class="form-row">
+                        <label for="a-captcha">验证码 <span style="color:var(--muted);font-weight:400">（人机验证）</span></label>
+                        <div class="captcha-row">
+                            <canvas id="captcha-canvas" width="120" height="44" title="看不清？点我换一张"></canvas>
+                            <input type="text" id="a-captcha" maxlength="4" required placeholder="输入图中字符" autocomplete="off">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-login" id="login-btn">登录</button>
+                    <p class="form-note" id="login-note"></p>
+                    <div class="login-links">
+                        <a href="https://maxmzh.com/community-auth.html?mode=signup">没有账号？注册 MAX 账号</a>
+                        <a href="https://maxmzh.com/community-auth.html?mode=recover">忘记密码</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+    (function () {
+        var SUPABASE_URL = 'https://xkvpzxxtcnocofnsezpy.supabase.co';
+        var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhrdnB6eHh0Y25vY29mbnNlenB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5MTY4MzQsImV4cCI6MjEwNjQ5MjgzNH0.zTpvyEsutA9hV_UIg36g5owBRnxdHaI-sy_fLUsu6ec';
+        var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        /* 回跳地址：只允许本站同源，防开放重定向 */
+        var next = '/';
+        try {
+            var raw = new URLSearchParams(location.search).get('next');
+            if (raw) {
+                var nu = new URL(raw, location.origin);
+                if (nu.origin === location.origin && !/login\.html$/.test(nu.pathname)) next = nu.pathname + nu.search + nu.hash;
+            }
+        } catch (e) {}
+
+        /* 图形验证码（与社区登录同一套规则） */
+        var captchaCode = '';
+        var captchaCanvas = document.getElementById('captcha-canvas');
+        function drawCaptcha() {
+            var chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+            captchaCode = '';
+            for (var i = 0; i < 4; i++) captchaCode += chars.charAt(Math.floor(Math.random() * chars.length));
+            var ctx = captchaCanvas.getContext('2d');
+            ctx.fillStyle = '#16161c';
+            ctx.fillRect(0, 0, 120, 44);
+            for (var n = 0; n < 5; n++) {
+                ctx.strokeStyle = 'rgba(255,204,0,' + (0.15 + Math.random() * 0.25) + ')';
+                ctx.beginPath();
+                ctx.moveTo(Math.random() * 120, Math.random() * 44);
+                ctx.lineTo(Math.random() * 120, Math.random() * 44);
+                ctx.stroke();
+            }
+            for (var j = 0; j < 4; j++) {
+                var ch = captchaCode.charAt(j);
+                ctx.font = 'bold ' + (24 + Math.floor(Math.random() * 6)) + 'px sans-serif';
+                ctx.fillStyle = ['#ffcc00', '#51cf66', '#74c0fc', '#ffa94d'][j % 4];
+                ctx.save();
+                ctx.translate(18 + j * 26, 30);
+                ctx.rotate((Math.random() - 0.5) * 0.5);
+                ctx.fillText(ch, 0, 0);
+                ctx.restore();
+            }
+            for (var d = 0; d < 40; d++) {
+                ctx.fillStyle = 'rgba(255,255,255,' + (Math.random() * 0.3) + ')';
+                ctx.fillRect(Math.random() * 120, Math.random() * 44, 1.5, 1.5);
+            }
+        }
+        captchaCanvas.addEventListener('click', drawCaptcha);
+        drawCaptcha();
+
+        var form = document.getElementById('login-form');
+        var note = document.getElementById('login-note');
+        var btn = document.getElementById('login-btn');
+
+        sb.auth.getSession().then(function (r) {
+            var session = r && r.data && r.data.session;
+            if (!session) { form.style.display = ''; return; }
+            sb.from('profiles').select('username').eq('id', session.user.id).single()
+                .then(function (pr) {
+                    var name = (pr.data && pr.data.username) || session.user.email;
+                    document.getElementById('already-text').textContent = '你已登录：' + name;
+                    document.getElementById('already').style.display = '';
+                })
+                .catch(function () {
+                    document.getElementById('already-text').textContent = '你已登录：' + session.user.email;
+                    document.getElementById('already').style.display = '';
+                });
+        }).catch(function () { form.style.display = ''; });
+
+        document.getElementById('go-btn').addEventListener('click', function () { location.href = next; });
+        document.getElementById('logout-btn').addEventListener('click', function () {
+            sb.auth.signOut().then(function () { location.reload(); }).catch(function () { location.reload(); });
+        });
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            var email = document.getElementById('a-email').value.trim();
+            var password = document.getElementById('a-password').value;
+            var cap = document.getElementById('a-captcha').value.trim();
+            note.className = 'form-note';
+            if (!email || !password) { note.textContent = '请填写邮箱和密码'; note.classList.add('err'); return; }
+            if (cap.toLowerCase() !== captchaCode.toLowerCase()) {
+                note.textContent = '图形验证码不对，换一张再试试'; note.classList.add('err');
+                document.getElementById('a-captcha').value = '';
+                drawCaptcha();
+                return;
+            }
+            btn.disabled = true; btn.textContent = '登录中…'; note.textContent = '';
+            sb.auth.signInWithPassword({ email: email, password: password }).then(function (r) {
+                if (r.error) throw r.error;
+                note.textContent = '登录成功，正在跳转…'; note.classList.add('ok');
+                location.href = next;
+            }).catch(function (err) {
+                var msg = (err && err.message) || '登录失败';
+                if (/invalid login credentials/i.test(msg)) msg = '邮箱或密码不对';
+                note.textContent = msg; note.classList.add('err');
+                btn.disabled = false; btn.textContent = '登录';
+                document.getElementById('a-captcha').value = '';
+                drawCaptcha();
+            });
+        });
+    })();
+    </script>
+</body>
+</html>

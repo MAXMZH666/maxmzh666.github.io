@@ -3,7 +3,8 @@
  * ------------------------------------------------------------
  * 原理：所有产品同域（maxmzh.com），共用同一个 Supabase 项目的
  * 登录态（localStorage 同源共享）。在社区登录一次，其它产品打开
- * 即已登录；未登录时点按钮跳到社区登录页，登录后自动跳回本页。
+ * 即已登录；未登录时点按钮跳到独立的 MAX 账号登录页（/login.html，
+ * 不再跳社区登录界面），登录后自动跳回本页。
  *
  * 新产品接入（两步）：
  *   1) 页面里加一个容器：<div data-max-account></div>
@@ -100,7 +101,7 @@
     }
 
     function loginUrl() {
-        return '/community-auth.html?next=' + encodeURIComponent(location.href);
+        return '/login.html?next=' + encodeURIComponent(location.href);
     }
 
     function renderInto(el) {

@@ -114,7 +114,7 @@
         <p>&copy; <span data-year>2026</span> MAXMZH. 保留所有权利。</p>
     </footer>
     <script src="js/scripts.min.js?v=20261113a"></script>
-    <script src="js/max-account.js?v=20261113a"></script>
+    <script src="js/max-account.js?v=20261114b"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/community.min.js?v=20261114a"></script>
     <script>
@@ -237,7 +237,7 @@
             slSay('生成中…');
             try {
                 var me = await currentUser();
-                if (!me) { slSay('<span class="err">请先 <a href="community-auth.html" style="color:inherit;text-decoration:underline">登录社区账号</a> 再生成短链</span>'); return; }
+                if (!me) { slSay('<span class="err">请先 <a href="login.html?next=' + encodeURIComponent(location.href) + '" style="color:inherit;text-decoration:underline">登录 MAX 账号</a> 再生成短链</span>'); return; }
                 var code = slCode(6);
                 var r = await sb.from('short_links').insert({ code: code, url: url, user_id: me.id }).select('code').single();
                 if (r.error) throw r.error;

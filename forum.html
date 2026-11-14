@@ -53,19 +53,19 @@
                 <a href="forum.html#cat-5a90d1f4-61f4-4ae9-b4f0-0ca5bd48a71f">💻 MAX编程社区专栏</a>
                 <a href="forum-new.html">✏️ 发新帖</a>
                 <a href="https://maxmzh.com/community-home.html">MAX编程社区</a>
-                <span id="sub-auth"><a href="https://maxmzh.com/community-auth.html">登录</a></span>
+                <span id="sub-auth"></span>
             </nav>
         </div>
     </div>
 
     <main>
         <section class="portfolio">
-            <p class="article-back"><a href="community.html">← 返回 MAX编程社区</a></p>
+            <p class="article-back"><a href="https://maxmzh.com/community.html">← 返回 MAX编程社区</a></p>
             <h1 class="section-title">💬 MAX论坛</h1>
             <p class="section-sub">聊游戏、问问题、提建议，和 MAX编程社区同账号互通。</p>
             <div class="forum-topbar">
                 <div class="sort-tabs" id="cat-tabs"><button data-cat="" class="active">全部</button></div>
-                <a class="btn-new" href="forum-new.html">✏️ 发新帖</a>
+                <a class="btn-new" id="btn-new" href="forum-new.html">✏️ 发新帖</a>
             </div>
             <div class="sort-tabs" id="sort-tabs" style="margin-bottom:14px">
                 <button data-sort="new" class="active">🆕 最新</button>
@@ -93,15 +93,30 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/community.min.js?v=20261114a"></script>
     <script src="js/scripts.min.js?v=20261113a"></script>
-    <script src="/js/max-account.js?v=20261113a"></script>
+    <script src="/js/max-account.js?v=20261114b"></script>
     <script>
     (async function () {
         var sb = window.sb, catId = '', sort = 'new';
         var cats = [], catMap = {};
+        var unameCache = {};
+        /* 版块列表 10 分钟缓存，避免每次进论坛都重复查询 */
+        async function loadCats() {
+            try {
+                var c = sessionStorage.getItem('forum_cats');
+                if (c) { var j = JSON.parse(c); if (j && (Date.now() - j.t) < 600000) return j.data || []; }
+            } catch (e) {}
+            var cr = await sb.from('forum_categories').select('*').order('sort_order');
+            var data = cr.data || [];
+            try { sessionStorage.setItem('forum_cats', JSON.stringify({ t: Date.now(), data: data })); } catch (e) {}
+            return data;
+        }
+        function updNewBtn() {
+            var bn = document.getElementById('btn-new');
+            if (bn) bn.href = catId ? 'forum-new.html?cat=' + catId : 'forum-new.html';
+        }
         /* 版块 */
         try {
-            var cr = await sb.from('forum_categories').select('*').order('sort_order');
-            cats = cr.data || [];
+            cats = await loadCats();
             cats.forEach(function (c) { catMap[c.id] = c; });
             var tabs = document.getElementById('cat-tabs');
             cats.forEach(function (c) {
@@ -112,6 +127,7 @@
                     catId = c.id;
                     tabs.querySelectorAll('button').forEach(function (x) { x.classList.remove('active'); });
                     b.classList.add('active');
+                    updNewBtn();
                     load();
                 });
                 tabs.appendChild(b);
@@ -120,7 +136,14 @@
                 catId = '';
                 tabs.querySelectorAll('button').forEach(function (x) { x.classList.remove('active'); });
                 this.classList.add('active');
+                updNewBtn();
                 load();
+            });
+            /* 在论坛页内点导航「专栏」链接只变 hash 不刷新，监听 hash 切换版块 */
+            window.addEventListener('hashchange', function () {
+                var hc = (location.hash || '').replace('#cat-', '');
+                var target = (hc && catMap[hc]) ? tabs.querySelector('[data-cat="' + hc + '"]') : tabs.querySelector('[data-cat=""]');
+                if (target && !target.classList.contains('active')) target.click();
             });
             /* #cat-<id> 深链：导航「MAX编程社区专栏」直达对应版块 */
             var hcat = (location.hash || '').replace('#cat-', '');
@@ -151,8 +174,8 @@
                 var ts = r.data || [];
                 if (!ts.length) { note.textContent = '还没有帖子，来发第一帖吧！'; return; }
                 note.textContent = '';
-                var aids = Array.from(new Set(ts.map(function (t) { return t.author_id; })));
-                var unames = {};
+                var aids = Array.from(new Set(ts.map(function (t) { return t.author_id; }))).filter(function (a) { return !unameCache[a]; });
+                var unames = unameCache;
                 if (aids.length) {
                     var pr = await sb.from('profiles').select('id,username').in('id', aids);
                     (pr.data || []).forEach(function (p) { unames[p.id] = p.username; });
@@ -170,6 +193,28 @@
             } catch (e) { note.textContent = '加载失败：' + e.message; }
         }
         load();
+    })();
+    </script>
+    <script>
+    /* 论坛账号区：登录走 MAX 账号登录页（同源 login.html，不跳社区登录界面）；已登录显示用户名和退出 */
+    (function () {
+        var el = document.getElementById('sub-auth');
+        if (!el || !window.sb) return;
+        function escn(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+        function render() {
+            window.sb.auth.getSession().then(function (r) {
+                var s = r && r.data && r.data.session;
+                if (!s) { el.innerHTML = '<a href="login.html?next=' + encodeURIComponent(location.href) + '">登录</a>'; return; }
+                window.sb.from('profiles').select('username').eq('id', s.user.id).single().then(function (pr) {
+                    var name = (pr.data && pr.data.username) || (s.user.email || '').split('@')[0];
+                    el.innerHTML = '<a href="https://maxmzh.com/community-user.html?username=' + encodeURIComponent(name) + '">' + escn(name) + '</a> · <a href="#" id="sub-logout">退出</a>';
+                    var lo = document.getElementById('sub-logout');
+                    if (lo) lo.addEventListener('click', function (e) { e.preventDefault(); window.sb.auth.signOut().then(function () { location.reload(); }); });
+                });
+            }).catch(function () {});
+        }
+        render();
+        try { window.sb.auth.onAuthStateChange(render); } catch (e) {}
     })();
     </script>
 </body>
