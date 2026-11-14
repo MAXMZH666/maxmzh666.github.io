@@ -32,4 +32,4 @@ jobs:
 
       - name: Deploy store API on VPS
         run: |
-          ssh -i ~/.ssh/id_vps "$VPS_USER@$VPS_HOST" 'bash ~/mmc-api-src/deploy-store.sh'
+          ssh -i ~/.ssh/id_vps "$VPS_USER@$VPS_HOST" 'bash ~/mmc-api-src/mmc-api/deploy-store.sh'
