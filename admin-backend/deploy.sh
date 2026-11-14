@@ -1,5 +1,5 @@
 #!/bin/bash
-# 在大阪 VPS 上部署 MAXMZH 网站后台（以 ops 身份运行，sudo 已免密）
+# 在服务器上部署 MAXMZH 网站后台
 # 用法：把本目录传到 VPS 后执行 bash deploy.sh
 set -e
 SRC_DIR="$(cd "$(dirname "$0")" && pwd)"
