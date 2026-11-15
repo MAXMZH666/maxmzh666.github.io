@@ -144,6 +144,7 @@
 
                 <label for="f-cover">封面图（选填）</label>
                 <input type="file" id="f-cover" accept="image/*">
+                <p class="form-hint" id="cur-cover-hint" style="display:none"></p>
                 <label class="check-row"><input type="checkbox" id="f-opensource"> 🌐 开源：允许他人查看/下载本作品的源代码（.sb3 / 代码）</label>
                 <p class="form-hint">不勾选则他人只能试玩/运行，无法看到源码（防扒源）。</p>
                 <div class="progress" id="progress" style="display:none">
@@ -432,10 +433,21 @@
                 document.getElementById('f-code').value = editWork.code || '';
             }
             if (et === 'scratch') {
-                document.querySelector('label[for="f-sb3"]').textContent = '游戏文件（.sb3，不换请留空）';
+                document.querySelector('label[for="f-sb3"]').innerHTML = '游戏文件（.sb3）<span class="form-hint"> ✓ 已有文件，不换请留空、直接点「保存修改」即可</span>';
             }
             if (BIN_TYPES[et]) {
-                document.getElementById('bin-label').innerHTML = BIN_TYPES[et].label + '文件 <span class="form-hint">（不换请留空）</span>';
+                document.getElementById('bin-label').innerHTML = BIN_TYPES[et].label + '文件 <span class="form-hint"> ✓ 已有文件，不换请留空、直接点「保存修改」即可</span>';
+                if (editWork.screenshots && editWork.screenshots.length) {
+                    document.querySelector('label[for="f-shots"]').innerHTML = '应用截图（选填，最多 3 张）<span class="form-hint"> ✓ 已有 ' + editWork.screenshots.length + ' 张，不换请留空</span>';
+                }
+            }
+            if (et === 'website' && editWork.site_url) {
+                document.getElementById('f-siteurl').value = editWork.site_url;
+            }
+            if (editWork.cover_url) {
+                var cch = document.getElementById('cur-cover-hint');
+                cch.style.display = '';
+                cch.innerHTML = '✓ 已有封面，不换请留空、直接保存即可<br><img src="' + esc(editWork.cover_url) + '" alt="" style="max-height:64px;border-radius:8px;margin-top:6px">';
             }
             if (et === 'website' && editWork.code) {
                 var wb = document.createElement('p');

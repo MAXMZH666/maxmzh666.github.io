@@ -241,7 +241,8 @@
                 (me ? '<a data-like="' + p.id + '"' + (myLikes[p.id] ? ' class="liked"' : '') + '>👍 ' + (lc ? lc : '赞') + '</a>' : '<span class="like-static">👍 ' + lc + '</span>') +
                 (me ? '<a data-reply-post="' + p.id + '" data-reply-name="' + esc(name) + '">回复</a>' : '') +
                 (canEdit ? '<a data-edit="' + p.id + '">编辑</a>' : '') +
-                (canDel ? '<a data-del="' + p.id + '">删除</a>' : '') + '</div></div>';
+                (canDel ? '<a data-del="' + p.id + '">删除</a>' : '') +
+                (me && p.author_id !== me.id ? '<a data-report="' + p.id + '">举报</a>' : '') + '</div></div>';
             (p.children || []).forEach(function (ch) { hh += renderPost(ch, 0, depth + 1); });
             return hh;
         }
@@ -257,6 +258,35 @@
             if (mw) mw.hidden = roots.length <= shownRoots;
             bindPostActions(list);
         }
+        /* 举报回帖（通用弹窗） */
+        var postReportTarget = null;
+        document.body.insertAdjacentHTML('beforeend',
+            '<div class="modal-backdrop" id="report-modal" style="display:none">' +
+            '<div class="modal"><h3>举报回帖</h3>' +
+            '<p class="form-hint">请填写举报原因，站长会尽快处理。</p>' +
+            '<textarea id="report-reason" maxlength="200" placeholder="如：辱骂、广告、色情等"></textarea>' +
+            '<p class="form-note" id="report-note"></p>' +
+            '<div class="modal-actions"><button class="btn" id="report-cancel" type="button">取消</button>' +
+            '<button class="btn btn-blue" id="report-submit" type="button">提交举报</button></div></div></div>');
+        var postReportModal = document.getElementById('report-modal');
+        function openPostReport(postId) {
+            if (!me) { location.href = 'login.html'; return; }
+            postReportTarget = postId;
+            document.getElementById('report-reason').value = '';
+            document.getElementById('report-note').textContent = '';
+            postReportModal.style.display = 'flex';
+        }
+        document.getElementById('report-cancel').addEventListener('click', function () { postReportModal.style.display = 'none'; });
+        postReportModal.addEventListener('click', function (e) { if (e.target === postReportModal) postReportModal.style.display = 'none'; });
+        document.getElementById('report-submit').addEventListener('click', async function () {
+            var reason = document.getElementById('report-reason').value.trim();
+            var rnote = document.getElementById('report-note');
+            if (!reason) { rnote.textContent = '请填写举报原因'; rnote.className = 'form-note err'; return; }
+            var r = await sb.from('reports').insert({ reporter_id: me.id, target_type: 'forum_post', target_id: postReportTarget, reason: reason });
+            if (r.error) { rnote.textContent = '举报失败：' + r.error.message; rnote.className = 'form-note err'; return; }
+            postReportModal.style.display = 'none';
+            alert('已收到举报，站长会尽快处理，感谢监督！');
+        });
         function bindPostActions(list) {
             list.querySelectorAll('[data-del]').forEach(function (a) {
                 a.addEventListener('click', async function () {
@@ -292,6 +322,11 @@
                         }
                         renderPosts();
                     } catch (e) { alert('点赞失败：' + e.message); }
+                });
+            });
+            list.querySelectorAll('[data-report]').forEach(function (a) {
+                a.addEventListener('click', function () {
+                    openPostReport(a.getAttribute('data-report'));
                 });
             });
             list.querySelectorAll('[data-edit]').forEach(function (a) {

@@ -245,7 +245,10 @@
             ' 作者：<a href="community-user.html?id=' + w.author_id + '">' + esc(authorName) + '</a>' +
             ' · ' + fmtDate(w.created_at) + ' · 👁 <span id="view-count">' + (w.views || 0) + '</span></p>' +
             '<div class="card-tags" id="work-tags" style="margin:8px 0"></div>' +
-            (w.description ? '<div class="work-desc markdown-body">' + renderMarkdown(w.description) + '</div>' : '') +
+            '<div id="desc-box">' +
+            (w.description ? '<div class="work-desc markdown-body">' + renderMarkdown(w.description) + '</div>' : (isAuthor ? '<p class="form-hint">还没有作品简介，点下方按钮添加。</p>' : '')) +
+            (isAuthor ? '<p style="margin:8px 0 0"><button type="button" class="btn btn-ghost" id="edit-desc-btn">✏️ 编辑简介</button></p>' : '') +
+            '</div>' +
             '<div class="work-actions">' +
                 '<button class="like-btn" id="like-btn">❤ <span id="like-count">…</span></button>' +
                 '<button class="fav-btn" id="fav-btn">⭐ <span id="fav-text">收藏</span> <span id="fav-count"></span></button>' +
@@ -554,12 +557,21 @@
             });
         }
 
-        /* 举报作品（自定义弹窗，不用原生 prompt） */
+        /* 举报（作品/评论共用弹窗，不用原生 prompt） */
         var reportBtn = document.getElementById('report-work');
-        if (reportBtn) {
+        var reportTarget = { type: 'work', id: id };
+        function openReport(type, targetId, title) {
+            if (!me) { authRequiredRedirect(); return; }
+            reportTarget = { type: type, id: targetId };
+            document.getElementById('report-title').textContent = title;
+            document.getElementById('report-reason').value = '';
+            document.getElementById('report-note').textContent = '';
+            document.getElementById('report-modal').style.display = 'flex';
+        }
+        if (reportBtn || me) {
             var modalHtml =
                 '<div class="modal-backdrop" id="report-modal" style="display:none">' +
-                '<div class="modal"><h3>举报作品</h3>' +
+                '<div class="modal"><h3 id="report-title">举报作品</h3>' +
                 '<p class="form-hint">请填写举报原因，站长会尽快处理。</p>' +
                 '<textarea id="report-reason" maxlength="200" placeholder="如：抄袭、色情、广告等"></textarea>' +
                 '<p class="form-note" id="report-note"></p>' +
@@ -567,12 +579,9 @@
                 '<button class="btn btn-blue" id="report-submit" type="button">提交举报</button></div></div></div>';
             document.body.insertAdjacentHTML('beforeend', modalHtml);
             var modal = document.getElementById('report-modal');
-            reportBtn.addEventListener('click', function (e) {
+            if (reportBtn) reportBtn.addEventListener('click', function (e) {
                 e.preventDefault();
-                if (!me) { authRequiredRedirect(); return; }
-                document.getElementById('report-reason').value = '';
-                document.getElementById('report-note').textContent = '';
-                modal.style.display = 'flex';
+                openReport('work', id, '举报作品');
             });
             document.getElementById('report-cancel').addEventListener('click', function () {
                 modal.style.display = 'none';
@@ -585,11 +594,58 @@
                 var rnote = document.getElementById('report-note');
                 if (!reason) { rnote.textContent = '请填写举报原因'; rnote.className = 'form-note err'; return; }
                 var r = await sb.from('reports').insert({
-                    reporter_id: me.id, target_type: 'work', target_id: id, reason: reason
+                    reporter_id: me.id, target_type: reportTarget.type, target_id: reportTarget.id, reason: reason
                 });
                 if (r.error) { rnote.textContent = '举报失败：' + r.error.message; rnote.className = 'form-note err'; return; }
                 modal.style.display = 'none';
                 alert('已收到举报，站长会尽快处理，感谢监督！');
+            });
+        }
+
+        /* 作者在详情页直接编辑简介（保存前自动存一个历史版本） */
+        var descBox = document.getElementById('desc-box');
+        if (descBox && isAuthor) {
+            var paintDesc = function () {
+                descBox.innerHTML = (w.description ? '<div class="work-desc markdown-body">' + renderMarkdown(w.description) + '</div>' : '<p class="form-hint">还没有作品简介，点下方按钮添加。</p>') +
+                    '<p style="margin:8px 0 0"><button type="button" class="btn btn-ghost" id="edit-desc-btn">✏️ 编辑简介</button></p>';
+            };
+            descBox.addEventListener('click', async function (e) {
+                var t = e.target;
+                if (t.id === 'edit-desc-btn') {
+                    descBox.innerHTML = '<textarea id="desc-edit" maxlength="2000" rows="7" style="width:100%" placeholder="玩法介绍、操作说明…（支持 Markdown）">' + esc(w.description || '') + '</textarea>' +
+                        '<p class="form-note" id="desc-note"></p>' +
+                        '<p style="margin:8px 0 0"><button type="button" class="btn btn-blue" id="desc-save">保存简介</button> <button type="button" class="btn" id="desc-cancel">取消</button></p>';
+                    document.getElementById('desc-edit').focus();
+                } else if (t.id === 'desc-cancel') {
+                    paintDesc();
+                } else if (t.id === 'desc-save') {
+                    var v = document.getElementById('desc-edit').value.trim();
+                    var note = document.getElementById('desc-note');
+                    t.disabled = true;
+                    try {
+                        var fw = await sb.from('works').select('*').eq('id', id).single();
+                        var cur = fw.data || w;
+                        try {
+                            var mxR = await sb.from('work_versions').select('version_no').eq('work_id', id).order('version_no', { ascending: false }).limit(1);
+                            var nextNo = (mxR.data && mxR.data[0] ? mxR.data[0].version_no : 0) + 1;
+                            await sb.from('work_versions').insert({
+                                work_id: id, author_id: me.id, version_no: nextNo,
+                                title: cur.title, description: cur.description, category: cur.category,
+                                work_type: workTypeOf(cur), code: cur.code || null, sb3_url: cur.sb3_url || null,
+                                apk_url: cur.apk_url || null, screenshots: cur.screenshots || [], cover_url: cur.cover_url || null,
+                                site_url: cur.site_url || null
+                            });
+                        } catch (se) {}
+                        var ur = await sb.from('works').update({ description: v || null }).eq('id', id);
+                        if (ur.error) throw ur.error;
+                        w.description = v;
+                        paintDesc();
+                    } catch (err) {
+                        note.textContent = '保存失败：' + (err.message || '');
+                        note.className = 'form-note err';
+                        t.disabled = false;
+                    }
+                }
             });
         }
 
@@ -635,6 +691,7 @@
                 var h = '<div class="' + cls + '" data-cid="' + c.id + '"><div class="comment-meta">' +
                     esc(nameMap[c.author_id] || '未知') + ' · ' + fmtDate(c.created_at) +
                     (canDel ? ' <button class="remove-btn" data-del-comment="' + c.id + '">删除</button>' : '') +
+                    (me && c.author_id !== me.id ? ' <button class="reply-btn" data-report-comment="' + c.id + '">举报</button>' : '') +
                     (me ? ' <button class="reply-btn" data-reply-id="' + c.id + '" data-reply-name="' + esc(nameMap[c.author_id] || '未知') + '">回复</button>' : '') +
                     '</div><div class="comment-body">' + md(c.content) + '</div></div>';
                 /* 子评论：depth+1，但视觉最多缩进1层 */
@@ -653,6 +710,12 @@
                     } catch (e) { alert('删除失败：' + (e.message || '')); }
                     hideLoading();
                     await loadComments();
+                });
+            });
+            /* 举报评论 */
+            list.querySelectorAll('[data-report-comment]').forEach(function (b) {
+                b.addEventListener('click', function () {
+                    openReport('comment', b.getAttribute('data-report-comment'), '举报评论');
                 });
             });
             /* 回复按钮：设置回复目标 */

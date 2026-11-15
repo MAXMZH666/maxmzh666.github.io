@@ -250,6 +250,36 @@
                     btn.disabled = false;
                 });
             });
+            /* 举报评论/回帖（通用弹窗） */
+            var feedReportTarget = { type: 'comment', id: null };
+            document.body.insertAdjacentHTML('beforeend',
+                '<div class="modal-backdrop" id="report-modal" style="display:none">' +
+                '<div class="modal"><h3 id="report-title">举报评论</h3>' +
+                '<p class="form-hint">请填写举报原因，站长会尽快处理。</p>' +
+                '<textarea id="report-reason" maxlength="200" placeholder="如：辱骂、广告、色情等"></textarea>' +
+                '<p class="form-note" id="report-note"></p>' +
+                '<div class="modal-actions"><button class="btn" id="report-cancel" type="button">取消</button>' +
+                '<button class="btn btn-blue" id="report-submit" type="button">提交举报</button></div></div></div>');
+            var feedReportModal = document.getElementById('report-modal');
+            function openFeedReport(type, targetId) {
+                if (!me) { location.href = 'login.html'; return; }
+                feedReportTarget = { type: type, id: targetId };
+                document.getElementById('report-title').textContent = type === 'comment' ? '举报评论' : '举报回帖';
+                document.getElementById('report-reason').value = '';
+                document.getElementById('report-note').textContent = '';
+                feedReportModal.style.display = 'flex';
+            }
+            document.getElementById('report-cancel').addEventListener('click', function () { feedReportModal.style.display = 'none'; });
+            feedReportModal.addEventListener('click', function (e) { if (e.target === feedReportModal) feedReportModal.style.display = 'none'; });
+            document.getElementById('report-submit').addEventListener('click', async function () {
+                var reason = document.getElementById('report-reason').value.trim();
+                var rnote = document.getElementById('report-note');
+                if (!reason) { rnote.textContent = '请填写举报原因'; rnote.className = 'form-note err'; return; }
+                var r = await sb.from('reports').insert({ reporter_id: me.id, target_type: feedReportTarget.type, target_id: feedReportTarget.id, reason: reason });
+                if (r.error) { rnote.textContent = '举报失败：' + r.error.message; rnote.className = 'form-note err'; return; }
+                feedReportModal.style.display = 'none';
+                alert('已收到举报，站长会尽快处理，感谢监督！');
+            });
             /* 加载某卡片的内联评论 */
             async function loadFeedComments(row) {
                 var kind = row.getAttribute('data-kind'), fid = row.getAttribute('data-id');
@@ -267,9 +297,16 @@
                     (pu.data || []).forEach(function (p) { nm[p.id] = p.username; });
                     listEl.innerHTML = cs.map(function (c) {
                         return '<div class="feed-cmt"><div class="feed-cmt-meta">' +
-                            esc(nm[c.author_id] || '未知') + ' · ' + fmtDate(c.created_at) + '</div>' +
+                            esc(nm[c.author_id] || '未知') + ' · ' + fmtDate(c.created_at) +
+                            (me && c.author_id !== me.id ? ' <a href="#" class="fc-report link-danger" style="font-size:12px" data-ftype="' + (kind === 'work' ? 'comment' : 'forum_post') + '" data-fcid="' + c.id + '">举报</a>' : '') + '</div>' +
                             '<div>' + md(c.content) + '</div></div>';
                     }).join('');
+                    listEl.querySelectorAll('.fc-report').forEach(function (b) {
+                        b.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            openFeedReport(b.getAttribute('data-ftype'), b.getAttribute('data-fcid'));
+                        });
+                    });
                 } catch (e) { listEl.innerHTML = '<p class="works-note" style="padding:12px 0">评论加载失败</p>'; }
             }
         } catch (e) { note.textContent = '加载失败：' + e.message; }
