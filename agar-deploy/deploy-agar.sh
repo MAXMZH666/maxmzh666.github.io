@@ -51,8 +51,21 @@ UNIT
 sudo systemctl daemon-reload
 sudo systemctl enable agar >/dev/null 2>&1 || true
 sudo systemctl restart agar
-sleep 3
-systemctl is-active agar
+# 健康检查：最多等 40 秒（首次启动要建库，可能较慢）
+OK=0
+for i in $(seq 1 20); do
+    sleep 2
+    if curl -s -m 3 -o /dev/null http://127.0.0.1:3000/; then OK=1; break; fi
+done
+systemctl is-active agar || true
+if [ "$OK" != "1" ]; then
+    echo "=== agar 服务未在 :3000 响应，诊断输出 ==="
+    sudo systemctl status agar --no-pager -l | tail -20 || true
+    sudo journalctl -u agar -n 80 --no-pager || true
+    echo "=== sqlite3 加载测试 ==="
+    "$NODE_BIN" -e "require('/opt/agar/node_modules/sqlite3'); console.log('sqlite3 ok')" || true
+    exit 1
+fi
 curl -s -m 5 -o /dev/null -w "local game page: %{http_code}\n" http://127.0.0.1:3000/
 
 # 4) nginx 反代（备份 + 插入 + 校验，失败回滚）
