@@ -313,7 +313,7 @@
     var featWrap = document.getElementById('feat-wrap');
     var featGrid = document.getElementById('feat-grid');
     var mask = document.getElementById('mask');
-    /* 首次打开安全提示（对标参考站，本机记住后不再弹） */
+    /* 首次打开安全提示（本机记住后不再弹） */
     var riskMask = document.getElementById('risk-mask');
     try {
         if (!localStorage.getItem('maxstore_risk_ok') && !/^#app-t?\d+$/.test(location.hash || '')) {
