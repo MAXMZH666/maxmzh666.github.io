@@ -1,0 +1,37 @@
+name: Deploy img page (one file)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-img:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    env:
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_USER: ops
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_vps
+          chmod 600 ~/.ssh/id_vps
+          ssh-keyscan -t ed25519 -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          FP=$(ssh-keygen -lf ~/.ssh/known_hosts | awk '{print $2}' | head -1)
+          echo "host key fingerprint: $FP"
+          test "$FP" = "SHA256:FhhiN4dO64X6WNnXRYICB/3kFzZpmS089TYUXpDUW9k"
+      - name: Upload img page
+        run: scp -i ~/.ssh/id_vps mmc-api/img-index.html "$VPS_USER@$VPS_HOST:~/img-index.html"
+      - name: Install img page
+        run: |
+          ssh -i ~/.ssh/id_vps "$VPS_USER@$VPS_HOST" '
+            set -e
+            sudo cp ~/img-index.html /opt/mmc-api/img/index.html
+            sudo chown "$(stat -c %U /opt/mmc-api)" /opt/mmc-api/img/index.html
+            grep -c "MaxSbAuth" /opt/mmc-api/img/index.html
+            curl -sk -H "Host: img.maxmzh.com" https://127.0.0.1/ | grep -c "MaxSbAuth"
+          '
