@@ -1,0 +1,59 @@
+name: Setup MAX Agar (one-time)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_USER: ops
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build game bundle
+        working-directory: agar.io-clone-master
+        run: |
+          npm install --ignore-scripts --no-audit --no-fund
+          npm install --no-save webpack-cli --ignore-scripts --no-audit --no-fund
+          npx webpack --mode production
+          cp dist/app.js src/client/js/app.js
+          npm rebuild sqlite3
+          find node_modules/sqlite3 -name '*.node' | grep -q . && echo "sqlite3 binary ok"
+          npm prune --omit=dev --ignore-scripts --no-audit --no-fund
+
+      - name: Package game
+        working-directory: agar.io-clone-master
+        run: |
+          rm -rf src/server/db test
+          tar -czf ../agar-deploy.tar.gz src config.js package.json LICENSE node_modules
+          ls -la ../agar-deploy.tar.gz
+
+      - name: Setup SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_vps
+          chmod 600 ~/.ssh/id_vps
+          ssh-keyscan -t ed25519 -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          FP=$(ssh-keygen -lf ~/.ssh/known_hosts | awk '{print $2}' | head -1)
+          echo "host key fingerprint: $FP"
+          test "$FP" = "SHA256:FhhiN4dO64X6WNnXRYICB/3kFzZpmS089TYUXpDUW9k"
+
+      - name: Upload to VPS
+        run: |
+          scp -i ~/.ssh/id_vps agar-deploy.tar.gz "$VPS_USER@$VPS_HOST:~/agar-deploy.tar.gz"
+          scp -i ~/.ssh/id_vps -r agar-deploy "$VPS_USER@$VPS_HOST:~/agar-deploy-src"
+
+      - name: Deploy on VPS
+        run: |
+          ssh -i ~/.ssh/id_vps "$VPS_USER@$VPS_HOST" 'S=$(find ~/agar-deploy-src -name deploy-agar.sh | head -1); echo "script: $S"; bash "$S"'
