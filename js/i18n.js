@@ -27,7 +27,7 @@
         '邮箱': 'Email', '密码': 'Password', '原密码': 'Current Password', '新密码（至少 6 位）': 'New Password (min. 6 chars)',
         '确认新密码': 'Confirm New Password', '新邮箱': 'New Email', '验证码': 'Code',
         '修改密码': 'Change Password', '修改邮箱': 'Change Email', '个人设置': 'Settings',
-        '⚙️ 个人设置': '⚙️ Settings', '⚙️ 账号设置': '⚙️ Account Settings', '🔐 MAX 账号设置': '🔐 MAX Account Settings', '🔐 修改密码': '🔐 Change Password', '📧 修改邮箱': '📧 Change Email',
+        '⚙️ 个人设置': '⚙️ Settings', '👥 社区与工作室': '👥 Community & Studios', '🎮 游戏': '🎮 Games', '🛠️ 工具与服务': '🛠️ Tools & Services', '⚙️ 账号设置': '⚙️ Account Settings', '🔐 MAX 账号设置': '🔐 MAX Account Settings', '🔐 修改密码': '🔐 Change Password', '📧 修改邮箱': '📧 Change Email',
         '🚫 屏蔽列表': '🚫 Block List', '🎛️ 个人喜好': '🎛️ Preferences',
         '在线编辑器自动保存间隔': 'Editor Autosave Interval', '发布作品时的默认分类': 'Default Category for New Works',
         '界面语言': 'Language', '主题模式': 'Theme', '暗色': 'Dark', '亮色': 'Light',

@@ -2493,3 +2493,8 @@ body .btn-submit {
 input, textarea, select { color: inherit; }
 ::placeholder { color: rgba(158, 168, 195, 0.55); opacity: 1; }
 :root[data-theme="light"] ::placeholder { color: rgba(92, 102, 128, 0.55); }
+
+/* 首页旗下站点分组标题 */
+.site-group-title { margin: 30px 0 4px; font-size: 1.12rem; color: var(--text); display: flex; align-items: center; gap: 10px; }
+.site-group-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.site-group-title:first-of-type { margin-top: 14px; }
