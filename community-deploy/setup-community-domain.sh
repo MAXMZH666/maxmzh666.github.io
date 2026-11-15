@@ -61,7 +61,7 @@ if [ "$PHASE" = "vhost" ]; then
 elif [ "$PHASE" = "redirect" ]; then
     echo "=== 给主站加社区页 301 跳转 ==="
     sudo cp "$SITE_MAIN" "$SITE_MAIN.bak-community-redirect"
-    OUT=$(python3 "$SRC_DIR/nginx_redirect_insert.py" "$SITE_MAIN" | sudo tee /dev/stderr | tail -1 || true)
+    OUT=$(sudo python3 "$SRC_DIR/nginx_redirect_insert.py" "$SITE_MAIN" | tail -1 || true)
     if [ "$OUT" = "NO_TARGET_BLOCK" ]; then
         echo "未找到主站 443 块，已放弃（备份保留）"
         exit 6
