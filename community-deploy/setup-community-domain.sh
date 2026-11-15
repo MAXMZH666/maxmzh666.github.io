@@ -55,7 +55,7 @@ if [ "$PHASE" = "vhost" ]; then
     echo "https community-home: $H2"
     H3=$(curl -sk -o /dev/null -w '%{http_code} %{redirect_url}' --resolve "$DOMAIN:443:127.0.0.1" "https://$DOMAIN/" || true)
     echo "https root: $H3"
-    [ "$H1" = "200" ] && [ "$H2" = "200" ] || { echo "SELF_CHECK_FAILED"; exit 5; }
+    [ "$H1" = "301" ] && [ "$H2" = "200" ] || { echo "SELF_CHECK_FAILED"; exit 5; }
     echo "VHOST_OK"
 
 elif [ "$PHASE" = "redirect" ]; then
