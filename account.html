@@ -61,6 +61,60 @@
         </div>
     </div>
 
+    <h2 class="sec">⚙️ 账号设置</h2>
+    <div class="card" id="acc-settings">
+        <style>
+            #acc-settings input, #acc-settings select { padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--soft-bg); color: var(--text); font-size: 14px; margin: 2px 4px 2px 0; max-width: 100%; }
+            #acc-settings h3 { margin: 18px 0 8px; font-size: 16px; }
+            #acc-settings h3:first-child { margin-top: 2px; }
+            .as-note { color: var(--muted); font-size: 13px; }
+            .as-info { list-style: none; padding: 0; margin: 0; }
+            .as-info li { margin: 5px 0; color: var(--sub); }
+            .as-info b { color: var(--text); }
+        </style>
+        <div id="as-locked">
+            <p>登录后可以在这里管理密码、邮箱、主题和语言，还能导出你的数据，或让账号在所有设备上退出登录。</p>
+            <p><a class="btn" href="https://maxmzh.com/login.html?next=https://store.maxmzh.com/account.html">登录 MAX 账号</a></p>
+        </div>
+        <div id="as-main" style="display:none">
+            <h3 data-i18n="账号信息">👤 账号信息</h3>
+            <ul class="as-info">
+                <li>邮箱：<b id="as-email">—</b></li>
+                <li>注册时间：<b id="as-created">—</b></li>
+                <li>用户 ID：<b id="as-uid" style="word-break:break-all">—</b></li>
+            </ul>
+            <h3 data-i18n="修改密码">🔐 修改密码</h3>
+            <p><input type="password" id="as-pw1" placeholder="新密码（至少 6 位）" autocomplete="new-password">
+            <input type="password" id="as-pw2" placeholder="再输一次新密码" autocomplete="new-password">
+            <button class="btn" id="as-pw-btn" type="button">修改密码</button></p>
+            <p class="as-note" id="as-pw-note"></p>
+            <h3 data-i18n="修改邮箱">📧 修改邮箱</h3>
+            <p><input type="email" id="as-em1" placeholder="新邮箱地址">
+            <button class="btn" id="as-em-btn" type="button">修改邮箱</button></p>
+            <p class="as-note" id="as-em-note"></p>
+            <h3>🎨 界面偏好</h3>
+            <p>主题：
+            <select id="as-theme">
+                <option value="auto">跟随系统</option>
+                <option value="light">亮色</option>
+                <option value="dark">暗色</option>
+            </select>
+            语言：
+            <select id="as-lang">
+                <option value="zh">简体中文</option>
+                <option value="en">English</option>
+            </select></p>
+            <p class="as-note">主题是商店这边的显示模式；语言切换对全站界面生效。</p>
+            <h3>📦 我的数据</h3>
+            <p><button class="btn ghost" id="as-export" type="button">导出我的数据（JSON）</button>
+            <span class="as-note">包含账号资料、发布的作品、收藏与积分记录。</span></p>
+            <p class="as-note" id="as-export-note"></p>
+            <h3>🚪 登录管理</h3>
+            <p><button class="btn ghost" id="as-signout-all" type="button">退出所有设备</button>
+            <span class="as-note">会让这个账号在所有浏览器和设备上退出登录，包括当前这个。</span></p>
+        </div>
+    </div>
+
     <h2 class="sec">MAX 账号能用在哪</h2>
     <div class="places">
         <div class="place"><h3>💻 MAX编程社区</h3><p>发布和试玩 Scratch 作品、评论点赞、收藏关注、参加赛事、私信聊天，积分和邀请奖励也记在这个账号上。</p><a class="btn ghost" href="https://maxmzh.com/community.html" target="_blank" rel="noopener">打开社区</a></div>
@@ -139,5 +193,91 @@ function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function
     }).catch(renderLoggedOut);
 })();
 </script>
+<script>
+(function () {
+    var main = document.getElementById('as-main'), locked = document.getElementById('as-locked');
+    if (!main) return;
+    function note(id, msg) { var el = document.getElementById(id); if (el) el.textContent = msg; }
+    /* 主题与语言：不依赖登录，先接上 */
+    var themeSel = document.getElementById('as-theme');
+    function resolveStoreTheme(m) { return m === 'auto' ? (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : m; }
+    try { themeSel.value = localStorage.getItem('maxstore_theme') || 'auto'; } catch (e) {}
+    themeSel.addEventListener('change', function () {
+        try { localStorage.setItem('maxstore_theme', themeSel.value); } catch (e) {}
+        document.documentElement.dataset.theme = resolveStoreTheme(themeSel.value);
+    });
+    var langSel = document.getElementById('as-lang');
+    try { langSel.value = localStorage.getItem('maxmzh-lang') === 'en' ? 'en' : 'zh'; } catch (e) {}
+    langSel.addEventListener('change', function () {
+        if (window.MaxI18n) MaxI18n.set(langSel.value);
+        else { try { localStorage.setItem('maxmzh-lang', langSel.value); } catch (e) {} location.reload(); }
+    });
+    if (!window.MaxAccount || !MaxAccount.ready) return;
+    MaxAccount.ready().then(function (r) {
+        if (!r || !r.user) return;
+        var u = r.user;
+        locked.style.display = 'none';
+        main.style.display = '';
+        document.getElementById('as-email').textContent = u.email || '—';
+        document.getElementById('as-created').textContent = u.created_at ? new Date(u.created_at).toLocaleString('zh-CN') : '—';
+        document.getElementById('as-uid').textContent = u.id;
+        var client = null;
+        function getClient() {
+            if (client) return client;
+            if (window.sb) { client = window.sb; return client; }
+            client = window.supabase.createClient('https://xkvpzxxtcnocofnsezpy.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhrdnB6eHh0Y25vY29mbnNlenB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5MTY4MzQsImV4cCI6MjEwNjQ5MjgzNH0.zTpvyEsutA9hV_UIg36g5owBRnxdHaI-sy_fLUsu6ec');
+            return client;
+        }
+        document.getElementById('as-pw-btn').addEventListener('click', async function () {
+            var p1 = document.getElementById('as-pw1').value, p2 = document.getElementById('as-pw2').value;
+            if (!p1 || p1.length < 6) { note('as-pw-note', '新密码至少 6 位。'); return; }
+            if (p1 !== p2) { note('as-pw-note', '两次输入的新密码不一致。'); return; }
+            note('as-pw-note', '修改中…');
+            var res = await getClient().auth.updateUser({ password: p1 });
+            if (res.error) note('as-pw-note', '修改失败：' + res.error.message);
+            else { note('as-pw-note', '✅ 密码已修改，下次登录用新密码。'); document.getElementById('as-pw1').value = ''; document.getElementById('as-pw2').value = ''; }
+        });
+        document.getElementById('as-em-btn').addEventListener('click', async function () {
+            var em = document.getElementById('as-em1').value.trim();
+            if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { note('as-em-note', '邮箱格式不对，请检查。'); return; }
+            note('as-em-note', '提交中…');
+            var res = await getClient().auth.updateUser({ email: em });
+            if (res.error) note('as-em-note', '修改失败：' + res.error.message);
+            else note('as-em-note', '✅ 确认邮件已发送到新邮箱，点击邮件里的链接后邮箱才会变更。');
+        });
+        document.getElementById('as-export').addEventListener('click', async function () {
+            note('as-export-note', '正在整理你的数据…');
+            try {
+                var c = getClient();
+                var prof = await c.from('profiles').select('*').eq('id', u.id).single();
+                var works = await c.from('works').select('*').eq('author_id', u.id).order('created_at', { ascending: false }).limit(200);
+                var favs = await c.from('favorites').select('*').eq('user_id', u.id).limit(200);
+                var pts = await c.from('point_transactions').select('*').eq('user_id', u.id).order('created_at', { ascending: false }).limit(200);
+                var data = {
+                    exported_at: new Date().toISOString(),
+                    account: { id: u.id, email: u.email, created_at: u.created_at },
+                    profile: prof.data || null,
+                    works: works.data || [],
+                    favorites: favs.data || [],
+                    point_transactions: pts.data || []
+                };
+                var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                var a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'max-account-data.json';
+                document.body.appendChild(a); a.click(); a.remove();
+                setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+                note('as-export-note', '✅ 已导出，文件已开始下载。');
+            } catch (e) { note('as-export-note', '导出失败：' + e.message); }
+        });
+        document.getElementById('as-signout-all').addEventListener('click', async function () {
+            if (!confirm('确定要让这个账号在所有设备上退出登录吗？')) return;
+            try { await getClient().auth.signOut({ scope: 'global' }); } catch (e) {}
+            location.reload();
+        });
+    }).catch(function () {});
+})();
+</script>
+    <script src="js/i18n.js?v=20261115a"></script>
 </body>
 </html>

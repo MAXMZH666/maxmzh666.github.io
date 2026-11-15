@@ -2486,3 +2486,10 @@ body .btn-submit {
     border-radius: 999px;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 16px rgba(255, 190, 0, 0.18);
 }
+
+/* ===== 颜色方案与表单控件修复（2026-11-15）：原生控件按当前主题渲染，输入文字跟随主题，避免暗色下黑字看不见 ===== */
+:root { color-scheme: dark; }
+:root[data-theme="light"] { color-scheme: light; }
+input, textarea, select { color: inherit; }
+::placeholder { color: rgba(158, 168, 195, 0.55); opacity: 1; }
+:root[data-theme="light"] ::placeholder { color: rgba(92, 102, 128, 0.55); }

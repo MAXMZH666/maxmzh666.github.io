@@ -239,13 +239,28 @@ async function renderSubHeader() {
         if (!p) { mineDot.style.display = 'none'; }
         else {
             try {
-                var nr = await window.sb.from('notifications')
+                var nq = window.sb.from('notifications')
                     .select('id', { count: 'exact', head: true })
                     .eq('user_id', p.id).eq('is_read', false);
+                var dmOff = false;
+                try {
+                    var sp = await window.sb.from('profiles').select('settings').eq('id', p.id).single();
+                    var nt = sp.data && sp.data.settings && sp.data.settings.notify;
+                    if (nt) {
+                        var off = [];
+                        if (nt.like === false) off.push('like');
+                        if (nt.comment === false) { off.push('comment'); off.push('mention'); }
+                        if (nt.follow === false) off.push('follow');
+                        if (nt.reply === false) off.push('reply');
+                        if (nt.dm === false) { off.push('dm'); dmOff = true; }
+                        if (off.length) nq = nq.not('type', 'in', '("' + off.join('","') + '")');
+                    }
+                } catch (e) {}
+                var nr = await nq;
                 var dr = await window.sb.from('direct_messages')
                     .select('id', { count: 'exact', head: true })
                     .eq('receiver_id', p.id).is('read_at', null);
-                applyUnreadDots(nr.count || 0, dr.count || 0);
+                applyUnreadDots(nr.count || 0, dmOff ? 0 : (dr.count || 0));
             } catch (e) { mineDot.style.display = 'none'; }
             startRealtimeDots(); /* WebSocket 实时推送（连不上自动放弃，不影响原有逻辑） */
         }

@@ -14,7 +14,7 @@
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://xkvpzxxtcnocofnsezpy.supabase.co">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
-    <link rel="stylesheet" href="css/styles.min.css?v=20261114e">
+    <link rel="stylesheet" href="css/styles.min.css?v=20261115a">
     <script>try{if(localStorage.getItem("maxmzh-theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}</script>
     <style>
         .feed-row { display: block; padding: 14px 16px; border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 12px; margin-bottom: 10px; background: var(--card, rgba(255,255,255,.02)); }
@@ -111,7 +111,7 @@
     </footer>
 
     <script src="js/supabase.min.js?v=20261114a"></script>
-    <script src="js/community.min.js?v=20261114a"></script>
+    <script src="js/community.min.js?v=20261115a"></script>
     <script src="js/scripts.min.js?v=20261113a"></script>
     <script>
     (async function () {
@@ -324,6 +324,18 @@
                 .eq('user_id', me.id).order('created_at', { ascending: false }).limit(50);
             if (r.error) throw r.error;
             var ns = r.data || [];
+            try {
+                var myp = await sb.from('profiles').select('settings').eq('id', me.id).single();
+                var nt = myp.data && myp.data.settings && myp.data.settings.notify;
+                if (nt) ns = ns.filter(function (n) {
+                    if (n.type === 'like') return nt.like !== false;
+                    if (n.type === 'comment' || n.type === 'mention') return nt.comment !== false;
+                    if (n.type === 'follow') return nt.follow !== false;
+                    if (n.type === 'reply') return nt.reply !== false;
+                    if (n.type === 'dm') return nt.dm !== false;
+                    return true;
+                });
+            } catch (e) {}
             if (!ns.length) { wrap.innerHTML = '<p class="works-note">还没有通知。</p>'; return; }
             var uids = Array.from(new Set(ns.map(function (n) { return n.from_user_id; })));
             var wids = Array.from(new Set(ns.map(function (n) { return n.work_id; }).filter(Boolean)));
@@ -477,7 +489,21 @@
         try {
             var me = await currentUser();
             if (!me) return;
-            var c = await sb.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', me.id).eq('is_read', false);
+            var cq = sb.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', me.id).eq('is_read', false);
+            try {
+                var myp2 = await sb.from('profiles').select('settings').eq('id', me.id).single();
+                var nt2 = myp2.data && myp2.data.settings && myp2.data.settings.notify;
+                if (nt2) {
+                    var off2 = [];
+                    if (nt2.like === false) off2.push('like');
+                    if (nt2.comment === false) { off2.push('comment'); off2.push('mention'); }
+                    if (nt2.follow === false) off2.push('follow');
+                    if (nt2.reply === false) off2.push('reply');
+                    if (nt2.dm === false) off2.push('dm');
+                    if (off2.length) cq = cq.not('type', 'in', '("' + off2.join('","') + '")');
+                }
+            } catch (e) {}
+            var c = await cq;
             if (c.count > 0) document.getElementById('notify-dot').style.display = 'inline';
         } catch (e) {}
     })();
@@ -497,5 +523,6 @@
         });
     })();
     </script>
+    <script src="js/i18n.js?v=20261115a"></script>
 </body>
 </html>
