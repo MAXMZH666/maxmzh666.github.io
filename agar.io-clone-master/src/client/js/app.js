@@ -19,6 +19,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent)) {
 
 function startGame(type) {
     global.playerName = playerNameInput.value.replace(/(<([^>]+)>)/ig, '').substring(0, 25);
+    try { localStorage.setItem('agar-nick', global.playerName); } catch (e) {}
     global.playerType = type;
 
     global.screen.width = window.innerWidth;
@@ -39,14 +40,18 @@ function startGame(type) {
     global.socket = socket;
 }
 
-// Checks if the nick chosen contains valid alphanumeric characters (and underscores).
+// Nickname: Chinese characters, letters, digits, underscores and hyphens (max 25).
 function validNick() {
-    var regex = /^\w*$/;
+    var regex = /^[\w\u4e00-\u9fa5\u3400-\u4dbf-]{0,25}$/;
     debug('Regex Test', regex.exec(playerNameInput.value));
     return regex.exec(playerNameInput.value) !== null;
 }
 
 window.onload = function () {
+    try {
+        var savedNick = localStorage.getItem('agar-nick');
+        if (savedNick && !playerNameInput.value) playerNameInput.value = savedNick;
+    } catch (e) {}
 
     var btn = document.getElementById('startButton'),
         btnS = document.getElementById('spectateButton'),
