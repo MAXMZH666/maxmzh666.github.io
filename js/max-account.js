@@ -128,6 +128,7 @@
             '<span class="maxacc-menu">' +
             '<a href="/community-user.html?username=' + encodeURIComponent(name) + '">👤 我的社区主页</a>' +
             '<a href="/community.html">🌐 MAX编程社区</a>' +
+            '<a href="/account.html">⚙️ 账号设置</a>' +
             '<button type="button" data-maxacc-logout>🚪 退出登录</button>' +
             '</span></span>';
         var chip = el.querySelector('.maxacc-chip');

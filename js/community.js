@@ -214,6 +214,7 @@ async function renderSubHeader() {
                 
                 '<a href="community-user.html?id=' + p.id + '" data-subitem="profile" role="menuitem">👤 个人主页</a>' +
                 '<a href="community-settings.html" data-subitem="settings" role="menuitem">⚙️ 设置</a>' +
+                '<a href="account.html" data-subitem="account" role="menuitem">🔐 MAX 账号设置</a>' +
                 '</div></div>' +
                 '<a href="#" id="sub-logout">退出</a>';
             document.getElementById('sub-logout').addEventListener('click', async function (e) {
@@ -531,15 +532,27 @@ function typeBadge(t) {
     return '<span class="tag type">' + m.icon + ' ' + m.name + '</span>';
 }
 /* 动态加载外部脚本（Pyodide / JSCPP 按需加载） */
-function loadScriptOnce(src) {
+function loadScriptOnce(src, timeoutMs) {
     if (document.querySelector('script[src="' + src + '"]')) return Promise.resolve();
     return new Promise(function (resolve, reject) {
         var s = document.createElement('script');
+        var timer = null;
         s.src = src;
-        s.onload = function () { resolve(); };
-        s.onerror = function () { reject(new Error('脚本加载失败')); };
+        s.onload = function () { if (timer) clearTimeout(timer); resolve(); };
+        s.onerror = function () { if (timer) clearTimeout(timer); reject(new Error('脚本加载失败')); };
+        if (timeoutMs) timer = setTimeout(function () { reject(new Error('脚本加载超时')); }, timeoutMs);
         document.head.appendChild(s);
     });
+}
+
+/* 带超时的 Promise 包装（加载类操作防假死） */
+function withTimeout(promise, ms, label) {
+    return Promise.race([
+        promise,
+        new Promise(function (resolve, reject) {
+            setTimeout(function () { reject(new Error((label || '操作') + '超时')); }, ms);
+        })
+    ]);
 }
 
 /* 带进度的上传：优先用 signed URL + XHR 显示进度，失败回退普通上传 */
@@ -676,10 +689,31 @@ function injectHljsTheme() {
 }
 
 /* Python 网页运行（Pyodide） */
+var PYODIDE_LOCAL = '/pyodide/v0.26.4/';
+var PYODIDE_CDN = 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/';
+
+async function ensurePyodide(say) {
+    if (pyodide) return pyodide;
+    var bases = [PYODIDE_LOCAL, PYODIDE_CDN];
+    var lastErr = null;
+    for (var i = 0; i < bases.length; i++) {
+        var base = bases[i];
+        try {
+            say(i === 0 ? '正在加载 Python 环境（本站镜像，约 10MB）…' : '本站镜像较慢，正在切换备用线路加载…');
+            await loadScriptOnce(base + 'pyodide.js', 60000);
+            if (typeof loadPyodide !== 'function') throw new Error('环境脚本异常');
+            pyodide = await withTimeout(loadPyodide({ indexURL: base }), 90000, 'Python 环境加载');
+            return pyodide;
+        } catch (e) {
+            lastErr = e;
+            pyodide = null;
+        }
+    }
+    throw new Error('Python 环境加载失败（网络较慢），请检查网络后重试。' + (lastErr && lastErr.message ? '（' + lastErr.message + '）' : ''));
+}
+
 async function runPython(code, inputText, say, append) {
-    say('正在加载 Python 环境（首次约 10MB，请稍候）…');
-    await loadScriptOnce('https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js');
-    if (!pyodide) pyodide = await loadPyodide();
+    await ensurePyodide(say);
     var pos = 0;
     try {
         pyodide.setStdin({ stdin: function () {
@@ -701,7 +735,11 @@ async function runPython(code, inputText, say, append) {
 /* C++ 网页运行（JSCPP 解释器） */
 async function runCpp(code, inputText, say, append) {
     say('正在加载 C++ 运行环境…');
-    await loadScriptOnce('https://cdn.jsdelivr.net/gh/felixhao28/JSCPP@gh-pages/dist/JSCPP.es5.min.js');
+    try {
+        await loadScriptOnce('/jscpp/JSCPP.es5.min.js', 45000);
+    } catch (e) {
+        await loadScriptOnce('https://cdn.jsdelivr.net/gh/felixhao28/JSCPP@gh-pages/dist/JSCPP.es5.min.js', 45000);
+    }
     if (!window.JSCPP || !JSCPP.run) throw new Error('C++ 环境加载失败');
     say('运行中…');
     var total = 0;
