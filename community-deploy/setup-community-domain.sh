@@ -25,9 +25,14 @@ if [ "$PHASE" = "vhost" ]; then
     done
     [ "$OK" = "1" ] || { echo "DNS_NOT_READY: $DOMAIN 尚无解析记录"; exit 3; }
 
-    CERT="/etc/letsencrypt/live/maxmzh.com/fullchain.pem"
-    KEY="/etc/letsencrypt/live/maxmzh.com/privkey.pem"
-    [ -f "$CERT" ] && [ -f "$KEY" ] || { echo "CERT_MISSING: $CERT / $KEY 不存在"; exit 4; }
+    CERT=$(sudo grep -h 'ssl_certificate ' /etc/nginx/sites-enabled/maxmzh 2>/dev/null | grep -v key | head -1 | sed -E 's/.*ssl_certificate[[:space:]]+([^;]+);.*/\1/' | tr -d ' ')
+    KEY=$(sudo grep -h 'ssl_certificate_key ' /etc/nginx/sites-enabled/maxmzh 2>/dev/null | head -1 | sed -E 's/.*ssl_certificate_key[[:space:]]+([^;]+);.*/\1/' | tr -d ' ')
+    if [ -z "$CERT" ] || [ -z "$KEY" ]; then
+        D=$(sudo find /etc/letsencrypt/live -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
+        CERT="$D/fullchain.pem"; KEY="$D/privkey.pem"
+    fi
+    echo "cert: $CERT"
+    if ! sudo test -f "$CERT" || ! sudo test -f "$KEY"; then echo "CERT_MISSING: $CERT / $KEY 不存在"; exit 4; fi
 
     echo "=== 写子域名站点 ==="
     sed -e "s|@CERT@|$CERT|g" -e "s|@KEY@|$KEY|g" "$SRC_DIR/vhost-community.conf" | sudo tee "$SITE_COMM" >/dev/null
