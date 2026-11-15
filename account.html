@@ -150,7 +150,7 @@
     </footer>
 </div>
 <script src="js/supabase.min.js?v=20261114a"></script>
-<script src="https://maxmzh.com/js/max-account.js?v=20261115b"></script>
+<script src="https://maxmzh.com/js/max-account.js?v=20261115c"></script>
 <script>
 (function () {
     var MODES = ['auto', 'light', 'dark'];
@@ -186,7 +186,7 @@ function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function
             '<button class="btn" id="st-logout" type="button">退出登录</button>';
         document.getElementById('st-logout').addEventListener('click', function () {
             try {
-                var c = window.supabase.createClient('https://xkvpzxxtcnocofnsezpy.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhrdnB6eHh0Y25vY29mbnNlenB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5MTY4MzQsImV4cCI6MjEwNjQ5MjgzNH0.zTpvyEsutA9hV_UIg36g5owBRnxdHaI-sy_fLUsu6ec');
+                var c = window.supabase.createClient('https://xkvpzxxtcnocofnsezpy.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhrdnB6eHh0Y25vY29mbnNlenB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5MTY4MzQsImV4cCI6MjEwNjQ5MjgzNH0.zTpvyEsutA9hV_UIg36g5owBRnxdHaI-sy_fLUsu6ec', window.maxSbOptions ? window.maxSbOptions() : undefined);
                 c.auth.signOut().then(function () { location.reload(); }, function () { location.reload(); });
             } catch (e) { location.reload(); }
         });
@@ -225,7 +225,7 @@ function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function
         function getClient() {
             if (client) return client;
             if (window.sb) { client = window.sb; return client; }
-            client = window.supabase.createClient('https://xkvpzxxtcnocofnsezpy.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhrdnB6eHh0Y25vY29mbnNlenB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5MTY4MzQsImV4cCI6MjEwNjQ5MjgzNH0.zTpvyEsutA9hV_UIg36g5owBRnxdHaI-sy_fLUsu6ec');
+            client = window.supabase.createClient('https://xkvpzxxtcnocofnsezpy.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhrdnB6eHh0Y25vY29mbnNlenB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5MTY4MzQsImV4cCI6MjEwNjQ5MjgzNH0.zTpvyEsutA9hV_UIg36g5owBRnxdHaI-sy_fLUsu6ec', window.maxSbOptions ? window.maxSbOptions() : undefined);
             return client;
         }
         document.getElementById('as-pw-btn').addEventListener('click', async function () {

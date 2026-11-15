@@ -1,9 +1,70 @@
+/* ===== MAX 账号单点登录：会话存主域名共享 Cookie，各子域名通用 ===== */
+(function () {
+    if (window.MaxSbAuth) return;
+    var DOMAIN = (function () {
+        var h = location.hostname || '';
+        if (!h || h === 'localhost' || /^\d{1,3}(\.\d{1,3}){3}$/.test(h)) return '';
+        var parts = h.split('.');
+        return parts.length >= 2 ? '.' + parts.slice(-2).join('.') : '';
+    })();
+    var CHUNK = 3000, MAXCH = 8;
+    function attrs(expired) {
+        var a = '; path=/; SameSite=Lax';
+        if (DOMAIN) a += '; domain=' + DOMAIN;
+        if (location.protocol === 'https:') a += '; Secure';
+        a += expired ? '; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT' : '; max-age=34560000';
+        return a;
+    }
+    function readRaw(name) {
+        var all = document.cookie ? document.cookie.split('; ') : [];
+        for (var i = 0; i < all.length; i++) {
+            var eq = all[i].indexOf('=');
+            if (eq > 0 && all[i].slice(0, eq) === name) return all[i].slice(eq + 1);
+        }
+        return null;
+    }
+    var storage = {
+        getItem: function (key) {
+            var v = readRaw(key);
+            if (v != null) {
+                var out = v, i = 1, part;
+                while (i < MAXCH && (part = readRaw(key + '.' + i)) != null) { out += part; i++; }
+                try { return decodeURIComponent(out); } catch (e) { return out; }
+            }
+            try {
+                var lv = window.localStorage.getItem(key);
+                if (lv) { storage.setItem(key, lv); return lv; }
+            } catch (e) {}
+            return null;
+        },
+        setItem: function (key, value) {
+            var enc = encodeURIComponent(String(value));
+            var n = Math.max(1, Math.ceil(enc.length / CHUNK));
+            for (var i = 0; i < MAXCH; i++) {
+                var name = i === 0 ? key : key + '.' + i;
+                if (i < n) document.cookie = name + '=' + enc.slice(i * CHUNK, (i + 1) * CHUNK) + attrs(false);
+                else if (readRaw(name) != null) document.cookie = name + '=' + attrs(true);
+            }
+        },
+        removeItem: function (key) {
+            for (var i = 0; i < MAXCH; i++) {
+                var name = i === 0 ? key : key + '.' + i;
+                if (readRaw(name) != null) document.cookie = name + '=' + attrs(true);
+            }
+        }
+    };
+    window.MaxSbAuth = { storage: storage };
+    window.maxSbOptions = function () {
+        return { auth: { storage: storage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: true } };
+    };
+})();
+
 /* ===== MAXMZH 社区：Supabase 初始化与共用工具 ===== */
 (function () {
     var SUPABASE_URL = 'https://xkvpzxxtcnocofnsezpy.supabase.co';
     var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhrdnB6eHh0Y25vY29mbnNlenB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5MTY4MzQsImV4cCI6MjEwNjQ5MjgzNH0.zTpvyEsutA9hV_UIg36g5owBRnxdHaI-sy_fLUsu6ec';
     if (!window.supabase) { console.error('supabase-js 未加载'); return; }
-    window.sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, window.maxSbOptions ? window.maxSbOptions() : undefined);
 })();
 
 /* HTML 转义，防止 XSS */
