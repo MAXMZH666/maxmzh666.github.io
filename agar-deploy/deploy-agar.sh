@@ -71,6 +71,8 @@ curl -s -m 5 -o /dev/null -w "local game page: %{http_code}\n" http://127.0.0.1:
 # 4) nginx 反代（备份 + 插入 + 校验，失败回滚）
 SITE=/etc/nginx/sites-available/maxmzh
 sudo cp "$SITE" "$SITE.bak-$(date +%Y%m%d%H%M%S)"
+# 先删旧版 Agar 位置块（片段改版时保证重新插入新版），再插入当前片段
+sudo python3 "$SRC_DIR/nginx_remove_agar.py" "$SITE"
 sudo python3 "$SRC_DIR/nginx_insert.py" "$SITE" "$SRC_DIR/nginx-agar.conf" "/agar/"
 if sudo nginx -t; then
     sudo systemctl reload nginx
