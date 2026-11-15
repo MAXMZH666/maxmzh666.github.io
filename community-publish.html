@@ -104,6 +104,7 @@
                 <div id="sec-scratch">
                     <label for="f-sb3">游戏文件（.sb3） * <span class="form-hint">（小于 100MB）</span></label>
                     <input type="file" id="f-sb3" accept=".sb3">
+                    <p class="cur-file-box" id="cur-sb3-box" style="display:none;margin-top:8px;padding:10px 12px;border:1px solid rgba(52,199,123,.45);background:rgba(52,199,123,.10);border-radius:10px;line-height:1.6"></p>
                     <p class="form-hint" id="file-info"></p>
                     <label class="check-row"><input type="checkbox" id="f-compress" checked> 压缩音频以加快上传（推荐，大文件效果明显）</label>
                     <p class="form-hint">没有 .sb3？<a href="#" id="goto-scratch-tab">去 Scratch 编程做一个</a></p>
@@ -135,6 +136,7 @@
                 <div id="sec-bin" style="display:none">
                     <label for="f-bin" id="bin-label">安装包文件 *</label>
                     <input type="file" id="f-bin">
+                    <p class="cur-file-box" id="cur-bin-box" style="display:none;margin-top:8px;padding:10px 12px;border:1px solid rgba(52,199,123,.45);background:rgba(52,199,123,.10);border-radius:10px;line-height:1.6"></p>
                     <p class="form-hint" id="bin-info"></p>
                     <p class="form-hint" id="bin-check"></p>
                     <label for="f-shots">应用截图（选填，最多 3 张）</label>
@@ -432,11 +434,30 @@
             if (et === 'python' || et === 'cpp') {
                 document.getElementById('f-code').value = editWork.code || '';
             }
+            var fileNameOf = function (u) { if (!u) return ''; var p = String(u).split('?')[0].split('/'); return p[p.length - 1] || ''; };
+            var bindCurBox = function (inputId, boxId, keepHtml) {
+                var box = document.getElementById(boxId);
+                if (!box) return;
+                box.style.display = '';
+                box.innerHTML = keepHtml;
+                document.getElementById(inputId).addEventListener('change', function () {
+                    var f = this.files && this.files[0];
+                    box.innerHTML = f
+                        ? '📄 已选择新文件：' + esc(f.name) + '<br>点「保存修改」后将替换原来的文件。'
+                        : keepHtml;
+                });
+            };
             if (et === 'scratch') {
                 document.querySelector('label[for="f-sb3"]').innerHTML = '游戏文件（.sb3）<span class="form-hint"> ✓ 已有文件，不换请留空、直接点「保存修改」即可</span>';
+                if (editWork.sb3_url) {
+                    bindCurBox('f-sb3', 'cur-sb3-box', '✅ <b>已有游戏文件</b>（' + esc(fileNameOf(editWork.sb3_url)) + '）<br>不用重新上传：文件框留空，直接改其他内容点「保存修改」就行；只有想换文件时才点上面的「选择文件」。');
+                }
             }
             if (BIN_TYPES[et]) {
                 document.getElementById('bin-label').innerHTML = BIN_TYPES[et].label + '文件 <span class="form-hint"> ✓ 已有文件，不换请留空、直接点「保存修改」即可</span>';
+                if (editWork.apk_url) {
+                    bindCurBox('f-bin', 'cur-bin-box', '✅ <b>已有' + BIN_TYPES[et].label + '文件</b>（' + esc(fileNameOf(editWork.apk_url)) + '）<br>不用重新上传：文件框留空，直接改其他内容点「保存修改」就行；只有想换文件时才点上面的「选择文件」。');
+                }
                 if (editWork.screenshots && editWork.screenshots.length) {
                     document.querySelector('label[for="f-shots"]').innerHTML = '应用截图（选填，最多 3 张）<span class="form-hint"> ✓ 已有 ' + editWork.screenshots.length + ' 张，不换请留空</span>';
                 }
@@ -446,8 +467,8 @@
             }
             if (editWork.cover_url) {
                 var cch = document.getElementById('cur-cover-hint');
-                cch.style.display = '';
-                cch.innerHTML = '✓ 已有封面，不换请留空、直接保存即可<br><img src="' + esc(editWork.cover_url) + '" alt="" style="max-height:64px;border-radius:8px;margin-top:6px">';
+                cch.style.cssText = 'margin-top:8px;padding:10px 12px;border:1px solid rgba(52,199,123,.45);background:rgba(52,199,123,.10);border-radius:10px;line-height:1.6';
+                cch.innerHTML = '✅ <b>已有封面</b>，不换请留空、直接保存即可<br><img src="' + esc(editWork.cover_url) + '" alt="" style="max-height:64px;border-radius:8px;margin-top:6px">';
             }
             if (et === 'website' && editWork.code) {
                 var wb = document.createElement('p');
