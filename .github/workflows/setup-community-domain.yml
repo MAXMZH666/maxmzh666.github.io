@@ -1,0 +1,44 @@
+name: Setup community subdomain (one-time)
+
+on:
+  workflow_dispatch:
+    inputs:
+      phase:
+        description: "vhost 或 redirect"
+        required: true
+        default: "vhost"
+        type: choice
+        options:
+          - vhost
+          - redirect
+
+jobs:
+  setup:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    env:
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_USER: ops
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_vps
+          chmod 600 ~/.ssh/id_vps
+          ssh-keyscan -t ed25519 -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          FP=$(ssh-keygen -lf ~/.ssh/known_hosts | awk '{print $2}' | head -1)
+          echo "host key fingerprint: $FP"
+          test "$FP" = "SHA256:FhhiN4dO64X6WNnXRYICB/3kFzZpmS089TYUXpDUW9k"
+
+      - name: Upload to VPS
+        run: |
+          scp -i ~/.ssh/id_vps -r community-deploy "$VPS_USER@$VPS_HOST:~/community-deploy-src"
+
+      - name: Run setup on VPS
+        run: |
+          ssh -i ~/.ssh/id_vps "$VPS_USER@$VPS_HOST" 'S=$(find ~/community-deploy-src -name setup-community-domain.sh | head -1); echo "script: $S"; bash "$S" "${{ inputs.phase }}"'
